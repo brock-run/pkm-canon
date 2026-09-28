@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/preservation/preservation-bundle",
+  "title": "preservation-bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "record_type": {
+      "const": "preservation_bundle"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "subject_id": {
+      "type": "string"
+    },
+    "source_system": {
+      "type": "string"
+    },
+    "bundle_strategy": {
+      "enum": [
+        "multi_payload_single_subject",
+        "compound_source_object",
+        "primary_plus_derivatives"
+      ]
+    },
+    "bundle_items": {
+      "type": "array",
+      "items": {
+        "$ref": "https://example.org/schemas/common/source-native-reference"
+      },
+      "minItems": 1
+    },
+    "primary_item_index": {
+      "type": "integer"
+    },
+    "normalization_status": {
+      "enum": [
+        "unprocessed",
+        "partial",
+        "normalized",
+        "deferred",
+        "unsupported"
+      ]
+    },
+    "preservation_reason": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "facets": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "subject_id",
+    "source_system",
+    "bundle_strategy",
+    "bundle_items",
+    "normalization_status"
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "$defs": {
+    "FacetEnvelope": {
+      "additionalProperties": true,
+      "properties": {
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
+        },
+        "_producer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Producer"
+        }
+      },
+      "required": [
+        "_schemaURL"
+      ],
+      "title": "FacetEnvelope",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "parent_node_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Node Id"
+    },
+    "node_type": {
+      "title": "Node Type",
+      "type": "string"
+    },
+    "semantic_kind": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Semantic Kind"
+    },
+    "position": {
+      "default": 0,
+      "title": "Position",
+      "type": "integer"
+    },
+    "plain_text": {
+      "default": "",
+      "title": "Plain Text",
+      "type": "string"
+    },
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
+    }
+  },
+  "required": [
+    "node_id",
+    "document_id",
+    "node_type"
+  ],
+  "title": "nodes",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/core/nodes"
+}

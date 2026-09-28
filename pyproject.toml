@@ -1,0 +1,16 @@
+[project]
+name = "pkm-canonical-starter"
+version = "0.1.0"
+description = "Starter scaffold for a canonical PKM migration package"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.8",
+  "jsonschema>=4.23",
+  "referencing>=0.35"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-jsonschema>=1.0"
+]

@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Private source exports and generated ingestion data
+input/raw/
+input/processed/
+input/output/
+
+# Local operating-system and editor artifacts
+.DS_Store
+.idea/
+.vscode/
+
+# Local environment variants
+.env.*
+!.env.example

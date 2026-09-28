@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "FacetEnvelope": {
+      "additionalProperties": true,
+      "properties": {
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
+        },
+        "_producer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Producer"
+        }
+      },
+      "required": [
+        "_schemaURL"
+      ],
+      "title": "FacetEnvelope",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "attribute_id": {
+      "title": "Attribute Id",
+      "type": "string"
+    },
+    "subject_kind": {
+      "title": "Subject Kind",
+      "type": "string"
+    },
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "key": {
+      "title": "Key",
+      "type": "string"
+    },
+    "value_type": {
+      "title": "Value Type",
+      "type": "string"
+    },
+    "value": {
+      "title": "Value"
+    },
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
+    }
+  },
+  "required": [
+    "attribute_id",
+    "subject_kind",
+    "subject_id",
+    "key",
+    "value_type",
+    "value"
+  ],
+  "title": "attributes",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/core/attributes"
+}

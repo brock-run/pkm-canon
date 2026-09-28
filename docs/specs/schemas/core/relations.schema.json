@@ -1,0 +1,89 @@
+{
+  "$defs": {
+    "FacetEnvelope": {
+      "additionalProperties": true,
+      "properties": {
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
+        },
+        "_producer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Producer"
+        }
+      },
+      "required": [
+        "_schemaURL"
+      ],
+      "title": "FacetEnvelope",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "relation_id": {
+      "title": "Relation Id",
+      "type": "string"
+    },
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
+    },
+    "target_id": {
+      "title": "Target Id",
+      "type": "string"
+    },
+    "relation_type": {
+      "title": "Relation Type",
+      "type": "string"
+    },
+    "subtype": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Subtype"
+    },
+    "source_representation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Representation"
+    },
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
+    }
+  },
+  "required": [
+    "relation_id",
+    "source_id",
+    "target_id",
+    "relation_type"
+  ],
+  "title": "relations",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/core/relations"
+}

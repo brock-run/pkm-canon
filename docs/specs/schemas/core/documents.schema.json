@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "FacetEnvelope": {
+      "additionalProperties": true,
+      "properties": {
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
+        },
+        "_producer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Producer"
+        }
+      },
+      "required": [
+        "_schemaURL"
+      ],
+      "title": "FacetEnvelope",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "created_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Created At"
+    },
+    "updated_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Updated At"
+    },
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
+    }
+  },
+  "required": [
+    "document_id",
+    "kind",
+    "title"
+  ],
+  "title": "documents",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/core/documents"
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/common/source-native-reference",
+  "title": "source-native-reference",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "storage_kind": {
+      "enum": [
+        "relative_path",
+        "embedded_utf8",
+        "embedded_base64",
+        "external_uri"
+      ]
+    },
+    "relative_path": {
+      "type": "string"
+    },
+    "external_uri": {
+      "type": "string"
+    },
+    "inline_utf8": {
+      "type": "string"
+    },
+    "inline_base64": {
+      "type": "string"
+    },
+    "byte_length": {
+      "type": "integer"
+    },
+    "hashes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "charset": {
+      "type": "string"
+    },
+    "content_language": {
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "primary",
+        "source_export",
+        "attachment",
+        "preview",
+        "thumbnail",
+        "sidecar",
+        "transcript",
+        "metadata"
+      ]
+    },
+    "label": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "storage_kind"
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "$defs": {
+    "FacetEnvelope": {
+      "additionalProperties": true,
+      "properties": {
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
+        },
+        "_producer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Producer"
+        }
+      },
+      "required": [
+        "_schemaURL"
+      ],
+      "title": "FacetEnvelope",
+      "type": "object"
+    },
+    "Mention": {
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "target_id": {
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "target_id"
+      ],
+      "title": "Mention",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "span_id": {
+      "title": "Span Id",
+      "type": "string"
+    },
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "text",
+        "mention",
+        "link",
+        "equation",
+        "code"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "marks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Marks",
+      "type": "array"
+    },
+    "mention": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Mention"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
+    }
+  },
+  "required": [
+    "span_id",
+    "node_id",
+    "kind",
+    "text"
+  ],
+  "title": "spans",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/core/spans"
+}
