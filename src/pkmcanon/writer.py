@@ -31,7 +31,7 @@ from .models import (
     Span,
 )
 from .package import RECORD_FAMILIES, CanonicalPackage, PackageValidationError
-from .storage import CanonicalStore, FilesystemPackageStore
+from .storage import CanonicalStore, FilesystemPackageStore, PackageCommit
 
 MODEL_FILES: dict[type[BaseModel], str] = {
     Document: "documents.jsonl",
@@ -146,7 +146,7 @@ def build_package(
             files=files, fidelity=fidelity,
         )
         (stage / "manifest.json").write_text(_serialize(manifest) + "\n", encoding="utf-8")
-        return store.commit(stage, output_dir)
+        return store.commit(PackageCommit(staged=stage, destination=output_dir))
     finally:
         if stage.exists():
             shutil.rmtree(stage)

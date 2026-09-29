@@ -1,21 +1,42 @@
-"""Canonical commit port and filesystem implementation for Rosetta."""
+"""Product-neutral canon store port and Rosetta's package adapter."""
 
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 from .package import CanonicalPackage, PackageValidationError
 
+RefT_contra = TypeVar("RefT_contra", contravariant=True)
+CommitT_contra = TypeVar("CommitT_contra", contravariant=True)
+ArtifactT_co = TypeVar("ArtifactT_co", covariant=True)
 
-class CanonicalStore(Protocol):
-    def open(self, location: Path) -> CanonicalPackage:
-        """Open and validate the canonical package at the supplied location."""
+
+class CanonStore(Protocol[RefT_contra, CommitT_contra, ArtifactT_co]):
+    """Open and commit a product's own validated artifact.
+
+    Ref, commit request, and return value belong to the product adapter. This
+    port makes no assumptions about packages, databases, branches, or claims.
+    """
+
+    def open(self, ref: RefT_contra) -> ArtifactT_co:
+        """Open and validate the product artifact at the supplied reference."""
         ...
-    def commit(self, staged: Path, destination: Path) -> CanonicalPackage:
-        """Publish a staged package atomically and return the committed package."""
+
+    def commit(self, request: CommitT_contra) -> ArtifactT_co:
+        """Commit a validated artifact and return its product-owned value."""
         ...
+
+
+@dataclass(frozen=True)
+class PackageCommit:
+    staged: Path
+    destination: Path
+
+
+CanonicalStore = CanonStore[Path, PackageCommit, CanonicalPackage]
 
 
 class FilesystemPackageStore:
@@ -23,8 +44,9 @@ class FilesystemPackageStore:
         """Load and validate a package from its filesystem directory."""
         return CanonicalPackage(location)
 
-    def commit(self, staged: Path, destination: Path) -> CanonicalPackage:
-        """Validate and atomically move a staged package, reusing a destination with the same ID."""
+    def commit(self, request: PackageCommit) -> CanonicalPackage:
+        """Validate and atomically move a staged package, reusing one with the same ID."""
+        staged, destination = request.staged, request.destination
         candidate = CanonicalPackage(staged)
         if destination.exists():
             existing = CanonicalPackage(destination)

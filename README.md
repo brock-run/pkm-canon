@@ -96,9 +96,11 @@ silently changes the index or source model.
 - Source identity and known losses are specified in
   `docs/specs/source-profiles/`. Each package retains the original source
   bytes and records its hash.
-- The validated package is committed atomically through the
-  `CanonicalStore` port. Rosetta currently provides a filesystem package
-  implementation. No database or hosted service is needed to validate one.
+- The validated package is committed atomically through the product-neutral
+  `CanonStore[Ref, Commit, Artifact]` port. Rosetta binds it as
+  `CanonicalStore = CanonStore[Path, PackageCommit, CanonicalPackage]` and
+  provides a filesystem implementation. No database or hosted service is
+  needed to validate a package.
 - The V1 design and implementation plan under `docs/specs/` describe later
   API, PostgreSQL, retrieval, inference, and export work. Those sections are
   proposals, not claims that the features are already implemented.
