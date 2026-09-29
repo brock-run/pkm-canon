@@ -96,7 +96,9 @@ def test_multiline_projection_escapes_continuation_markdown_and_tracks_lines(tmp
     source = tmp_path / "roam.json"
     source.write_text(json.dumps([
         {"uid": "P", "title": "Project", "children": [
-            {"uid": "B1", "order": 0, "string": "First\n# heading\n- item\n1. ordered"},
+            {"uid": "B1", "order": 0, "string": "First\n# heading\n- item\n1. ordered", "children": [
+                {"uid": "B1C", "order": 0, "string": "Child\ncontinued"},
+            ]},
             {"uid": "B2", "order": 1, "string": "Second"},
         ]},
     ]))
@@ -108,5 +110,7 @@ def test_multiline_projection_escapes_continuation_markdown_and_tracks_lines(tmp
     assert "  \\- item" in page
     assert "  1\\. ordered" in page
     evidence = [json.loads(line) for line in (output / "evidence-map.jsonl").read_text().splitlines()]
+    child = next(item for item in evidence if item["node_id"] == next(node.node_id for node in package.nodes if node.plain_text == "Child\ncontinued"))
     second = next(item for item in evidence if item["node_id"] == next(node.node_id for node in package.nodes if node.plain_text == "Second"))
-    assert second["rendered_line"] == 11
+    assert child["rendered_line"] == 11
+    assert second["rendered_line"] == 13

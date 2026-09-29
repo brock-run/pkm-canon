@@ -98,11 +98,11 @@ def project_audit_markdown(package: CanonicalPackage, output_dir: Path) -> Proje
 
         def append_nodes(
             document_id: str, filename: str, lines: list[str],
-            parent: str | None, depth: int,
-        ) -> None:
+            parent: str | None, depth: int, line_count: int,
+        ) -> int:
             """Append nested Markdown bullets and record their rendered-line evidence mappings."""
             for node in [item for item in children.get(parent, []) if item.document_id == document_id]:
-                rendered_line = sum(line.count("\n") + 1 for line in lines) + 1
+                rendered_line = line_count + 1
                 text = _render_node_text(node.plain_text, "  " * (depth + 1))
                 lines.append(f"{'  ' * depth}- {text}")
                 evidence = evidence_for_node(package, node.node_id)
@@ -113,7 +113,11 @@ def project_audit_markdown(package: CanonicalPackage, output_dir: Path) -> Proje
                     "source_locator": evidence.source_locator.model_dump(mode="json", exclude_none=True),
                     "source_content_hash": evidence.source_content_hash,
                 })
-                append_nodes(document_id, filename, lines, node.node_id, depth + 1)
+                line_count = append_nodes(
+                    document_id, filename, lines, node.node_id, depth + 1,
+                    rendered_line + text.count("\n"),
+                )
+            return line_count
 
         for document in sorted(package.documents, key=lambda item: item.document_id):
             filename = stable_id("page", document.document_id).split(":", 1)[1] + ".md"
@@ -124,7 +128,10 @@ def project_audit_markdown(package: CanonicalPackage, output_dir: Path) -> Proje
                 f"Source version: {document.source_version_id}", "",
             ]
 
-            append_nodes(document.document_id, filename, lines, None, 0)
+            append_nodes(
+                document.document_id, filename, lines, None, 0,
+                sum(line.count("\n") + 1 for line in lines),
+            )
             (stage / filename).write_text("\n".join(lines) + "\n", encoding="utf-8")
         (stage / "evidence-map.jsonl").write_text(
             "".join(json.dumps(item, sort_keys=True, ensure_ascii=False) + "\n" for item in evidence_map),
