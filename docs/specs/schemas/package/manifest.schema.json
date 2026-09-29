@@ -1,0 +1,619 @@
+{
+  "$defs": {
+    "AccessPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "default": "personal",
+          "title": "Classification",
+          "type": "string"
+        },
+        "principal_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Principal Ids",
+          "type": "array"
+        },
+        "visibility": {
+          "default": "private",
+          "enum": [
+            "private",
+            "restricted",
+            "public"
+          ],
+          "title": "Visibility",
+          "type": "string"
+        }
+      },
+      "title": "AccessPolicy",
+      "type": "object"
+    },
+    "FidelitySummary": {
+      "additionalProperties": false,
+      "properties": {
+        "error_count": {
+          "minimum": 0,
+          "title": "Error Count",
+          "type": "integer"
+        },
+        "normalized": {
+          "minimum": 0,
+          "title": "Normalized",
+          "type": "integer"
+        },
+        "partial": {
+          "minimum": 0,
+          "title": "Partial",
+          "type": "integer"
+        },
+        "preserved_only": {
+          "minimum": 0,
+          "title": "Preserved Only",
+          "type": "integer"
+        },
+        "rejected": {
+          "minimum": 0,
+          "title": "Rejected",
+          "type": "integer"
+        },
+        "source_object_count": {
+          "minimum": 0,
+          "title": "Source Object Count",
+          "type": "integer"
+        },
+        "unresolved_reference_count": {
+          "minimum": 0,
+          "title": "Unresolved Reference Count",
+          "type": "integer"
+        },
+        "unsupported": {
+          "minimum": 0,
+          "title": "Unsupported",
+          "type": "integer"
+        },
+        "warning_count": {
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_object_count",
+        "normalized",
+        "partial",
+        "preserved_only",
+        "unsupported",
+        "rejected",
+        "unresolved_reference_count",
+        "warning_count",
+        "error_count"
+      ],
+      "title": "FidelitySummary",
+      "type": "object"
+    },
+    "FileInventoryEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_length": {
+          "minimum": 0,
+          "title": "Byte Length",
+          "type": "integer"
+        },
+        "record_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Record Count"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha256",
+        "byte_length"
+      ],
+      "title": "FileInventoryEntry",
+      "type": "object"
+    },
+    "HashDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "enum": [
+            "sha256",
+            "sha512",
+            "md5"
+          ],
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "digest": {
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "digest"
+      ],
+      "title": "HashDescriptor",
+      "type": "object"
+    },
+    "ParserDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ParserDescriptor",
+      "type": "object"
+    },
+    "SourceNativeReference": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "relative_path"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "type": "null"
+              },
+              "inline_base64": {
+                "type": "null"
+              },
+              "inline_utf8": {
+                "type": "null"
+              },
+              "relative_path": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "relative_path"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "embedded_utf8"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "type": "null"
+              },
+              "inline_base64": {
+                "type": "null"
+              },
+              "inline_utf8": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "relative_path": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "inline_utf8"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "embedded_base64"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "type": "null"
+              },
+              "inline_base64": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "inline_utf8": {
+                "type": "null"
+              },
+              "relative_path": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "inline_base64"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "external_uri"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "inline_base64": {
+                "type": "null"
+              },
+              "inline_utf8": {
+                "type": "null"
+              },
+              "relative_path": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "external_uri"
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "byte_length": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Byte Length"
+        },
+        "charset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Charset"
+        },
+        "content_language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Language"
+        },
+        "external_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "External Uri"
+        },
+        "hashes": {
+          "items": {
+            "$ref": "#/$defs/HashDescriptor"
+          },
+          "title": "Hashes",
+          "type": "array"
+        },
+        "inline_base64": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inline Base64"
+        },
+        "inline_utf8": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inline Utf8"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "media_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Type"
+        },
+        "relative_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relative Path"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "enum": [
+                "primary",
+                "source_export",
+                "attachment",
+                "preview",
+                "thumbnail",
+                "sidecar",
+                "transcript",
+                "metadata"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        },
+        "storage_kind": {
+          "enum": [
+            "relative_path",
+            "embedded_utf8",
+            "embedded_base64",
+            "external_uri"
+          ],
+          "title": "Storage Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "storage_kind"
+      ],
+      "title": "SourceNativeReference",
+      "type": "object"
+    },
+    "SourceProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_version": {
+          "title": "Profile Version",
+          "type": "string"
+        },
+        "source_system": {
+          "title": "Source System",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_system",
+        "profile_version"
+      ],
+      "title": "SourceProfile",
+      "type": "object"
+    },
+    "SourceVersion": {
+      "additionalProperties": false,
+      "properties": {
+        "access": {
+          "$ref": "#/$defs/AccessPolicy"
+        },
+        "content_hash": {
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "native_id": {
+          "title": "Native Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        },
+        "source_event_time": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Event Time"
+        },
+        "source_scope": {
+          "title": "Source Scope",
+          "type": "string"
+        },
+        "source_system": {
+          "title": "Source System",
+          "type": "string"
+        },
+        "source_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Uri"
+        },
+        "source_version_id": {
+          "title": "Source Version Id",
+          "type": "string"
+        },
+        "storage": {
+          "$ref": "#/$defs/SourceNativeReference"
+        }
+      },
+      "required": [
+        "source_version_id",
+        "source_system",
+        "source_scope",
+        "native_id",
+        "content_hash",
+        "storage"
+      ],
+      "title": "SourceVersion",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pkm-rosetta:schema:v1:package:manifest",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "adapter_contracts": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Adapter Contracts",
+      "type": "object"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "fidelity": {
+      "$ref": "#/$defs/FidelitySummary"
+    },
+    "files": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FileInventoryEntry"
+      },
+      "title": "Files",
+      "type": "object"
+    },
+    "package_id": {
+      "title": "Package Id",
+      "type": "string"
+    },
+    "package_schema_version": {
+      "title": "Package Schema Version",
+      "type": "string"
+    },
+    "parser": {
+      "$ref": "#/$defs/ParserDescriptor"
+    },
+    "source_profiles": {
+      "items": {
+        "$ref": "#/$defs/SourceProfile"
+      },
+      "title": "Source Profiles",
+      "type": "array"
+    },
+    "source_versions": {
+      "items": {
+        "$ref": "#/$defs/SourceVersion"
+      },
+      "title": "Source Versions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "package_id",
+    "package_schema_version",
+    "created_at",
+    "source_profiles",
+    "source_versions",
+    "parser",
+    "files",
+    "fidelity"
+  ],
+  "title": "manifest",
+  "type": "object"
+}

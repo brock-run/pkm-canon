@@ -1,28 +1,566 @@
 {
+  "$defs": {
+    "ExtractionByteRange": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "minimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "ExtractionByteRange",
+      "type": "object"
+    },
+    "ExtractionHints": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_range": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractionByteRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dom_selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dom Selector"
+        },
+        "json_pointer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Json Pointer"
+        }
+      },
+      "title": "ExtractionHints",
+      "type": "object"
+    },
+    "GeneratedByActivity": {
+      "additionalProperties": false,
+      "properties": {
+        "activity_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Activity Id"
+        },
+        "activity_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Activity Type"
+        },
+        "agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent"
+        },
+        "used_inputs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Used Inputs",
+          "type": "array"
+        }
+      },
+      "title": "GeneratedByActivity",
+      "type": "object"
+    },
+    "HashDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "enum": [
+            "sha256",
+            "sha512",
+            "md5"
+          ],
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "digest": {
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "digest"
+      ],
+      "title": "HashDescriptor",
+      "type": "object"
+    },
+    "SourceLocator": {
+      "additionalProperties": false,
+      "properties": {
+        "char_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char End"
+        },
+        "char_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char Start"
+        },
+        "graph": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Graph"
+        },
+        "line_end": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line End"
+        },
+        "line_start": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line Start"
+        },
+        "parent_source_uid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Source Uid"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "source_uid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Uid"
+        },
+        "uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uri"
+        },
+        "workspace": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Workspace"
+        }
+      },
+      "title": "SourceLocator",
+      "type": "object"
+    },
+    "SourceNativeReference": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "relative_path"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "type": "null"
+              },
+              "inline_base64": {
+                "type": "null"
+              },
+              "inline_utf8": {
+                "type": "null"
+              },
+              "relative_path": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "relative_path"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "embedded_utf8"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "type": "null"
+              },
+              "inline_base64": {
+                "type": "null"
+              },
+              "inline_utf8": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "relative_path": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "inline_utf8"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "embedded_base64"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "type": "null"
+              },
+              "inline_base64": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "inline_utf8": {
+                "type": "null"
+              },
+              "relative_path": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "inline_base64"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_kind": {
+                "const": "external_uri"
+              }
+            },
+            "required": [
+              "storage_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "external_uri": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "inline_base64": {
+                "type": "null"
+              },
+              "inline_utf8": {
+                "type": "null"
+              },
+              "relative_path": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "external_uri"
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "byte_length": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Byte Length"
+        },
+        "charset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Charset"
+        },
+        "content_language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Language"
+        },
+        "external_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "External Uri"
+        },
+        "hashes": {
+          "items": {
+            "$ref": "#/$defs/HashDescriptor"
+          },
+          "title": "Hashes",
+          "type": "array"
+        },
+        "inline_base64": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inline Base64"
+        },
+        "inline_utf8": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inline Utf8"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "media_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Type"
+        },
+        "relative_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relative Path"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "enum": [
+                "primary",
+                "source_export",
+                "attachment",
+                "preview",
+                "thumbnail",
+                "sidecar",
+                "transcript",
+                "metadata"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        },
+        "storage_kind": {
+          "enum": [
+            "relative_path",
+            "embedded_utf8",
+            "embedded_base64",
+            "external_uri"
+          ],
+          "title": "Storage Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "storage_kind"
+      ],
+      "title": "SourceNativeReference",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pkm-rosetta:schema:v1:preservation:preservation-record",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/preservation/preservation-record",
-  "title": "preservation-record",
-  "type": "object",
   "additionalProperties": false,
   "properties": {
-    "record_type": {
-      "const": "preservation_record"
-    },
-    "schema_version": {
-      "type": "string"
-    },
-    "id": {
-      "type": "string"
-    },
-    "subject_id": {
-      "type": "string"
-    },
-    "source_system": {
-      "type": "string"
-    },
-    "source_object_type": {
-      "type": "string"
-    },
     "capture_type": {
       "enum": [
         "raw_json",
@@ -35,10 +573,47 @@
         "rendered_preview",
         "unsupported_object",
         "adapter_sidecar"
-      ]
+      ],
+      "title": "Capture Type",
+      "type": "string"
     },
-    "storage": {
-      "$ref": "https://example.org/schemas/common/source-native-reference"
+    "derived_from_preservation_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Derived From Preservation Id"
+    },
+    "extraction_hints": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExtractionHints"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "generated_by_activity": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GeneratedByActivity"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
     },
     "normalization_status": {
       "enum": [
@@ -47,19 +622,85 @@
         "normalized",
         "deferred",
         "unsupported"
-      ]
-    },
-    "preservation_reason": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "notes": {
+      ],
+      "title": "Normalization Status",
       "type": "string"
     },
-    "facets": {
-      "type": "object"
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "preservation_reason": {
+      "items": {
+        "enum": [
+          "loss_prevention",
+          "future_replay",
+          "source_audit",
+          "unsupported_feature",
+          "adapter_roundtrip",
+          "binary_attachment",
+          "legal_archive",
+          "debugging"
+        ],
+        "type": "string"
+      },
+      "title": "Preservation Reason",
+      "type": "array"
+    },
+    "record_type": {
+      "const": "preservation_record",
+      "title": "Record Type",
+      "type": "string"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_locator": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SourceLocator"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "source_object_type": {
+      "title": "Source Object Type",
+      "type": "string"
+    },
+    "source_profile_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Profile Version"
+    },
+    "source_system": {
+      "title": "Source System",
+      "type": "string"
+    },
+    "storage": {
+      "$ref": "#/$defs/SourceNativeReference"
+    },
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
     }
   },
   "required": [
@@ -72,5 +713,7 @@
     "capture_type",
     "storage",
     "normalization_status"
-  ]
+  ],
+  "title": "preservation-record",
+  "type": "object"
 }

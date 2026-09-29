@@ -1,0 +1,59 @@
+{
+  "$id": "urn:pkm-rosetta:schema:v1:knowledge:retrieval-change",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "title": "Action",
+      "type": "string"
+    },
+    "change_id": {
+      "title": "Change Id",
+      "type": "string"
+    },
+    "evaluation_case_id": {
+      "title": "Evaluation Case Id",
+      "type": "string"
+    },
+    "missing_node_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Missing Node Ids",
+      "type": "array"
+    },
+    "query": {
+      "title": "Query",
+      "type": "string"
+    },
+    "source_trace_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Trace Ids",
+      "type": "array"
+    },
+    "status": {
+      "default": "proposed",
+      "enum": [
+        "proposed",
+        "approved",
+        "rejected"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "change_id",
+    "evaluation_case_id",
+    "query",
+    "action",
+    "missing_node_ids",
+    "source_trace_ids"
+  ],
+  "title": "retrieval-change",
+  "type": "object"
+}

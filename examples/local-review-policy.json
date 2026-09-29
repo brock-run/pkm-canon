@@ -1,0 +1,4 @@
+{
+  "policy_version": "local-v1",
+  "approved_reviewers": ["local-operator"]
+}

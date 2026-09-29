@@ -1,0 +1,98 @@
+{
+  "$defs": {
+    "NativeLink": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "link_id": {
+          "title": "Link Id",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_representation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Representation"
+        },
+        "target_id": {
+          "title": "Target Id",
+          "type": "string"
+        },
+        "target_kind": {
+          "enum": [
+            "canonical",
+            "tag",
+            "external"
+          ],
+          "title": "Target Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "link_id",
+        "source_id",
+        "target_id",
+        "kind",
+        "target_kind"
+      ],
+      "title": "NativeLink",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pkm-rosetta:schema:v1:projection:index-projection",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "index_id": {
+      "title": "Index Id",
+      "type": "string"
+    },
+    "native_links": {
+      "items": {
+        "$ref": "#/$defs/NativeLink"
+      },
+      "title": "Native Links",
+      "type": "array"
+    },
+    "profile_version": {
+      "title": "Profile Version",
+      "type": "string"
+    },
+    "source_package_id": {
+      "title": "Source Package Id",
+      "type": "string"
+    },
+    "terms": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Terms",
+      "type": "object"
+    }
+  },
+  "required": [
+    "index_id",
+    "source_package_id",
+    "profile_version",
+    "terms",
+    "native_links"
+  ],
+  "title": "index-projection",
+  "type": "object"
+}

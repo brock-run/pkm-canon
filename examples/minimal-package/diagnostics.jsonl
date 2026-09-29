@@ -1,0 +1,1 @@
+{"code": "PARTIAL_SOURCE_OBJECT", "detail": "Source-native block payload retained for replay", "diagnostic_id": "diag:1", "outcome": "partial", "preservation_id": "pres:1", "severity": "warning", "source_locator": {"graph": "demo", "source_uid": "block-1"}, "subject_id": "node:1"}

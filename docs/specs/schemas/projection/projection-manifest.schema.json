@@ -1,0 +1,80 @@
+{
+  "$defs": {
+    "FileInventoryEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_length": {
+          "minimum": 0,
+          "title": "Byte Length",
+          "type": "integer"
+        },
+        "record_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Record Count"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha256",
+        "byte_length"
+      ],
+      "title": "FileInventoryEntry",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pkm-rosetta:schema:v1:projection:projection-manifest",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "adapter_contract_version": {
+      "title": "Adapter Contract Version",
+      "type": "string"
+    },
+    "adapter_name": {
+      "title": "Adapter Name",
+      "type": "string"
+    },
+    "files": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FileInventoryEntry"
+      },
+      "title": "Files",
+      "type": "object"
+    },
+    "issue_count": {
+      "minimum": 0,
+      "title": "Issue Count",
+      "type": "integer"
+    },
+    "projection_id": {
+      "title": "Projection Id",
+      "type": "string"
+    },
+    "source_package_id": {
+      "title": "Source Package Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "projection_id",
+    "adapter_name",
+    "adapter_contract_version",
+    "source_package_id",
+    "files",
+    "issue_count"
+  ],
+  "title": "projection-manifest",
+  "type": "object"
+}

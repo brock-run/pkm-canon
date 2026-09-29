@@ -1,0 +1,57 @@
+{
+  "$id": "urn:pkm-rosetta:schema:v1:knowledge:methodology-rule",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "rule_type": {
+      "enum": [
+        "attribute_convention",
+        "tag_convention",
+        "link_convention"
+      ],
+      "title": "Rule Type",
+      "type": "string"
+    },
+    "source_trace_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Trace Ids",
+      "type": "array"
+    },
+    "statement": {
+      "title": "Statement",
+      "type": "string"
+    },
+    "status": {
+      "default": "proposed",
+      "enum": [
+        "proposed",
+        "approved",
+        "rejected"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule_id",
+    "rule_type",
+    "statement",
+    "confidence",
+    "source_trace_ids"
+  ],
+  "title": "methodology-rule",
+  "type": "object"
+}

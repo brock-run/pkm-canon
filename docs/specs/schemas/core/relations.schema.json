@@ -3,10 +3,6 @@
     "FacetEnvelope": {
       "additionalProperties": true,
       "properties": {
-        "_schemaURL": {
-          "title": "Schemaurl",
-          "type": "string"
-        },
         "_producer": {
           "anyOf": [
             {
@@ -18,6 +14,10 @@
           ],
           "default": null,
           "title": "Producer"
+        },
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
         }
       },
       "required": [
@@ -27,34 +27,28 @@
       "type": "object"
     }
   },
+  "$id": "urn:pkm-rosetta:schema:v1:core:relations",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
   "properties": {
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
+    },
     "relation_id": {
       "title": "Relation Id",
-      "type": "string"
-    },
-    "source_id": {
-      "title": "Source Id",
-      "type": "string"
-    },
-    "target_id": {
-      "title": "Target Id",
       "type": "string"
     },
     "relation_type": {
       "title": "Relation Type",
       "type": "string"
     },
-    "subtype": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Subtype"
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
     },
     "source_representation": {
       "anyOf": [
@@ -68,12 +62,31 @@
       "default": null,
       "title": "Source Representation"
     },
-    "facets": {
-      "additionalProperties": {
-        "$ref": "#/$defs/FacetEnvelope"
-      },
-      "title": "Facets",
-      "type": "object"
+    "subtype": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Subtype"
+    },
+    "target_id": {
+      "title": "Target Id",
+      "type": "string"
+    },
+    "target_kind": {
+      "default": "canonical",
+      "enum": [
+        "canonical",
+        "tag",
+        "external"
+      ],
+      "title": "Target Kind",
+      "type": "string"
     }
   },
   "required": [
@@ -83,7 +96,5 @@
     "relation_type"
   ],
   "title": "relations",
-  "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/core/relations"
+  "type": "object"
 }

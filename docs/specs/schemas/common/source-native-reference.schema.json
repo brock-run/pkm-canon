@@ -1,65 +1,316 @@
 {
+  "$defs": {
+    "HashDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "enum": [
+            "sha256",
+            "sha512",
+            "md5"
+          ],
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "digest": {
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "digest"
+      ],
+      "title": "HashDescriptor",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pkm-rosetta:schema:v1:common:source-native-reference",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/common/source-native-reference",
-  "title": "source-native-reference",
-  "type": "object",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "storage_kind": {
+            "const": "relative_path"
+          }
+        },
+        "required": [
+          "storage_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "external_uri": {
+            "type": "null"
+          },
+          "inline_base64": {
+            "type": "null"
+          },
+          "inline_utf8": {
+            "type": "null"
+          },
+          "relative_path": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "relative_path"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "storage_kind": {
+            "const": "embedded_utf8"
+          }
+        },
+        "required": [
+          "storage_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "external_uri": {
+            "type": "null"
+          },
+          "inline_base64": {
+            "type": "null"
+          },
+          "inline_utf8": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "relative_path": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "inline_utf8"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "storage_kind": {
+            "const": "embedded_base64"
+          }
+        },
+        "required": [
+          "storage_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "external_uri": {
+            "type": "null"
+          },
+          "inline_base64": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "inline_utf8": {
+            "type": "null"
+          },
+          "relative_path": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "inline_base64"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "storage_kind": {
+            "const": "external_uri"
+          }
+        },
+        "required": [
+          "storage_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "external_uri": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "inline_base64": {
+            "type": "null"
+          },
+          "inline_utf8": {
+            "type": "null"
+          },
+          "relative_path": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "external_uri"
+        ]
+      }
+    }
+  ],
   "properties": {
+    "byte_length": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Byte Length"
+    },
+    "charset": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Charset"
+    },
+    "content_language": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Language"
+    },
+    "external_uri": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "External Uri"
+    },
+    "hashes": {
+      "items": {
+        "$ref": "#/$defs/HashDescriptor"
+      },
+      "title": "Hashes",
+      "type": "array"
+    },
+    "inline_base64": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Inline Base64"
+    },
+    "inline_utf8": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Inline Utf8"
+    },
+    "label": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Label"
+    },
+    "media_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Media Type"
+    },
+    "relative_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Relative Path"
+    },
+    "role": {
+      "anyOf": [
+        {
+          "enum": [
+            "primary",
+            "source_export",
+            "attachment",
+            "preview",
+            "thumbnail",
+            "sidecar",
+            "transcript",
+            "metadata"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Role"
+    },
     "storage_kind": {
       "enum": [
         "relative_path",
         "embedded_utf8",
         "embedded_base64",
         "external_uri"
-      ]
-    },
-    "relative_path": {
-      "type": "string"
-    },
-    "external_uri": {
-      "type": "string"
-    },
-    "inline_utf8": {
-      "type": "string"
-    },
-    "inline_base64": {
-      "type": "string"
-    },
-    "byte_length": {
-      "type": "integer"
-    },
-    "hashes": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "media_type": {
-      "type": "string"
-    },
-    "charset": {
-      "type": "string"
-    },
-    "content_language": {
-      "type": "string"
-    },
-    "role": {
-      "enum": [
-        "primary",
-        "source_export",
-        "attachment",
-        "preview",
-        "thumbnail",
-        "sidecar",
-        "transcript",
-        "metadata"
-      ]
-    },
-    "label": {
+      ],
+      "title": "Storage Kind",
       "type": "string"
     }
   },
   "required": [
     "storage_kind"
-  ]
+  ],
+  "title": "source-native-reference",
+  "type": "object"
 }
