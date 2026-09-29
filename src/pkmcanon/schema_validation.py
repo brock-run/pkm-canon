@@ -15,6 +15,7 @@ class SchemaStore:
         self._schemas_by_path: dict[Path, dict[str, Any]] = {}
         self._schemas_by_id: dict[str, dict[str, Any]] = {}
         self._paths_by_short_name: dict[str, Path] = {}
+        self._validators_by_short_name: dict[str, Draft202012Validator] = {}
         self._registry = self._build_registry()
 
     def _load_schema_file(self, path: Path) -> dict[str, Any]:
@@ -71,9 +72,13 @@ class SchemaStore:
         return self._load_schema_file(self.resolve_short_name(short_name))
 
     def validator_for_short_name(self, short_name: str) -> Draft202012Validator:
-        schema = self.schema_by_short_name(short_name)
-        Draft202012Validator.check_schema(schema)
-        return Draft202012Validator(schema, registry=self._build_registry())
+        validator = self._validators_by_short_name.get(short_name)
+        if validator is None:
+            schema = self.schema_by_short_name(short_name)
+            Draft202012Validator.check_schema(schema)
+            validator = Draft202012Validator(schema, registry=self._registry)
+            self._validators_by_short_name[short_name] = validator
+        return validator
 
     def validate_instance_with_short_name(self, instance: Any, short_name: str) -> None:
         self.validator_for_short_name(short_name).validate(instance)
@@ -89,4 +94,7 @@ def default_schema_store(schema_root: str | Path | None = None) -> SchemaStore:
     """Build a schema store from an explicit root or the repository schema directory."""
     if schema_root is None:
         schema_root = Path(__file__).resolve().parents[2] / "docs" / "specs" / "schemas"
-    return SchemaStore(Path(schema_root))
+    root = Path(schema_root)
+    if not root.is_dir():
+        raise FileNotFoundError(f"Schema root does not exist or is not a directory: {root}. Generate or restore docs/specs/schemas.")
+    return SchemaStore(root)

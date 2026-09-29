@@ -16,6 +16,10 @@
       "title": "Coverage",
       "type": "string"
     },
+    "coverage_matched": {
+      "title": "Coverage Matched",
+      "type": "boolean"
+    },
     "expected_node_ids": {
       "items": {
         "type": "string"
@@ -64,6 +68,7 @@
     "expected_node_ids",
     "missing_node_ids",
     "coverage",
+    "coverage_matched",
     "recall",
     "passed"
   ],

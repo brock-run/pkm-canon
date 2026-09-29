@@ -144,6 +144,7 @@ class CanonicalPackage:
         _check(actual_files == set(inventory), "INVENTORY_MISMATCH", "inventory differs from package files")
 
         store = default_schema_store()
+        validators = {}
         rows: dict[str, list[BaseModel]] = {}
         all_ids: set[str] = set()
         for relative, entry in inventory.items():
@@ -155,10 +156,14 @@ class CanonicalPackage:
                 model, schema_name, id_field = RECORD_FAMILIES[relative]
                 raw_rows = _read_jsonl(path)
                 _check(entry.record_count == len(raw_rows), "RECORD_COUNT_MISMATCH", relative)
+                validator = validators.get(schema_name)
+                if validator is None:
+                    validator = store.validator_for_short_name(schema_name)
+                    validators[schema_name] = validator
                 parsed: list[BaseModel] = []
                 for number, raw in enumerate(raw_rows, 1):
                     try:
-                        store.validate_instance_with_short_name(raw, schema_name)
+                        validator.validate(raw)
                         item = model.model_validate(raw)
                     except Exception as exc:
                         raise PackageValidationError("RECORD_INVALID", f"{relative}:{number}: {exc}") from exc
@@ -199,6 +204,7 @@ class CanonicalPackage:
             while cursor.parent_node_id is not None:
                 _check(cursor.node_id not in seen, "PARENT_CYCLE", node.node_id)
                 seen.add(cursor.node_id)
+                _check(cursor.parent_node_id in nodes, "DANGLING_PARENT", cursor.node_id)
                 cursor = nodes[cursor.parent_node_id]
         for span in spans.values():
             _check(span.node_id in nodes, "DANGLING_NODE", span.span_id)

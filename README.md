@@ -17,6 +17,7 @@ Use the repository's Python environment and committed lockfile:
 
 ```sh
 uv sync --extra dev --locked
+source .venv/bin/activate
 make check
 pkmcanon ingest-roam graph.json my-graph output/roam-package
 pkmcanon validate output/roam-package
@@ -47,8 +48,8 @@ Publication reads the append-only review ledger and selects approved
 proposals only:
 
 ```sh
-pkmcanon publish-methodology PACKAGE PROPOSALS REVIEW_LEDGER output/active-methodology.json
-pkmcanon publish-domain-page PACKAGE PROPOSALS REVIEW_LEDGER output/reviewed-domain.md
+pkmcanon publish-methodology PACKAGE PROPOSALS REVIEW_LEDGER POLICY_JSON output/active-methodology.json
+pkmcanon publish-domain-page PACKAGE PROPOSALS REVIEW_LEDGER POLICY_JSON output/reviewed-domain.md
 ```
 
 `pkmcanon context PACKAGE "owner" ownership` assembles an access-aware

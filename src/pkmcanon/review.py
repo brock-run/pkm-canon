@@ -104,13 +104,20 @@ class ReviewLedger:
         return event
 
 
-def approved_proposals(proposals: list[Proposal], ledger: ReviewLedger) -> list[tuple[Proposal, ReviewEvent]]:
+def approved_proposals(
+    proposals: list[Proposal], ledger: ReviewLedger, policy: ReviewPolicy,
+) -> list[tuple[Proposal, ReviewEvent]]:
     """Pair approved proposals with ledger events after checking that their run IDs match."""
     events = {item.proposal_id: item for item in ledger.events()}
     for proposal in proposals:
         event = events.get(proposal.proposal_id)
-        if event is not None and event.run_id != proposal.run_id:
-            raise PackageValidationError("REVIEW_RUN_MISMATCH", proposal.proposal_id)
+        if event is not None:
+            if event.run_id != proposal.run_id:
+                raise PackageValidationError("REVIEW_RUN_MISMATCH", proposal.proposal_id)
+            if event.reviewer_id not in policy.approved_reviewers:
+                raise PackageValidationError("UNAUTHORIZED_REVIEWER", event.reviewer_id)
+            if event.policy_version != policy.policy_version:
+                raise PackageValidationError("REVIEW_POLICY_MISMATCH", proposal.proposal_id)
     return [
         (proposal, events[proposal.proposal_id])
         for proposal in proposals
@@ -119,11 +126,12 @@ def approved_proposals(proposals: list[Proposal], ledger: ReviewLedger) -> list[
 
 
 def publish_methodology(
-    package: CanonicalPackage, proposals: list[Proposal], ledger: ReviewLedger, output: Path,
+    package: CanonicalPackage, proposals: list[Proposal], ledger: ReviewLedger,
+    policy: ReviewPolicy, output: Path,
 ) -> MethodologyManifest:
     """Validate approved methodology rules and atomically publish their manifest."""
     selected = []
-    for proposal, event in approved_proposals(proposals, ledger):
+    for proposal, event in approved_proposals(proposals, ledger, policy):
         if proposal.proposal_type != "methodology_rule":
             continue
         validate_proposal(package, proposal)
@@ -148,12 +156,12 @@ def publish_methodology(
 
 def publish_reviewed_domain_page(
     package: CanonicalPackage, proposals: list[Proposal], ledger: ReviewLedger,
-    output: Path, *, principal_id: str = "local-operator",
+    policy: ReviewPolicy, output: Path, *, principal_id: str = "local-operator",
 ) -> str:
     """Publish approved domain claims with evidence, requiring access to every cited source."""
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
     selected = []
-    for proposal, event in approved_proposals(proposals, ledger):
+    for proposal, event in approved_proposals(proposals, ledger, policy):
         if proposal.proposal_type != "domain_claim":
             continue
         validate_proposal(package, proposal)

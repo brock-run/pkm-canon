@@ -356,6 +356,7 @@ class EvaluationResult(StrictModel):
     expected_node_ids: list[str]
     missing_node_ids: list[str]
     coverage: Literal["complete", "partial", "none"]
+    coverage_matched: bool
     recall: float = Field(ge=0, le=1)
     passed: bool
 

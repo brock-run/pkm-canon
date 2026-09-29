@@ -43,10 +43,10 @@ def test_rejected_claim_cannot_be_published(review_context, tmp_path):
     event = ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="rejected", rationale="Insufficient evidence")
     assert ledger.events() == [event]
     assert event.rationale == "Insufficient evidence"
-    assert approved_proposals([proposal], ledger) == []
+    assert approved_proposals([proposal], ledger, policy) == []
     output = tmp_path / "published.md"
     with pytest.raises(PackageValidationError, match="NO_APPROVED_DOMAIN_CLAIMS"):
-        publish_reviewed_domain_page(package, [proposal], ledger, output)
+        publish_reviewed_domain_page(package, [proposal], ledger, policy, output)
     assert not output.exists()
 
 
@@ -88,4 +88,4 @@ def test_approval_from_another_run_cannot_publish(review_context):
     package, proposal, policy, ledger = review_context
     ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved")
     with pytest.raises(PackageValidationError, match="REVIEW_RUN_MISMATCH"):
-        approved_proposals([proposal.model_copy(update={"run_id": "other-run"})], ledger)
+        approved_proposals([proposal.model_copy(update={"run_id": "other-run"})], ledger, policy)

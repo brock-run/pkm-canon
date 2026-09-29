@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -27,6 +28,22 @@ def _hash(data: bytes) -> str:
 def _manifest_path(root: Path) -> Path:
     """Return the projection manifest path beneath the supplied root."""
     return root / "projection-manifest.json"
+
+
+def _escape_continuation_markdown(line: str) -> str:
+    if match := re.match(r"^([ \t]*)([!\"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~])", line):
+        return f"{match.group(1)}\\{line[len(match.group(1)):]}"
+    if match := re.match(r"^([ \t]*\d+)([.)])(?=\s)", line):
+        return f"{match.group(1)}\\{match.group(2)}{line[match.end():]}"
+    return line
+
+
+def _render_node_text(text: str, continuation_indent: str) -> str:
+    lines = text.split("\n")
+    return lines[0] + "".join(
+        f"\n{continuation_indent}{_escape_continuation_markdown(line)}"
+        for line in lines[1:]
+    )
 
 
 def validate_projection(root: Path) -> ProjectionManifest:
@@ -83,8 +100,8 @@ def project_audit_markdown(package: CanonicalPackage, output_dir: Path) -> Proje
         ) -> None:
             """Append nested Markdown bullets and record their rendered-line evidence mappings."""
             for node in [item for item in children.get(parent, []) if item.document_id == document_id]:
-                rendered_line = len(lines) + 1
-                text = node.plain_text.replace("\n", "\n" + "  " * (depth + 1))
+                rendered_line = sum(line.count("\n") + 1 for line in lines) + 1
+                text = _render_node_text(node.plain_text, "  " * (depth + 1))
                 lines.append(f"{'  ' * depth}- {text}")
                 evidence = evidence_for_node(package, node.node_id)
                 evidence_map.append({
@@ -137,7 +154,10 @@ def project_audit_markdown(package: CanonicalPackage, output_dir: Path) -> Proje
         )
         raw = manifest.model_dump(mode="json", exclude_none=True)
         default_schema_store().validate_instance_with_short_name(raw, "projection-manifest")
-        _manifest_path(stage).write_text(json.dumps(raw, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
+        _manifest_path(stage).write_text(
+            json.dumps(raw, sort_keys=True, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
         validate_projection(stage)
         os.replace(stage, output_dir)
         return manifest

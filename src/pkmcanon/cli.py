@@ -151,12 +151,15 @@ def review_command(
 
 
 @app.command("publish-methodology")
-def publish_methodology_command(package_path: Path, proposals_path: Path, ledger_path: Path, output: Path) -> None:
+def publish_methodology_command(
+    package_path: Path, proposals_path: Path, ledger_path: Path, policy_path: Path, output: Path,
+) -> None:
     """Publish only approved methodology rules."""
     try:
         package = CanonicalPackage(package_path)
         manifest = publish_methodology(
-            package, read_proposals(proposals_path, package), ReviewLedger(ledger_path), output,
+            package, read_proposals(proposals_path, package), ReviewLedger(ledger_path),
+            load_review_policy(policy_path), output,
         )
     except Exception as exc:
         typer.echo(json.dumps({"error": str(exc)}), err=True)
@@ -166,7 +169,7 @@ def publish_methodology_command(package_path: Path, proposals_path: Path, ledger
 
 @app.command("publish-domain-page")
 def publish_domain_page_command(
-    package_path: Path, proposals_path: Path, ledger_path: Path, output: Path,
+    package_path: Path, proposals_path: Path, ledger_path: Path, policy_path: Path, output: Path,
     principal: str = "local-operator",
 ) -> None:
     """Render a reviewed Markdown page from approved domain claims."""
@@ -174,7 +177,7 @@ def publish_domain_page_command(
         package = CanonicalPackage(package_path)
         content = publish_reviewed_domain_page(
             package, read_proposals(proposals_path, package), ReviewLedger(ledger_path),
-            output, principal_id=principal,
+            load_review_policy(policy_path), output, principal_id=principal,
         )
     except Exception as exc:
         typer.echo(json.dumps({"error": str(exc)}), err=True)

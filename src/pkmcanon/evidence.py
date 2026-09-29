@@ -18,7 +18,7 @@ def can_access(source: SourceVersion, principal_id: str) -> bool:
 
 def evidence_for_node(
     package: CanonicalPackage, node_id: str, *,
-    start: int = 0, end: int | None = None,
+    start: int | None = 0, end: int | None = None,
 ) -> EvidenceRef:
     """Build source-grounded evidence for a node character range, rejecting invalid bounds."""
     node = next((item for item in package.nodes if item.node_id == node_id), None)
@@ -26,8 +26,9 @@ def evidence_for_node(
         raise PackageValidationError("DANGLING_EVIDENCE_NODE", node_id)
     document = next(item for item in package.documents if item.document_id == node.document_id)
     source = next(item for item in package.manifest.source_versions if item.source_version_id == document.source_version_id)
+    slice_start = 0 if start is None else start
     end = len(node.plain_text) if end is None else end
-    if not (0 <= start <= end <= len(node.plain_text)):
+    if not (0 <= slice_start <= end <= len(node.plain_text)):
         raise PackageValidationError("INVALID_EVIDENCE_RANGE", node_id)
     span = next((item for item in package.spans if item.node_id == node_id and item.start == 0 and item.end == len(node.plain_text)), None)
     if document.kind == "markdown":
@@ -50,7 +51,7 @@ def evidence_for_node(
         source_version_id=document.source_version_id,
         source_locator=locator, source_content_hash=source.content_hash,
         node_id=node_id, span_id=span.span_id if span else None,
-        start=start, end=end, quote=node.plain_text[start:end],
+        start=start, end=end, quote=node.plain_text[slice_start:end],
     )
 
 
@@ -58,7 +59,7 @@ def validate_evidence(package: CanonicalPackage, evidence: EvidenceRef) -> None:
     """Reject evidence that differs from the reference reconstructed from the package."""
     expected = evidence_for_node(
         package, evidence.node_id,
-        start=evidence.start or 0, end=evidence.end,
+        start=evidence.start, end=evidence.end,
     )
     if evidence != expected:
         raise PackageValidationError("EVIDENCE_MISMATCH", evidence.evidence_id)

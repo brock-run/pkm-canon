@@ -34,11 +34,12 @@ BLOCK_FIELDS = {"uid", "string", "order", "create-time", "edit-time", "children"
 
 def _timestamp(value: object) -> str | None:
     """Convert numeric epoch milliseconds to UTC, returning None for nonnumeric values."""
-    if value is None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    if not isinstance(value, (int, float)):
+    try:
+        return datetime.fromtimestamp(value / 1000, tz=UTC).isoformat()
+    except (OverflowError, OSError, ValueError):
         return None
-    return datetime.fromtimestamp(value / 1000, tz=UTC).isoformat()
 
 
 def _raw_payload(value: dict) -> tuple[str, str]:

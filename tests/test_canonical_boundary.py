@@ -116,6 +116,15 @@ def test_invalid_block_order_and_time_are_diagnosed_and_preserved(tmp_path: Path
     assert package.preservation_records[0].storage.inline_utf8
 
 
+@pytest.mark.parametrize("value", [True, False, float("inf"), 1e300])
+def test_invalid_roam_timestamps_are_diagnosed_without_crashing(tmp_path: Path, value: object) -> None:
+    source = tmp_path / "invalid-time.json"
+    source.write_text(json.dumps([{"uid": "P", "title": "Page", "create-time": value}]))
+    package = build_package(RoamParser(), source, tmp_path / "package", source_scope="test")
+    assert package.documents[0].created_at is None
+    assert any(item.code == "INVALID_CREATE_TIME" for item in package.diagnostics)
+
+
 def test_bad_file_hash_fails(package: CanonicalPackage) -> None:
     """Verify appended bytes are rejected by the package inventory length check."""
     with (package.root / "nodes.jsonl").open("a") as stream:
@@ -147,6 +156,21 @@ def test_dangling_reference_fails_after_inventory_is_updated(package: CanonicalP
     """Verify record reference checks reject an unknown document after inventory refresh."""
     _replace_record(package.root, "nodes.jsonl", lambda rows: rows[0].update(document_id="missing"))
     with pytest.raises(PackageValidationError, match="DANGLING_DOCUMENT"):
+        CanonicalPackage(package.root)
+
+
+def test_dangling_ancestor_fails_with_stable_error(tmp_path: Path) -> None:
+    source = tmp_path / "nested.json"
+    source.write_text('[{"uid":"P","title":"Page","children":[{"uid":"B1","string":"Parent","children":[{"uid":"B2","string":"Child"}]}]}]')
+    package = build_package(RoamParser(), source, tmp_path / "package", source_scope="test")
+    path = package.root / "nodes.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    parent = next(row for row in rows if row["plain_text"] == "Parent")
+    child = next(row for row in rows if row["plain_text"] == "Child")
+    parent["parent_node_id"] = "missing"
+    path.write_text("".join(json.dumps(row) + "\n" for row in [child, parent]))
+    _update_inventory(package.root, "nodes.jsonl")
+    with pytest.raises(PackageValidationError, match="DANGLING_PARENT"):
         CanonicalPackage(package.root)
 
 
@@ -267,3 +291,6 @@ def test_inventory_symlink_is_rejected_even_when_bytes_match(package, tmp_path):
     path.symlink_to(outside)
     with pytest.raises(PackageValidationError, match="UNSAFE_PATH"):
         CanonicalPackage(package.root)
+def test_missing_schema_root_has_actionable_error(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="Generate or restore docs/specs/schemas"):
+        default_schema_store(tmp_path / "missing")

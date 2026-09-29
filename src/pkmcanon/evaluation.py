@@ -77,7 +77,9 @@ def evaluate_retrieval(
             case_id=case.case_id, source_package_id=package.manifest.package_id,
             index_id=index.index_id, retrieved_node_ids=retrieved,
             expected_node_ids=case.expected_node_ids, missing_node_ids=missing,
-            coverage=bundle.coverage, recall=recall, passed=passed,
+            coverage=bundle.coverage,
+            coverage_matched=bundle.coverage == case.expected_coverage,
+            recall=recall, passed=passed,
         )
         default_schema_store().validate_instance_with_short_name(result.model_dump(mode="json"), "evaluation-result")
         results.append(result)

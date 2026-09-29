@@ -3,7 +3,11 @@ from pathlib import Path
 
 import pytest
 
-from pkmcanon.evidence import assemble_evidence_bundle
+from pkmcanon.evidence import (
+    assemble_evidence_bundle,
+    evidence_for_node,
+    validate_evidence,
+)
 from pkmcanon.models import ReviewPolicy
 from pkmcanon.package import PackageValidationError
 from pkmcanon.parsers.markdown import MarkdownAdapter
@@ -36,16 +40,16 @@ def test_two_adapters_share_boundary_and_review_contract(tmp_path: Path) -> None
     write_proposals(methodology_path, methodology)
     assert read_proposals(methodology_path, roam_package) == methodology
     ledger = ReviewLedger(tmp_path / "methodology-reviews")
-    unpublished = publish_methodology(roam_package, methodology, ledger, tmp_path / "unpublished.json")
-    assert unpublished.rules == []
     policy = ReviewPolicy(policy_version="test-v1", approved_reviewers=["local-operator"])
+    unpublished = publish_methodology(roam_package, methodology, ledger, policy, tmp_path / "unpublished.json")
+    assert unpublished.rules == []
     with pytest.raises(PackageValidationError, match="UNAUTHORIZED_REVIEWER"):
         ledger.record(methodology[0], roam_package, policy=policy, reviewer_id="stranger", decision="approved")
     event = ledger.record(methodology[0], roam_package, policy=policy, reviewer_id="local-operator", decision="approved")
     assert ledger.record(methodology[0], roam_package, policy=policy, reviewer_id="local-operator", decision="approved") == event
     with pytest.raises(PackageValidationError, match="ALREADY_REVIEWED"):
         ledger.record(methodology[0], roam_package, policy=policy, reviewer_id="local-operator", decision="rejected")
-    active = publish_methodology(roam_package, methodology, ledger, tmp_path / "active.json")
+    active = publish_methodology(roam_package, methodology, ledger, policy, tmp_path / "active.json")
     assert len(active.rules) == 1
     assert active.rules[0].source_trace_ids == [item.node_id for item in methodology[0].evidence]
     assert active.review_event_ids == [event.event_id]
@@ -69,13 +73,13 @@ def test_two_adapters_share_boundary_and_review_contract(tmp_path: Path) -> None
     validate_proposal(domain_package, claims[0])
     domain_ledger = ReviewLedger(tmp_path / "domain-reviews")
     with pytest.raises(PackageValidationError, match="NO_APPROVED_DOMAIN_CLAIMS"):
-        publish_reviewed_domain_page(domain_package, claims, domain_ledger, tmp_path / "page.md")
+        publish_reviewed_domain_page(domain_package, claims, domain_ledger, policy, tmp_path / "page.md")
     domain_ledger.record(claims[0], domain_package, policy=policy, reviewer_id="local-operator", decision="approved")
-    page = publish_reviewed_domain_page(domain_package, claims, domain_ledger, tmp_path / "page.md")
+    page = publish_reviewed_domain_page(domain_package, claims, domain_ledger, policy, tmp_path / "page.md")
     assert "Context API" in page and "Data Platform" in page
     assert claims[0].evidence[0].evidence_id in page
     with pytest.raises(PackageValidationError, match="PUBLICATION_ACCESS_DENIED"):
-        publish_reviewed_domain_page(domain_package, claims, domain_ledger, tmp_path / "other.md", principal_id="stranger")
+        publish_reviewed_domain_page(domain_package, claims, domain_ledger, policy, tmp_path / "other.md", principal_id="stranger")
 
 
 def test_context_applies_access_before_retrieval(tmp_path: Path) -> None:
@@ -102,6 +106,31 @@ def test_tampered_proposal_evidence_is_rejected(tmp_path: Path) -> None:
     path.write_text(json.dumps(value) + "\n")
     with pytest.raises(PackageValidationError, match="PROPOSAL_INVALID"):
         read_proposals(path, package)
+
+
+def test_evidence_can_preserve_an_unknown_start_offset(tmp_path: Path) -> None:
+    source = tmp_path / "doc.md"
+    source.write_text("# Service\n\nOwner: Platform Team\n")
+    package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
+    node = next(item for item in package.nodes if "Owner:" in item.plain_text)
+    evidence = evidence_for_node(package, node.node_id, start=None, end=5)
+    assert evidence.start is None
+    assert evidence.end == 5
+    assert evidence.quote == "Owner"
+    validate_evidence(package, evidence)
+
+
+def test_publication_rejects_decisions_under_a_different_policy(tmp_path: Path) -> None:
+    source = tmp_path / "doc.md"
+    source.write_text("# Service\n\nOwner: Platform Team\n")
+    package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
+    proposals = propose_domain_claims(package)
+    policy = ReviewPolicy(policy_version="v1", approved_reviewers=["local-operator"])
+    ledger = ReviewLedger(tmp_path / "reviews")
+    ledger.record(proposals[0], package, policy=policy, reviewer_id="local-operator", decision="approved")
+    changed_policy = ReviewPolicy(policy_version="v2", approved_reviewers=["local-operator"])
+    with pytest.raises(PackageValidationError, match="REVIEW_POLICY_MISMATCH"):
+        publish_reviewed_domain_page(package, proposals, ledger, changed_policy, tmp_path / "page.md")
 
 
 def test_markdown_partial_structure_has_preserved_payload(tmp_path: Path) -> None:

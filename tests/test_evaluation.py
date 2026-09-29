@@ -52,6 +52,23 @@ def test_retrieval_failure_becomes_grounded_review_proposal(tmp_path: Path) -> N
         write_evaluation_results(tmp_path / "results.jsonl", results[1:])
 
 
+def test_evaluation_records_coverage_mismatch_without_missing_evidence(tmp_path: Path) -> None:
+    source = tmp_path / "service.md"
+    source.write_text("# Service\n\nOwner: Platform Team\n")
+    package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
+    owner_node = next(node for node in package.nodes if "Owner:" in node.plain_text)
+    case = EvaluationCase(
+        case_id="coverage-only", source_package_id=package.manifest.package_id,
+        query="owner", task_type="ownership", principal_id="local-operator",
+        expected_node_ids=[owner_node.node_id], expected_coverage="partial",
+    )
+    result = evaluate_retrieval(package, build_index(package), [case])[0]
+    assert result.missing_node_ids == []
+    assert result.coverage == "complete"
+    assert not result.coverage_matched
+    assert not result.passed
+
+
 def test_evaluation_cannot_label_inaccessible_evidence_as_expected(tmp_path: Path) -> None:
     """Verify gold labels cannot require evidence inaccessible to the evaluation principal."""
     source = tmp_path / "service.md"
