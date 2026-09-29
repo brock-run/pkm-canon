@@ -3,10 +3,6 @@
     "FacetEnvelope": {
       "additionalProperties": true,
       "properties": {
-        "_schemaURL": {
-          "title": "Schemaurl",
-          "type": "string"
-        },
         "_producer": {
           "anyOf": [
             {
@@ -18,6 +14,10 @@
           ],
           "default": null,
           "title": "Producer"
+        },
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
         }
       },
       "required": [
@@ -27,6 +27,7 @@
       "type": "object"
     },
     "Mention": {
+      "additionalProperties": false,
       "properties": {
         "kind": {
           "title": "Kind",
@@ -45,14 +46,29 @@
       "type": "object"
     }
   },
+  "$id": "urn:pkm-rosetta:schema:v1:core:spans",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
   "properties": {
-    "span_id": {
-      "title": "Span Id",
-      "type": "string"
+    "end": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "End"
     },
-    "node_id": {
-      "title": "Node Id",
-      "type": "string"
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
     },
     "kind": {
       "enum": [
@@ -63,10 +79,6 @@
         "code"
       ],
       "title": "Kind",
-      "type": "string"
-    },
-    "text": {
-      "title": "Text",
       "type": "string"
     },
     "marks": {
@@ -87,12 +99,30 @@
       ],
       "default": null
     },
-    "facets": {
-      "additionalProperties": {
-        "$ref": "#/$defs/FacetEnvelope"
-      },
-      "title": "Facets",
-      "type": "object"
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "span_id": {
+      "title": "Span Id",
+      "type": "string"
+    },
+    "start": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Start"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
     }
   },
   "required": [
@@ -102,7 +132,5 @@
     "text"
   ],
   "title": "spans",
-  "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/core/spans"
+  "type": "object"
 }

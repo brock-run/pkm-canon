@@ -1,6 +1,7 @@
 from pathlib import Path
+
+from pkmcanon.models import PreservationBundle, PreservationRecord
 from pkmcanon.package import CanonicalPackage
-from pkmcanon.models import PreservationRecord, PreservationBundle
 
 
 def test_preservation_models_load():

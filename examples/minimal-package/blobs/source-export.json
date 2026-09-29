@@ -1,0 +1,22 @@
+[
+  {
+    "children": [
+      {
+        "string": "First block",
+        "uid": "block-1"
+      }
+    ],
+    "title": "Project Alpha",
+    "uid": "page-1"
+  },
+  {
+    "children": [
+      {
+        "string": "Daily block",
+        "uid": "block-2"
+      }
+    ],
+    "title": "Daily Note",
+    "uid": "page-2"
+  }
+]

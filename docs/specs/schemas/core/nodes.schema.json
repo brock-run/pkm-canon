@@ -3,10 +3,6 @@
     "FacetEnvelope": {
       "additionalProperties": true,
       "properties": {
-        "_schemaURL": {
-          "title": "Schemaurl",
-          "type": "string"
-        },
         "_producer": {
           "anyOf": [
             {
@@ -18,6 +14,10 @@
           ],
           "default": null,
           "title": "Producer"
+        },
+        "_schemaURL": {
+          "title": "Schemaurl",
+          "type": "string"
         }
       },
       "required": [
@@ -27,13 +27,27 @@
       "type": "object"
     }
   },
+  "$id": "urn:pkm-rosetta:schema:v1:core:nodes",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
   "properties": {
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "facets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetEnvelope"
+      },
+      "title": "Facets",
+      "type": "object"
+    },
     "node_id": {
       "title": "Node Id",
       "type": "string"
     },
-    "document_id": {
-      "title": "Document Id",
+    "node_type": {
+      "title": "Node Type",
       "type": "string"
     },
     "parent_node_id": {
@@ -48,9 +62,16 @@
       "default": null,
       "title": "Parent Node Id"
     },
-    "node_type": {
-      "title": "Node Type",
+    "plain_text": {
+      "default": "",
+      "title": "Plain Text",
       "type": "string"
+    },
+    "position": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Position",
+      "type": "integer"
     },
     "semantic_kind": {
       "anyOf": [
@@ -63,23 +84,6 @@
       ],
       "default": null,
       "title": "Semantic Kind"
-    },
-    "position": {
-      "default": 0,
-      "title": "Position",
-      "type": "integer"
-    },
-    "plain_text": {
-      "default": "",
-      "title": "Plain Text",
-      "type": "string"
-    },
-    "facets": {
-      "additionalProperties": {
-        "$ref": "#/$defs/FacetEnvelope"
-      },
-      "title": "Facets",
-      "type": "object"
     }
   },
   "required": [
@@ -88,7 +92,5 @@
     "node_type"
   ],
   "title": "nodes",
-  "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/core/nodes"
+  "type": "object"
 }

@@ -1,1 +1,1 @@
-from .package import CanonicalPackage
+from .package import CanonicalPackage as CanonicalPackage

@@ -1,0 +1,25 @@
+{
+  "$id": "urn:pkm-rosetta:schema:v1:knowledge:review-policy",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approved_reviewers": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Approved Reviewers",
+      "type": "array"
+    },
+    "policy_version": {
+      "title": "Policy Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy_version",
+    "approved_reviewers"
+  ],
+  "title": "review-policy",
+  "type": "object"
+}

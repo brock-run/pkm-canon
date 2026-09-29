@@ -1,0 +1,49 @@
+{
+  "$id": "urn:pkm-rosetta:schema:v1:shared:content-element",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "element_id": {
+      "title": "Element Id",
+      "type": "string"
+    },
+    "item_id": {
+      "title": "Item Id",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "parent_element_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Element Id"
+    },
+    "position": {
+      "minimum": 0,
+      "title": "Position",
+      "type": "integer"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "element_id",
+    "item_id",
+    "kind",
+    "position",
+    "text"
+  ],
+  "title": "content-element",
+  "type": "object"
+}

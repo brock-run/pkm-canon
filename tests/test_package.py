@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from pkmcanon.package import CanonicalPackage
 
 

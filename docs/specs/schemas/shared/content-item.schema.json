@@ -1,0 +1,114 @@
+{
+  "$defs": {
+    "AccessPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "default": "personal",
+          "title": "Classification",
+          "type": "string"
+        },
+        "principal_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Principal Ids",
+          "type": "array"
+        },
+        "visibility": {
+          "default": "private",
+          "enum": [
+            "private",
+            "restricted",
+            "public"
+          ],
+          "title": "Visibility",
+          "type": "string"
+        }
+      },
+      "title": "AccessPolicy",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pkm-rosetta:schema:v1:shared:content-item",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "access": {
+      "$ref": "#/$defs/AccessPolicy"
+    },
+    "item_id": {
+      "title": "Item Id",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "observed_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observed At"
+    },
+    "source_event_time": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Event Time"
+    },
+    "source_version_id": {
+      "title": "Source Version Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "valid_from": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Valid From"
+    },
+    "valid_to": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Valid To"
+    }
+  },
+  "required": [
+    "item_id",
+    "source_version_id",
+    "kind",
+    "title",
+    "access"
+  ],
+  "title": "content-item",
+  "type": "object"
+}

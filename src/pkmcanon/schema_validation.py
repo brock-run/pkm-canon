@@ -33,8 +33,7 @@ class SchemaStore:
     def _candidate_short_names(self, path: Path, schema: dict[str, Any]) -> list[str]:
         rel = path.relative_to(self.schema_root)
         stem = rel.stem
-        if stem.endswith('.schema'):
-            stem = stem[:-7]
+        stem = stem.removesuffix('.schema')
         rel_no_suffix = str(rel).replace('.schema.json', '').replace('.json', '')
         rel_no_suffix = rel_no_suffix.replace('\\', '/')
         names = {stem, rel_no_suffix, rel_no_suffix.replace('/', '.'), rel_no_suffix.replace('/', '-')}
@@ -85,5 +84,7 @@ class SchemaStore:
                 self.validate_instance_with_short_name(json.loads(line), short_name)
 
 
-def default_schema_store(schema_root: str | Path = "specs/schemas") -> SchemaStore:
+def default_schema_store(schema_root: str | Path | None = None) -> SchemaStore:
+    if schema_root is None:
+        schema_root = Path(__file__).resolve().parents[2] / "docs" / "specs" / "schemas"
     return SchemaStore(Path(schema_root))

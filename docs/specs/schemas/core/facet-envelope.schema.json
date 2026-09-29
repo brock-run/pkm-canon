@@ -1,10 +1,8 @@
 {
+  "$id": "urn:pkm-rosetta:schema:v1:core:facet-envelope",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
   "properties": {
-    "_schemaURL": {
-      "title": "Schemaurl",
-      "type": "string"
-    },
     "_producer": {
       "anyOf": [
         {
@@ -16,13 +14,15 @@
       ],
       "default": null,
       "title": "Producer"
+    },
+    "_schemaURL": {
+      "title": "Schemaurl",
+      "type": "string"
     }
   },
   "required": [
     "_schemaURL"
   ],
   "title": "facet-envelope",
-  "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/core/facet-envelope"
+  "type": "object"
 }

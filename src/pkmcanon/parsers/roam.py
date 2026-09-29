@@ -1,160 +1,236 @@
+"""Deterministic Roam JSON source adapter."""
+
+from __future__ import annotations
+
+import hashlib
 import json
 import re
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterator
 
-from pydantic import BaseModel
+from pkmcanon.adapters import AdapterResult, stable_id
 from pkmcanon.models import (
-    Document, Node, Relation, Attribute,
-    PreservationRecord, SourceLocator, SourceNativeReference
+    Attribute,
+    Diagnostic,
+    Document,
+    Node,
+    PreservationRecord,
+    Relation,
+    SourceLocator,
+    SourceNativeReference,
+    Span,
 )
 
-# Regex patterns for Roam conventions
-PAGE_REF_PATTERN = re.compile(r'\[\[(.*?)\]\]')
-TAG_PATTERN = re.compile(r'#([A-Za-z0-9_-]+)|#\[\[(.*?)\]\]')
-BLOCK_REF_PATTERN = re.compile(r'\(\((.*?)\)\)')
-ATTRIBUTE_PATTERN = re.compile(r'^(.+?)::\s*(.*)')
-# Handles {{embed: [[Page]]}} or {{[[embed]]: ((block))}}
-EMBED_PATTERN = re.compile(r'\{\{(?:\[\[)?embed(?:\]\])?:\s*(?:\[\[(.*?)\]\]|\(\((.*?)\)\))\s*\}\}')
-# Match macros that are NOT embeds to preserve them
-COMPLEX_MACRO_PATTERN = re.compile(r'\{\{(?!/?(?:embed|\[\[embed\]\])).*?\}\}')
+PAGE_REF = re.compile(r"\[\[([^\]]+)\]\]")
+BLOCK_REF = re.compile(r"\(\(([^)]+)\)\)")
+TAG = re.compile(r"#(?:\[\[([^\]]+)\]\]|([A-Za-z0-9_-]+))")
+ATTRIBUTE = re.compile(r"^(.+?)::\s*(.*)$")
+EMBED = re.compile(r"\{\{(?:\[\[)?embed(?:\]\])?:\s*(?:\[\[([^\]]+)\]\]|\(\(([^)]+)\)\))\s*\}\}", re.IGNORECASE)
+MACRO = re.compile(r"\{\{(.*?)\}\}")
+RICH_TEXT = re.compile(r"\*\*|__|~~|\^\^")
+PAGE_FIELDS = {"uid", "title", "create-time", "edit-time", "children"}
+BLOCK_FIELDS = {"uid", "string", "order", "create-time", "edit-time", "children"}
+
+
+def _timestamp(value: object) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, (int, float)):
+        return None
+    return datetime.fromtimestamp(value / 1000, tz=UTC).isoformat()
+
+
+def _raw_payload(value: dict) -> tuple[str, str]:
+    text = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return text, hashlib.sha256(text.encode("utf-8")).hexdigest()
+
 
 class RoamParser:
-    """Parses Roam Research JSON exports into the PKM Canonical Package format."""
+    source_system = "roam"
+    profile_version = "0.1.0"
+    name = "roam-json"
+    version = "0.2.0"
+    contract_version = "0.1.0"
 
-    def __init__(self, source_graph_name: str):
+    def __init__(self, source_graph_name: str | None = None):
         self.source_graph_name = source_graph_name
-        self.system_name = "roam"
 
-    def _to_iso(self, timestamp_ms: int | None) -> str:
-        """Convert Roam epoch ms to ISO 8601 string."""
-        if not timestamp_ms:
-            return datetime.now(timezone.utc).isoformat()
-        return datetime.fromtimestamp(timestamp_ms / 1000.0, tz=timezone.utc).isoformat()
+    def parse_file(self, filepath: Path, *, source_version_id: str = "source:uncommitted") -> AdapterResult:
+        return self.parse(filepath.read_bytes(), source_scope=self.source_graph_name or filepath.stem, source_version_id=source_version_id, native_id=filepath.name)
 
-    def parse_file(self, filepath: Path) -> Iterator[BaseModel]:
-        """Reads a Roam JSON file and yields canonical Pydantic models."""
-        with open(filepath, 'r', encoding='utf-8') as f:
-            roam_data = json.load(f)
+    def parse(self, data: bytes, *, source_scope: str, source_version_id: str, native_id: str) -> AdapterResult:
+        try:
+            pages = json.loads(data)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError("INVALID_ROAM_JSON") from exc
+        if not isinstance(pages, list) or not all(isinstance(page, dict) for page in pages):
+            raise ValueError("INVALID_ROAM_ROOT")
+        result = AdapterResult()
+        seen_pages: set[str] = set()
+        seen_blocks: set[str] = set()
+        page_entries: list[tuple[dict, str, str, list[str]]] = []
+        block_entries: list[tuple[dict, str, str, str, str | None, int, list[str]]] = []
+        pages_by_title: dict[str, list[str]] = {}
+        blocks_by_uid: dict[str, list[str]] = {}
 
-        for page in roam_data:
-            yield from self._parse_page(page)
+        def key_for(value: dict, path: str, seen: set[str], issues: list[str]) -> str:
+            uid = value.get("uid")
+            if not isinstance(uid, str) or not uid:
+                issues.append("MISSING_UID")
+                return f"path:{path}"
+            if uid in seen:
+                issues.append("DUPLICATE_UID")
+                return f"path:{path}"
+            seen.add(uid)
+            return f"uid:{uid}"
 
-    def _parse_page(self, page: dict) -> Iterator[BaseModel]:
-        source_uid = page.get('uid', str(uuid.uuid4()))
-        doc_id = f"doc:{self.system_name}:{self.source_graph_name}:{source_uid}"
+        def scan_blocks(blocks: object, document_id: str, parent_id: str | None, parent_path: str) -> None:
+            if not isinstance(blocks, list) or not all(isinstance(block, dict) for block in blocks):
+                raise ValueError("INVALID_ROAM_CHILDREN")
+            ordered = sorted(enumerate(blocks), key=lambda pair: (pair[1].get("order", 0) if isinstance(pair[1].get("order", 0), int) else 0, pair[0]))
+            for position, (original_index, block) in enumerate(ordered):
+                path = f"{parent_path}/children/{original_index}"
+                issues: list[str] = []
+                key = key_for(block, path, seen_blocks, issues)
+                node_id = stable_id("node", self.source_system, source_scope, key)
+                block_entries.append((block, node_id, document_id, path, parent_id, position, issues))
+                uid = block.get("uid")
+                if isinstance(uid, str) and uid:
+                    blocks_by_uid.setdefault(uid, []).append(node_id)
+                if "children" in block:
+                    scan_blocks(block["children"], document_id, node_id, path)
 
-        yield Document(
-            document_id=doc_id,
-            kind="page",
-            title=page.get('title', 'Untitled'),
-            created_at=self._to_iso(page.get('create-time')),
-            updated_at=self._to_iso(page.get('edit-time')),
-            facets={
-                "pkm/source-roam": {
-                    "_schemaURL": "https://example.org/schemas/facets/source-roam.json",
-                    "roam_uid": source_uid
-                }
-            }
-        )
+        for index, page in enumerate(pages):
+            path = f"/{index}"
+            issues: list[str] = []
+            key = key_for(page, path, seen_pages, issues)
+            doc_id = stable_id("doc", self.source_system, source_scope, key)
+            page_entries.append((page, doc_id, path, issues))
+            title = page.get("title")
+            if isinstance(title, str):
+                pages_by_title.setdefault(title, []).append(doc_id)
+            if "children" in page:
+                scan_blocks(page["children"], doc_id, None, path)
 
-        if 'children' in page:
-            yield from self._parse_blocks(page['children'], doc_id, None)
+        def preserve(subject_id: str, raw: dict, path: str, object_type: str) -> str:
+            text, digest = _raw_payload(raw)
+            preservation_id = stable_id("pres", subject_id, path, digest)
+            result.records.append(PreservationRecord(
+                record_type="preservation_record", schema_version="0.1.0",
+                id=preservation_id, subject_id=subject_id, source_system=self.source_system,
+                source_profile_version=self.profile_version, source_object_type=object_type,
+                source_locator=SourceLocator(graph=source_scope, path=path, source_uid=raw.get("uid") if isinstance(raw.get("uid"), str) else None),
+                capture_type="raw_json",
+                storage=SourceNativeReference(
+                    storage_kind="embedded_utf8", inline_utf8=text, byte_length=len(text.encode("utf-8")),
+                    hashes=[{"algorithm": "sha256", "digest": digest}], media_type="application/json", role="primary",
+                ),
+                normalization_status="partial", preservation_reason=["loss_prevention", "future_replay"],
+            ))
+            return preservation_id
 
-    def _parse_blocks(self, blocks: list[dict], doc_id: str, parent_node_id: str | None) -> Iterator[BaseModel]:
-        # Roam 'order' dictates vertical layout position
-        sorted_blocks = sorted(blocks, key=lambda b: b.get('order', 0))
+        def diagnose(subject_id: str, raw: dict, path: str, issues: list[str], preservation_id: str | None) -> None:
+            locator = SourceLocator(graph=source_scope, path=path, source_uid=raw.get("uid") if isinstance(raw.get("uid"), str) else None)
+            for issue in sorted(set(issues)):
+                result.diagnostics.append(Diagnostic(
+                    diagnostic_id=stable_id("diag", subject_id, issue, path),
+                    code=issue, severity="warning",
+                    outcome="unresolved_reference" if issue.startswith("UNRESOLVED_") else "partial",
+                    source_locator=locator, subject_id=subject_id,
+                    preservation_id=preservation_id, detail=issue.replace("_", " ").lower(),
+                ))
 
-        for position, block in enumerate(sorted_blocks):
-            source_uid = block.get('uid', str(uuid.uuid4()))
-            node_id = f"node:{self.system_name}:{self.source_graph_name}:{source_uid}"
-            text = block.get('string', '')
+        def add_ref(
+            node_id: str, issues: list[str], start: int, target: str,
+            kind: str, representation: str, target_ids: list[str] | None,
+            target_kind: str = "canonical",
+        ) -> None:
+            if target_kind == "canonical" and (target_ids is None or len(target_ids) != 1):
+                issues.append(f"UNRESOLVED_{kind.upper()}")
+                return
+            result.records.append(Relation(
+                relation_id=stable_id("rel", node_id, kind, str(start), target),
+                source_id=node_id, target_id=target_ids[0] if target_kind == "canonical" else target,
+                relation_type=kind, target_kind=target_kind, source_representation=representation,
+            ))
 
-            yield Node(
-                node_id=node_id,
-                document_id=doc_id,
-                parent_node_id=parent_node_id,
-                node_type="block",
-                position=position,
-                plain_text=text
-            )
+        for page, doc_id, path, issues in page_entries:
+            result.source_object_count += 1
+            issues.extend(sorted(f"UNSUPPORTED_FIELD_{key}" for key in page.keys() - PAGE_FIELDS))
+            if not isinstance(page.get("title"), str):
+                issues.append("MISSING_TITLE")
+            for field in ("create-time", "edit-time"):
+                if field in page and _timestamp(page[field]) is None:
+                    issues.append(f"INVALID_{field.upper().replace('-', '_')}")
+            result.records.append(Document(
+                document_id=doc_id, source_version_id=source_version_id, kind="page",
+                title=page.get("title") if isinstance(page.get("title"), str) else "Untitled",
+                created_at=_timestamp(page.get("create-time")), updated_at=_timestamp(page.get("edit-time")),
+                facets={"pkm/source-roam": {
+                    "_schemaURL": "urn:pkm-rosetta:facet:roam:v1",
+                    "_producer": "roam-json:0.2.0",
+                    "roam_uid": page.get("uid"),
+                }},
+            ))
+            preservation_id = preserve(doc_id, page, path, "page") if issues else None
+            diagnose(doc_id, page, path, issues, preservation_id)
 
-            # Attributes (Key:: Value)
-            attr_match = ATTRIBUTE_PATTERN.match(text)
-            if attr_match:
-                key, value = attr_match.groups()
-                yield Attribute(
-                    attribute_id=f"attr:{uuid.uuid4()}",
-                    subject_kind="node",
-                    subject_id=node_id,
-                    key=key.strip(),
-                    value_type="string",
-                    value=value.strip()
-                )
+        for block, node_id, doc_id, path, parent_id, position, issues in block_entries:
+            result.source_object_count += 1
+            issues.extend(sorted(f"UNSUPPORTED_FIELD_{key}" for key in block.keys() - BLOCK_FIELDS))
+            if not isinstance(block.get("string"), str):
+                issues.append("MISSING_STRING")
+            if "order" in block and not isinstance(block["order"], int):
+                issues.append("INVALID_ORDER")
+            for field in ("create-time", "edit-time"):
+                if field in block and _timestamp(block[field]) is None:
+                    issues.append(f"INVALID_{field.upper().replace('-', '_')}")
+            text = block.get("string") if isinstance(block.get("string"), str) else ""
+            result.records.append(Node(
+                node_id=node_id, document_id=doc_id, parent_node_id=parent_id,
+                node_type="block", position=position, plain_text=text,
+                facets={"pkm/source-roam": {
+                    "_schemaURL": "urn:pkm-rosetta:facet:roam:v1",
+                    "_producer": "roam-json:0.2.0",
+                    "roam_uid": block.get("uid"),
+                    "json_pointer": path,
+                    "source_order": block.get("order"),
+                    "created_at": _timestamp(block.get("create-time")),
+                    "updated_at": _timestamp(block.get("edit-time")),
+                }},
+            ))
+            result.records.append(Span(
+                span_id=stable_id("span", node_id, "text", "0"), node_id=node_id,
+                kind="text", text=text, start=0, end=len(text),
+            ))
 
-            # Embeds (Yielded strictly as relations per architectural constraint)
-            for page_embed, block_embed in EMBED_PATTERN.findall(text):
-                target = page_embed or block_embed
-                target_id = f"doc:{self.system_name}:{self.source_graph_name}:{target}" if page_embed else f"node:{self.system_name}:{self.source_graph_name}:{target}"
-                yield Relation(
-                    relation_id=f"rel:{uuid.uuid4()}",
-                    source_id=node_id,
-                    target_id=target_id,
-                    relation_type="embed",
-                    source_representation=f"{{{{embed: {target}}}}}"
-                )
+            match = ATTRIBUTE.match(text)
+            if match:
+                result.records.append(Attribute(
+                    attribute_id=stable_id("attr", node_id, match.group(1).strip(), "0"),
+                    subject_kind="node", subject_id=node_id, key=match.group(1).strip(),
+                    value_type="string", value=match.group(2).strip(),
+                ))
 
-            # Standard Page Refs
-            for match in PAGE_REF_PATTERN.findall(text):
-                yield Relation(
-                    relation_id=f"rel:{uuid.uuid4()}",
-                    source_id=node_id,
-                    target_id=f"doc:{self.system_name}:{self.source_graph_name}:{match}",
-                    relation_type="page_ref",
-                    source_representation=f"[[{match}]]"
-                )
-
-            # Block Refs
-            for match in BLOCK_REF_PATTERN.findall(text):
-                yield Relation(
-                    relation_id=f"rel:{uuid.uuid4()}",
-                    source_id=node_id,
-                    target_id=f"node:{self.system_name}:{self.source_graph_name}:{match}",
-                    relation_type="block_ref",
-                    source_representation=f"(({match}))"
-                )
-
-            # Tags
-            for tag1, tag2 in TAG_PATTERN.findall(text):
-                tag = tag1 or tag2
-                yield Relation(
-                    relation_id=f"rel:{uuid.uuid4()}",
-                    source_id=node_id,
-                    target_id=f"tag:{tag}",
-                    relation_type="tag",
-                    source_representation=f"#{tag}"
-                )
-
-            # Preserve Unsupported Macros (Queries, Calculators, Sliders)
-            if COMPLEX_MACRO_PATTERN.search(text):
-                yield PreservationRecord(
-                    record_type="preservation_record",
-                    schema_version="0.1.0",
-                    id=f"pres:{uuid.uuid4()}",
-                    subject_id=node_id,
-                    source_system=self.system_name,
-                    source_object_type="block_macro",
-                    capture_type="plain_text",
-                    storage=SourceNativeReference(
-                        storage_kind="embedded_utf8",
-                        inline_utf8=text,
-                        role="source_export"
-                    ),
-                    normalization_status="partial",
-                    preservation_reason=["unsupported_feature"]
-                )
-
-            if 'children' in block:
-                yield from self._parse_blocks(block['children'], doc_id, node_id)
+            covered: list[tuple[int, int]] = []
+            for match in EMBED.finditer(text):
+                covered.append(match.span())
+                title, uid = match.groups()
+                add_ref(node_id, issues, match.start(), title or uid, "embed", match.group(), pages_by_title.get(title) if title else blocks_by_uid.get(uid))
+            for match in TAG.finditer(text):
+                covered.append(match.span())
+                tag = match.group(1) or match.group(2)
+                add_ref(node_id, issues, match.start(), f"tag:{tag}", "tag", match.group(), None, "tag")
+            for pattern, target_map, kind in ((PAGE_REF, pages_by_title, "page_ref"), (BLOCK_REF, blocks_by_uid, "block_ref")):
+                for match in pattern.finditer(text):
+                    if any(start <= match.start() < end for start, end in covered):
+                        continue
+                    add_ref(node_id, issues, match.start(), match.group(1), kind, match.group(), target_map.get(match.group(1)))
+            for match in MACRO.finditer(text):
+                if not EMBED.fullmatch(match.group()):
+                    issues.append("UNSUPPORTED_MACRO")
+            if RICH_TEXT.search(text) or chr(96) in text:
+                issues.append("RICH_TEXT_NOT_NORMALIZED")
+            preservation_id = preserve(node_id, block, path, "block") if issues else None
+            diagnose(node_id, block, path, issues, preservation_id)
+        return result
