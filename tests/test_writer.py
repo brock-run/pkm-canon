@@ -1,0 +1,71 @@
+import shutil
+
+import pytest
+
+from pkmcanon.package import PackageValidationError
+from pkmcanon.parsers.markdown import MarkdownAdapter
+from pkmcanon.storage import FilesystemPackageStore
+from pkmcanon.writer import build_package
+
+
+@pytest.fixture
+def source(tmp_path):
+    path = tmp_path / "source.md"
+    path.write_text("# Service\n\nOwner: Team\n")
+    return path
+
+
+def test_writer_cleans_stage_and_does_not_publish_after_commit_failure(source, tmp_path):
+    class FailingStore:
+        staged = None
+
+        def commit(self, staged, destination):
+            self.staged = staged
+            assert (staged / "manifest.json").is_file()
+            raise OSError("disk full")
+
+    store = FailingStore()
+    output = tmp_path / "package"
+    with pytest.raises(OSError, match="disk full"):
+        build_package(MarkdownAdapter(), source, output, source_scope="repo", store=store)
+    assert store.staged is not None and not store.staged.exists()
+    assert not output.exists()
+    assert not list(tmp_path.glob(".package.staging-*"))
+
+
+def test_store_validates_before_publishing_and_keeps_existing_package(source, tmp_path):
+    original = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="repo")
+    staged = tmp_path / "stage"
+    shutil.copytree(original.root, staged)
+    store = FilesystemPackageStore()
+    assert store.commit(staged, original.root).root == original.root
+    assert staged.exists()
+    (staged / "nodes.jsonl").write_text("corrupt")
+    destination = tmp_path / "new"
+    with pytest.raises(PackageValidationError, match="FILE_LENGTH_MISMATCH"):
+        store.commit(staged, destination)
+    assert not destination.exists()
+    assert store.open(original.root).manifest.package_id == original.manifest.package_id
+
+
+def test_store_does_not_replace_different_existing_package(source, tmp_path):
+    original = build_package(MarkdownAdapter(), source, tmp_path / "original", source_scope="repo")
+    candidate = build_package(MarkdownAdapter(), source, tmp_path / "candidate", source_scope="other")
+    with pytest.raises(PackageValidationError, match="PACKAGE_EXISTS"):
+        FilesystemPackageStore().commit(candidate.root, original.root)
+    assert FilesystemPackageStore().open(original.root).manifest.package_id == original.manifest.package_id
+    assert candidate.root.exists()
+
+
+def test_store_wraps_rename_failure_without_publishing(source, tmp_path, monkeypatch):
+    staged = build_package(MarkdownAdapter(), source, tmp_path / "stage", source_scope="repo")
+
+    def fail(*args):
+        raise OSError("rename failed")
+
+    monkeypatch.setattr("pkmcanon.storage.os.replace", fail)
+    destination = tmp_path / "destination"
+    with pytest.raises(PackageValidationError, match="PACKAGE_COMMIT_FAILED"):
+        FilesystemPackageStore().commit(staged.root, destination)
+    assert staged.root.exists()
+    assert not destination.exists()

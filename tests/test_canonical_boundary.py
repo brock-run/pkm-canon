@@ -193,3 +193,77 @@ def test_storage_kind_matches_locator_in_model_and_schema() -> None:
         SourceNativeReference.model_validate(value)
     with pytest.raises(SchemaValidationError):
         default_schema_store().validate_instance_with_short_name(value, "source-native-reference")
+
+
+@pytest.mark.parametrize("relative,update,code", [
+    ("documents.jsonl", {"source_version_id": "missing"}, "DANGLING_SOURCE_VERSION"),
+    ("nodes.jsonl", {"parent_node_id": "missing"}, "DANGLING_PARENT"),
+    ("spans.jsonl", {"node_id": "missing"}, "DANGLING_NODE"),
+    ("spans.jsonl", {"end": 9999}, "INVALID_SPAN_RANGE"),
+    ("spans.jsonl", {"text": "forged"}, "SPAN_TEXT_MISMATCH"),
+    ("relations.jsonl", {"source_id": "missing"}, "DANGLING_RELATION_SOURCE"),
+    ("attributes.jsonl", {"subject_id": "missing"}, "DANGLING_ATTRIBUTE_SUBJECT"),
+    ("preservation_records.jsonl", {"subject_id": "missing"}, "DANGLING_PRESERVATION_SUBJECT"),
+    ("diagnostics.jsonl", {"subject_id": "missing"}, "DANGLING_DIAGNOSTIC_SUBJECT"),
+    ("diagnostics.jsonl", {"preservation_id": "missing"}, "DANGLING_DIAGNOSTIC_PRESERVATION"),
+    ("diagnostics.jsonl", {"preservation_id": None}, "UNPRESERVED_OUTCOME"),
+])
+def test_semantic_corruption_fails_even_with_valid_inventory(package, relative, update, code):
+    _replace_record(package.root, relative, lambda rows: rows[0].update(update))
+    with pytest.raises(PackageValidationError, match=code):
+        CanonicalPackage(package.root)
+
+
+def test_parent_cannot_point_to_itself(package):
+    _replace_record(package.root, "nodes.jsonl", lambda rows: rows[0].update(parent_node_id=rows[0]["node_id"]))
+    with pytest.raises(PackageValidationError, match="PARENT_CYCLE"):
+        CanonicalPackage(package.root)
+
+
+def test_parent_cannot_belong_to_another_document(package):
+    _replace_record(package.root, "nodes.jsonl", lambda rows: rows[0].update(parent_node_id=rows[1]["node_id"]))
+    with pytest.raises(PackageValidationError, match="CROSS_DOCUMENT_PARENT"):
+        CanonicalPackage(package.root)
+
+
+@pytest.mark.parametrize("target_kind,valid", [("canonical", False), ("external", True)])
+def test_only_canonical_relation_targets_must_exist(package, target_kind, valid):
+    _replace_record(package.root, "relations.jsonl", lambda rows: rows[0].update(target_id="https://example.test", target_kind=target_kind))
+    if valid:
+        assert CanonicalPackage(package.root).relations[0].target_kind == "external"
+    else:
+        with pytest.raises(PackageValidationError, match="DANGLING_RELATION_TARGET"):
+            CanonicalPackage(package.root)
+
+
+@pytest.mark.parametrize("line", ["{bad json}", "[]", "null"])
+def test_invalid_jsonl_reports_filename_and_line(package, line):
+    (package.root / "nodes.jsonl").write_text("\n" + line + "\n")
+    _update_inventory(package.root, "nodes.jsonl")
+    with pytest.raises(PackageValidationError, match=r"INVALID_JSONL: nodes.jsonl:2"):
+        CanonicalPackage(package.root)
+
+
+def test_same_length_tampering_is_detected_by_hash(package):
+    path = package.root / "nodes.jsonl"
+    original = path.read_bytes()
+    changed = original.replace(b"Evidence", b"Tampered")
+    assert changed != original and len(changed) == len(original)
+    path.write_bytes(changed)
+    with pytest.raises(PackageValidationError, match="FILE_HASH_MISMATCH"):
+        CanonicalPackage(package.root)
+
+
+def test_uninventoried_files_are_rejected(package):
+    (package.root / "untracked.txt").write_text("unexpected")
+    with pytest.raises(PackageValidationError, match="INVENTORY_MISMATCH"):
+        CanonicalPackage(package.root)
+
+
+def test_inventory_symlink_is_rejected_even_when_bytes_match(package, tmp_path):
+    path = package.root / "nodes.jsonl"
+    outside = tmp_path / "outside.jsonl"
+    path.rename(outside)
+    path.symlink_to(outside)
+    with pytest.raises(PackageValidationError, match="UNSAFE_PATH"):
+        CanonicalPackage(package.root)

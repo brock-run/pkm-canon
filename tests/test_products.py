@@ -121,3 +121,68 @@ def test_code_example_does_not_become_domain_claim(tmp_path: Path) -> None:
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
     assert package.manifest.fidelity.partial == 1
     assert propose_domain_claims(package) == []
+
+
+@pytest.fixture
+def methodology_package(tmp_path):
+    source = tmp_path / "rules.json"
+    source.write_text(json.dumps([{"uid": "P", "title": "Rules", "children": [
+        {"uid": str(i), "string": "Status:: active"} for i in range(8)
+    ]}]))
+    return build_package(RoamParser(), source, tmp_path / "package", source_scope="graph")
+
+
+def test_methodology_groups_evidence_caps_confidence_and_respects_access(methodology_package):
+    proposals = propose_methodology(methodology_package)
+    assert len(proposals) == 1
+    proposal = proposals[0]
+    assert len(proposal.evidence) == 8
+    assert proposal.confidence == proposal.payload["confidence"] == 0.95
+    assert proposal.payload["status"] == proposal.status == "proposed"
+    assert proposal.payload["source_trace_ids"] == sorted(node.node_id for node in methodology_package.nodes)
+    assert propose_methodology(methodology_package, principal_id="stranger") == []
+    validate_proposal(methodology_package, proposal)
+
+
+@pytest.mark.parametrize("field,value,code", [
+    ("source_package_id", "other", "PROPOSAL_PACKAGE_MISMATCH"),
+    ("status", "approved", "INVALID_PROPOSAL_STATUS"),
+    ("payload_schema", "other", "PROPOSAL_SCHEMA_MISMATCH"),
+    ("confidence", 0.1, "PROPOSAL_CONFIDENCE_MISMATCH"),
+    ("proposal_type", "documentation_change", "UNSUPPORTED_PROPOSAL_TYPE"),
+])
+def test_proposal_validation_rejects_inconsistent_envelopes(methodology_package, field, value, code):
+    proposal = propose_methodology(methodology_package)[0].model_copy(update={field: value})
+    with pytest.raises(PackageValidationError, match=code):
+        validate_proposal(methodology_package, proposal)
+
+
+@pytest.mark.parametrize("update,code", [
+    ({"status": "approved"}, "INVALID_PROPOSAL_STATUS"),
+    ({"source_trace_ids": ["absent"]}, "PROPOSAL_TRACE_MISMATCH"),
+])
+def test_proposal_validation_checks_payload_status_and_traces(methodology_package, update, code):
+    proposal = propose_methodology(methodology_package)[0]
+    proposal = proposal.model_copy(update={"payload": {**proposal.payload, **update}})
+    with pytest.raises(PackageValidationError, match=code):
+        validate_proposal(methodology_package, proposal)
+
+
+def test_proposal_file_is_immutable_and_duplicate_ids_are_rejected(methodology_package, tmp_path):
+    proposals = propose_methodology(methodology_package)
+    path = tmp_path / "nested" / "proposals.jsonl"
+    write_proposals(path, proposals)
+    original = path.read_bytes()
+    write_proposals(path, proposals)
+    assert path.read_bytes() == original
+    with pytest.raises(PackageValidationError, match="PROPOSALS_EXIST"):
+        write_proposals(path, [])
+    assert path.read_bytes() == original
+    path.write_bytes(b"\n" + original + b"\n")
+    assert read_proposals(path, methodology_package) == proposals
+    path.write_bytes(original + original)
+    with pytest.raises(PackageValidationError, match="DUPLICATE_PROPOSAL"):
+        read_proposals(path, methodology_package)
+    path.write_text("\n{bad json}\n")
+    with pytest.raises(PackageValidationError, match="PROPOSAL_INVALID: line 2"):
+        read_proposals(path, methodology_package)

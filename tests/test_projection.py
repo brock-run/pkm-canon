@@ -44,3 +44,51 @@ def test_audit_projection_is_rebuildable_and_links_back_to_source(tmp_path: Path
         stream.write("changed")
     with pytest.raises(PackageValidationError, match="PROJECTION_HASH_MISMATCH"):
         validate_projection(output)
+
+
+@pytest.fixture
+def projection(tmp_path):
+    source = tmp_path / "roam.json"
+    source.write_text('[{"uid":"P","title":"Page","children":[{"uid":"B","string":"Text"}]}]')
+    package = build_package(RoamParser(), source, tmp_path / "package", source_scope="graph")
+    output = tmp_path / "projection"
+    project_audit_markdown(package, output)
+    return output
+
+
+@pytest.mark.parametrize("mutation,code", [
+    ("extra_file", "PROJECTION_INVENTORY_MISMATCH"),
+    ("missing_file", "PROJECTION_INVENTORY_MISMATCH"),
+    ("jsonl_count", "PROJECTION_RECORD_COUNT_MISMATCH"),
+    ("markdown_count", "PROJECTION_RECORD_COUNT_MISMATCH"),
+    ("symlink", "UNSAFE_PROJECTION_PATH"),
+])
+def test_projection_rejects_inventory_corruption(projection, mutation, code, tmp_path):
+    manifest_path = projection / "projection-manifest.json"
+    raw = json.loads(manifest_path.read_text())
+    page = next(projection.glob("*.md"))
+    if mutation == "extra_file":
+        (projection / "extra.md").write_text("unexpected")
+    elif mutation == "missing_file":
+        page.unlink()
+    elif mutation == "jsonl_count":
+        raw["files"]["evidence-map.jsonl"]["record_count"] += 1
+    elif mutation == "markdown_count":
+        raw["files"][page.name]["record_count"] = 0
+    else:
+        outside = tmp_path / "outside.md"
+        page.rename(outside)
+        page.symlink_to(outside)
+    manifest_path.write_text(json.dumps(raw))
+    with pytest.raises(PackageValidationError, match=code):
+        validate_projection(projection)
+
+
+def test_projection_does_not_overwrite_another_package(projection, tmp_path):
+    original = {path.name: path.read_bytes() for path in projection.iterdir()}
+    source = tmp_path / "other.json"
+    source.write_text('[{"uid":"other","title":"Other"}]')
+    package = build_package(RoamParser(), source, tmp_path / "other-package", source_scope="graph")
+    with pytest.raises(PackageValidationError, match="PROJECTION_EXISTS"):
+        project_audit_markdown(package, projection)
+    assert {path.name: path.read_bytes() for path in projection.iterdir()} == original
