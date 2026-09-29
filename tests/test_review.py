@@ -17,6 +17,7 @@ from pkmcanon.writer import build_package
 
 @pytest.fixture
 def review_context(tmp_path):
+    """Build an ownership proposal, reviewer policy, and empty filesystem ledger."""
     source = tmp_path / "page.md"
     source.write_text("# Service\n\nOwner: Team\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="repo")
@@ -31,6 +32,7 @@ def review_context(tmp_path):
     ("local-operator", "pending", "INVALID_REVIEW_DECISION"),
 ])
 def test_invalid_review_does_not_create_ledger(review_context, reviewer, decision, code):
+    """Verify invalid reviewers, access, or decisions fail before creating a ledger."""
     package, proposal, policy, ledger = review_context
     with pytest.raises(PackageValidationError, match=code):
         ledger.record(proposal, package, policy=policy, reviewer_id=reviewer, decision=decision)
@@ -39,6 +41,7 @@ def test_invalid_review_does_not_create_ledger(review_context, reviewer, decisio
 
 
 def test_rejected_claim_cannot_be_published(review_context, tmp_path):
+    """Verify a recorded rejection excludes the claim and prevents page publication."""
     package, proposal, policy, ledger = review_context
     event = ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="rejected", rationale="Insufficient evidence")
     assert ledger.events() == [event]
@@ -51,6 +54,7 @@ def test_rejected_claim_cannot_be_published(review_context, tmp_path):
 
 
 def test_review_replay_keeps_original_bytes_and_policy_cannot_change(review_context):
+    """Verify replay preserves the original event and a changed policy cannot rereview it."""
     package, proposal, policy, ledger = review_context
     event = ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved", rationale="Original")
     path = ledger.root / f"{event.event_id}.json"
@@ -65,6 +69,7 @@ def test_review_replay_keeps_original_bytes_and_policy_cannot_change(review_cont
 
 @pytest.mark.parametrize("tampering", ["filename", "decision", "duplicate"])
 def test_ledger_rejects_forged_or_duplicate_decisions(review_context, tampering):
+    """Verify event identity checks and duplicate-decision checks detect ledger tampering."""
     package, proposal, policy, ledger = review_context
     event = ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved")
     path = ledger.root / f"{event.event_id}.json"
@@ -85,6 +90,7 @@ def test_ledger_rejects_forged_or_duplicate_decisions(review_context, tampering)
 
 
 def test_approval_from_another_run_cannot_publish(review_context):
+    """Verify an approval cannot authorize a proposal with a different run ID."""
     package, proposal, policy, ledger = review_context
     ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved")
     with pytest.raises(PackageValidationError, match="REVIEW_RUN_MISMATCH"):

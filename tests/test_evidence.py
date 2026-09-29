@@ -16,12 +16,14 @@ from pkmcanon.writer import build_package
 
 @pytest.fixture
 def package(tmp_path):
+    """Build a Markdown package with two owner paragraphs, including Unicode text."""
     source = tmp_path / "page.md"
     source.write_text("# Service\n\nOwner: Café Team\n\nOwner: Other Team\n", encoding="utf-8")
     return build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="repo", native_id="docs/page.md")
 
 
 def test_evidence_uses_character_offsets_and_source_line_locator(package):
+    """Verify a Unicode quote retains character offsets, source lines, and provenance."""
     node = next(row for row in package.nodes if "Café" in row.plain_text)
     evidence = evidence_for_node(package, node.node_id, start=7, end=11)
     assert evidence.quote == "Café"
@@ -36,11 +38,13 @@ def test_evidence_uses_character_offsets_and_source_line_locator(package):
 
 @pytest.mark.parametrize("start,end", [(-1, 1), (2, 1), (0, 1000)])
 def test_invalid_evidence_ranges_are_rejected(package, start, end):
+    """Verify negative, reversed, and out-of-bounds evidence ranges are rejected."""
     with pytest.raises(PackageValidationError, match="INVALID_EVIDENCE_RANGE"):
         evidence_for_node(package, package.nodes[0].node_id, start=start, end=end)
 
 
 def test_evidence_allows_empty_range_at_end_but_rejects_unknown_node(package):
+    """Verify an empty terminal quote is valid and a missing node is rejected."""
     node = package.nodes[0]
     evidence = evidence_for_node(package, node.node_id, start=len(node.plain_text))
     assert evidence.quote == ""
@@ -56,6 +60,7 @@ def test_evidence_allows_empty_range_at_end_but_rejects_unknown_node(package):
     ("span_id", "other-span"),
 ])
 def test_evidence_rejects_tampered_provenance(package, field, value):
+    """Verify altered evidence fields fail comparison with package-derived evidence."""
     evidence = evidence_for_node(package, package.nodes[0].node_id)
     with pytest.raises(PackageValidationError, match="EVIDENCE_MISMATCH"):
         validate_evidence(package, evidence.model_copy(update={field: value}))
@@ -72,6 +77,7 @@ def test_evidence_rejects_tampered_provenance(package, field, value):
     ("owner", 1, "complete", 1),
 ])
 def test_retrieval_coverage_limits_and_deterministic_ties(package, indexed, query, limit, coverage, count):
+    """Verify both retrieval paths apply limits, report coverage, and break ties by ID."""
     options = {"principal_id": "local-operator", "task_type": "lookup", "limit": limit}
     bundle = search_index(package, build_index(package), query, **options) if indexed else assemble_evidence_bundle(package, query, **options)
     assert bundle.coverage == coverage
@@ -85,6 +91,7 @@ def test_retrieval_coverage_limits_and_deterministic_ties(package, indexed, quer
     ("restricted", ["reader"], True), ("restricted", ["someone-else"], False),
 ])
 def test_both_retrieval_paths_enforce_source_access(tmp_path: Path, visibility, principals, allowed):
+    """Verify both retrieval paths filter evidence according to source access policy."""
     source = tmp_path / "page.md"
     source.write_text("Owner: Team")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="repo", access=AccessPolicy(visibility=visibility, principal_ids=principals))

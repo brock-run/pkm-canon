@@ -31,6 +31,7 @@ def _manifest_path(root: Path) -> Path:
 
 
 def _escape_continuation_markdown(line: str) -> str:
+    """Escape leading punctuation or ordered-list markers on a continuation line."""
     if match := re.match(r"^([ \t]*)([!\"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~])", line):
         return f"{match.group(1)}\\{line[len(match.group(1)):]}"
     if match := re.match(r"^([ \t]*\d+)([.)])(?=\s)", line):
@@ -39,6 +40,7 @@ def _escape_continuation_markdown(line: str) -> str:
 
 
 def _render_node_text(text: str, continuation_indent: str) -> str:
+    """Keep the first line intact and indent escaped continuation lines."""
     lines = text.split("\n")
     return lines[0] + "".join(
         f"\n{continuation_indent}{_escape_continuation_markdown(line)}"

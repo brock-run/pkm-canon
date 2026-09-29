@@ -53,6 +53,7 @@ def test_retrieval_failure_becomes_grounded_review_proposal(tmp_path: Path) -> N
 
 
 def test_evaluation_records_coverage_mismatch_without_missing_evidence(tmp_path: Path) -> None:
+    """Verify complete evidence recall still fails when reported coverage differs from the label."""
     source = tmp_path / "service.md"
     source.write_text("# Service\n\nOwner: Platform Team\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
@@ -86,6 +87,7 @@ def test_evaluation_cannot_label_inaccessible_evidence_as_expected(tmp_path: Pat
 
 @pytest.fixture
 def evaluation_context(tmp_path):
+    """Build a two-owner package, its index, and a case expecting both owner nodes."""
     source = tmp_path / "page.md"
     source.write_text("Owner: Team\n\nOwner: Other\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="repo")
@@ -98,6 +100,7 @@ def evaluation_context(tmp_path):
 
 
 def test_partial_recall_proposes_only_missing_evidence(evaluation_context):
+    """Verify limited retrieval proposes a validated change citing only missing gold evidence."""
     package, index, case = evaluation_context
     result = evaluate_retrieval(package, index, [case], limit=1)[0]
     assert result.recall == 0.5
@@ -119,6 +122,7 @@ def test_partial_recall_proposes_only_missing_evidence(evaluation_context):
     ("absent", False, "none", 1.0, True),
 ])
 def test_evaluation_requires_both_expected_evidence_and_coverage(evaluation_context, query, expected, coverage, recall, passed):
+    """Verify recall and coverage jointly determine success without spurious change proposals."""
     package, index, case = evaluation_context
     case = case.model_copy(update={"query": query, "expected_node_ids": case.expected_node_ids if expected else [], "expected_coverage": coverage})
     result = evaluate_retrieval(package, index, [case])[0]
@@ -132,12 +136,14 @@ def test_evaluation_requires_both_expected_evidence_and_coverage(evaluation_cont
     ({"expected_node_ids": ["absent"]}, "EVALUATION_DANGLING_NODE"),
 ])
 def test_invalid_evaluation_cases_fail_before_scoring(evaluation_context, change, code):
+    """Verify foreign package IDs and missing expected nodes raise evaluation errors."""
     package, index, case = evaluation_context
     with pytest.raises(PackageValidationError, match=code):
         evaluate_retrieval(package, index, [case.model_copy(update=change)])
 
 
 def test_duplicate_expected_nodes_and_foreign_index_are_rejected(evaluation_context):
+    """Verify duplicate gold nodes and indexes from another package are rejected."""
     package, index, case = evaluation_context
     duplicate = case.model_copy(update={"expected_node_ids": [case.expected_node_ids[0]] * 2})
     with pytest.raises(PackageValidationError, match="DUPLICATE_EXPECTED_NODE"):
@@ -147,6 +153,7 @@ def test_duplicate_expected_nodes_and_foreign_index_are_rejected(evaluation_cont
 
 
 def test_case_reader_ignores_blanks_but_rejects_duplicate_ids_and_bad_lines(evaluation_context, tmp_path):
+    """Verify JSONL case loading skips blanks and reports duplicates or invalid line numbers."""
     _, _, case = evaluation_context
     path = tmp_path / "cases.jsonl"
     row = case.model_dump_json()

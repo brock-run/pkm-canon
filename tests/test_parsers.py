@@ -10,6 +10,7 @@ from pkmcanon.parsers.roam import RoamParser
 
 
 def parse_roam(pages):
+    """Parse JSON-encoded pages with fixed graph and source-version identifiers."""
     return RoamParser().parse(
         json.dumps(pages).encode(), source_scope="graph",
         source_version_id="version", native_id="export.json",
@@ -17,6 +18,7 @@ def parse_roam(pages):
 
 
 def parse_markdown(data):
+    """Parse Markdown bytes with a fixed repository path and source version."""
     return MarkdownAdapter().parse(
         data, source_scope="repo", source_version_id="version", native_id="docs/page.md",
     )
@@ -32,11 +34,13 @@ def parse_markdown(data):
     (b'[{"children": [{"children": false}]}]', "INVALID_ROAM_CHILDREN"),
 ])
 def test_roam_rejects_invalid_source_shapes(data, code):
+    """Verify malformed Roam exports raise the expected stable error codes."""
     with pytest.raises(ValueError, match=f"^{code}$"):
         RoamParser().parse(data, source_scope="graph", source_version_id="v", native_id="x")
 
 
 def test_roam_sorts_siblings_but_retains_source_paths_and_parents():
+    """Verify sibling ordering preserves parent links and original JSON pointers."""
     result = parse_roam([{"uid": "P", "title": "Page", "children": [
         {"uid": "late", "order": 9, "string": "Late"},
         {"uid": "first", "order": -1, "string": "First", "children": [
@@ -53,6 +57,7 @@ def test_roam_sorts_siblings_but_retains_source_paths_and_parents():
 
 
 def test_roam_embeds_and_tags_do_not_also_create_page_or_block_refs():
+    """Verify embeds and tags produce distinct relations without duplicate references."""
     result = parse_roam([
         {"uid": "P", "title": "Page", "children": [
             {"uid": "B", "string": "{{embed: [[Target]]}} {{embed: ((T))}} #[[Target]] #work [[Target]] ((T))"},
@@ -66,6 +71,7 @@ def test_roam_embeds_and_tags_do_not_also_create_page_or_block_refs():
 
 
 def test_roam_ambiguous_and_missing_references_are_preserved_without_guessing():
+    """Verify unresolved references retain their raw block and linked diagnostics."""
     block = {"uid": "B", "string": "[[Duplicate]] ((missing))"}
     result = parse_roam([
         {"uid": "P", "title": "Duplicate", "children": [block]},
@@ -80,6 +86,7 @@ def test_roam_ambiguous_and_missing_references_are_preserved_without_guessing():
 
 
 def test_roam_duplicate_uids_have_distinct_repeatable_ids_and_ambiguous_refs():
+    """Verify duplicate UIDs yield stable distinct nodes and unresolved references."""
     source = [{"uid": "P", "title": "Page", "children": [
         {"uid": "B", "string": "First"}, {"uid": "B", "string": "Second"},
         {"uid": "R", "string": "((B))"},
@@ -93,6 +100,7 @@ def test_roam_duplicate_uids_have_distinct_repeatable_ids_and_ambiguous_refs():
 
 
 def test_markdown_keeps_unicode_text_line_ranges_and_external_links():
+    """Verify Unicode text, source line ranges, spans, and external links survive parsing."""
     result = parse_markdown("# Café\r\n\r\nOwner: Équipe\r\nSee [guide](../guide.md).\r\n".encode())
     document = next(row for row in result.records if isinstance(row, Document))
     nodes = [row for row in result.records if isinstance(row, Node)]
@@ -114,6 +122,7 @@ def test_markdown_keeps_unicode_text_line_ranges_and_external_links():
     ("<div>Café</div>\n\n<div>Again</div>", "HTML_NOT_NORMALIZED"),
 ])
 def test_markdown_partial_structures_preserve_exact_bytes_once(text, code):
+    """Verify unsupported structures retain one exact payload with a matching diagnostic."""
     data = text.encode()
     result = parse_markdown(data)
     preserved = [row for row in result.records if isinstance(row, PreservationRecord)]
@@ -127,17 +136,20 @@ def test_markdown_partial_structures_preserve_exact_bytes_once(text, code):
 
 @pytest.mark.parametrize("data,count", [(b"", 1), (b"\n \n", 1), (b"No heading", 2)])
 def test_markdown_without_heading_uses_source_path(data, count):
+    """Verify heading-free input uses the source path as its title and counts objects."""
     result = parse_markdown(data)
     assert next(row for row in result.records if isinstance(row, Document)).title == "docs/page.md"
     assert result.source_object_count == count
 
 
 def test_markdown_rejects_non_utf8():
+    """Verify invalid UTF-8 raises the Markdown encoding error."""
     with pytest.raises(ValueError, match="INVALID_MARKDOWN_ENCODING"):
         parse_markdown(b"\xff")
 
 
 def test_stable_identity_preserves_component_boundaries_and_unicode():
+    """Verify stable IDs distinguish component order, boundaries, and Unicode text."""
     assert stable_id("node", "café", "a:b") == stable_id("node", "café", "a:b")
     assert stable_id("node", "a:b", "c") != stable_id("node", "a", "b:c")
     assert stable_id("node", "café") != stable_id("node", "cafe")

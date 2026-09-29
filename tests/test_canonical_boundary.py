@@ -118,6 +118,7 @@ def test_invalid_block_order_and_time_are_diagnosed_and_preserved(tmp_path: Path
 
 @pytest.mark.parametrize("value", [True, False, float("inf"), 1e300])
 def test_invalid_roam_timestamps_are_diagnosed_without_crashing(tmp_path: Path, value: object) -> None:
+    """Verify boolean and out-of-range timestamps produce diagnostics and no creation time."""
     source = tmp_path / "invalid-time.json"
     source.write_text(json.dumps([{"uid": "P", "title": "Page", "create-time": value}]))
     package = build_package(RoamParser(), source, tmp_path / "package", source_scope="test")
@@ -160,6 +161,7 @@ def test_dangling_reference_fails_after_inventory_is_updated(package: CanonicalP
 
 
 def test_dangling_ancestor_fails_with_stable_error(tmp_path: Path) -> None:
+    """Verify a missing ancestor yields DANGLING_PARENT even when its child appears first."""
     source = tmp_path / "nested.json"
     source.write_text('[{"uid":"P","title":"Page","children":[{"uid":"B1","string":"Parent","children":[{"uid":"B2","string":"Child"}]}]}]')
     package = build_package(RoamParser(), source, tmp_path / "package", source_scope="test")
@@ -233,18 +235,21 @@ def test_storage_kind_matches_locator_in_model_and_schema() -> None:
     ("diagnostics.jsonl", {"preservation_id": None}, "UNPRESERVED_OUTCOME"),
 ])
 def test_semantic_corruption_fails_even_with_valid_inventory(package, relative, update, code):
+    """Verify record-level inconsistencies are rejected after inventory hashes are refreshed."""
     _replace_record(package.root, relative, lambda rows: rows[0].update(update))
     with pytest.raises(PackageValidationError, match=code):
         CanonicalPackage(package.root)
 
 
 def test_parent_cannot_point_to_itself(package):
+    """Verify a node cannot name itself as its parent."""
     _replace_record(package.root, "nodes.jsonl", lambda rows: rows[0].update(parent_node_id=rows[0]["node_id"]))
     with pytest.raises(PackageValidationError, match="PARENT_CYCLE"):
         CanonicalPackage(package.root)
 
 
 def test_parent_cannot_belong_to_another_document(package):
+    """Verify parent links cannot cross document boundaries."""
     _replace_record(package.root, "nodes.jsonl", lambda rows: rows[0].update(parent_node_id=rows[1]["node_id"]))
     with pytest.raises(PackageValidationError, match="CROSS_DOCUMENT_PARENT"):
         CanonicalPackage(package.root)
@@ -252,6 +257,7 @@ def test_parent_cannot_belong_to_another_document(package):
 
 @pytest.mark.parametrize("target_kind,valid", [("canonical", False), ("external", True)])
 def test_only_canonical_relation_targets_must_exist(package, target_kind, valid):
+    """Verify canonical targets must resolve while external targets may remain outside the package."""
     _replace_record(package.root, "relations.jsonl", lambda rows: rows[0].update(target_id="https://example.test", target_kind=target_kind))
     if valid:
         assert CanonicalPackage(package.root).relations[0].target_kind == "external"
@@ -262,6 +268,7 @@ def test_only_canonical_relation_targets_must_exist(package, target_kind, valid)
 
 @pytest.mark.parametrize("line", ["{bad json}", "[]", "null"])
 def test_invalid_jsonl_reports_filename_and_line(package, line):
+    """Verify malformed JSONL records report their filename and physical line number."""
     (package.root / "nodes.jsonl").write_text("\n" + line + "\n")
     _update_inventory(package.root, "nodes.jsonl")
     with pytest.raises(PackageValidationError, match=r"INVALID_JSONL: nodes.jsonl:2"):
@@ -269,6 +276,7 @@ def test_invalid_jsonl_reports_filename_and_line(package, line):
 
 
 def test_same_length_tampering_is_detected_by_hash(package):
+    """Verify file hashes detect changed bytes even when file length is unchanged."""
     path = package.root / "nodes.jsonl"
     original = path.read_bytes()
     changed = original.replace(b"Evidence", b"Tampered")
@@ -279,12 +287,14 @@ def test_same_length_tampering_is_detected_by_hash(package):
 
 
 def test_uninventoried_files_are_rejected(package):
+    """Verify extra files cause a package inventory mismatch."""
     (package.root / "untracked.txt").write_text("unexpected")
     with pytest.raises(PackageValidationError, match="INVENTORY_MISMATCH"):
         CanonicalPackage(package.root)
 
 
 def test_inventory_symlink_is_rejected_even_when_bytes_match(package, tmp_path):
+    """Verify an inventoried file cannot be replaced by a symlink to identical bytes."""
     path = package.root / "nodes.jsonl"
     outside = tmp_path / "outside.jsonl"
     path.rename(outside)
@@ -292,5 +302,6 @@ def test_inventory_symlink_is_rejected_even_when_bytes_match(package, tmp_path):
     with pytest.raises(PackageValidationError, match="UNSAFE_PATH"):
         CanonicalPackage(package.root)
 def test_missing_schema_root_has_actionable_error(tmp_path: Path) -> None:
+    """Verify a missing schema directory reports how to restore the required schemas."""
     with pytest.raises(FileNotFoundError, match="Generate or restore docs/specs/schemas"):
         default_schema_store(tmp_path / "missing")
