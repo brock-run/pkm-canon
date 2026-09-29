@@ -22,6 +22,7 @@ CHANGE_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:retrieval-change"
 
 
 def read_evaluation_cases(path: Path) -> list[EvaluationCase]:
+    """Load schema-validated JSONL cases, rejecting invalid records and duplicate IDs."""
     cases = []
     ids = set()
     for number, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
@@ -44,6 +45,7 @@ def evaluate_retrieval(
     package: CanonicalPackage, index: IndexProjection, cases: list[EvaluationCase],
     *, limit: int = 8,
 ) -> list[EvaluationResult]:
+    """Validate gold cases and measure indexed recall and coverage for each principal."""
     if index.source_package_id != package.manifest.package_id:
         raise PackageValidationError("INDEX_PACKAGE_MISMATCH", index.index_id)
     nodes = {item.node_id: item for item in package.nodes}
@@ -85,6 +87,7 @@ def evaluate_retrieval(
 def propose_retrieval_changes(
     package: CanonicalPackage, cases: list[EvaluationCase], results: list[EvaluationResult],
 ) -> list[Proposal]:
+    """Create evidence-backed review proposals for the nodes missed by evaluation."""
     by_id = {case.case_id: case for case in cases}
     proposals = []
     for result in results:
@@ -111,6 +114,7 @@ def propose_retrieval_changes(
 
 
 def write_evaluation_results(path: Path, results: list[EvaluationResult]) -> None:
+    """Write results as JSONL, rejecting an existing file with different content."""
     path = Path(path)
     content = "".join(
         json.dumps(item.model_dump(mode="json"), sort_keys=True, ensure_ascii=False) + "\n"

@@ -43,6 +43,7 @@ class SourceNativeReference(StrictModel):
 
     @model_validator(mode="after")
     def storage_locator_matches_kind(self) -> SourceNativeReference:
+        """Require exactly one nonempty locator matching storage_kind, then return this model."""
         fields = {
             "relative_path": self.relative_path,
             "external_uri": self.external_uri,

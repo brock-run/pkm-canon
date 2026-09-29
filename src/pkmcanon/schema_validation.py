@@ -31,6 +31,7 @@ class SchemaStore:
         return sorted(self.schema_root.rglob("*.json"))
 
     def _candidate_short_names(self, path: Path, schema: dict[str, Any]) -> list[str]:
+        """Derive schema aliases from its filename, relative path, and optional title."""
         rel = path.relative_to(self.schema_root)
         stem = rel.stem
         stem = stem.removesuffix('.schema')
@@ -85,6 +86,7 @@ class SchemaStore:
 
 
 def default_schema_store(schema_root: str | Path | None = None) -> SchemaStore:
+    """Build a schema store from an explicit root or the repository schema directory."""
     if schema_root is None:
         schema_root = Path(__file__).resolve().parents[2] / "docs" / "specs" / "schemas"
     return SchemaStore(Path(schema_root))

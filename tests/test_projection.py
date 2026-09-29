@@ -10,6 +10,7 @@ from pkmcanon.writer import build_package
 
 
 def test_audit_projection_is_rebuildable_and_links_back_to_source(tmp_path: Path) -> None:
+    """Verify projection reuse, evidence mappings, and detection of manifest and page tampering."""
     source = tmp_path / "roam.json"
     source.write_text(json.dumps([
         {"uid": "P", "title": "Projects", "children": [

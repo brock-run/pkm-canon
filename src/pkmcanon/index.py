@@ -18,10 +18,12 @@ PROFILE_VERSION = "lexical-graph-v1"
 
 
 def _terms(text: str) -> set[str]:
+    """Extract unique lowercase word tokens longer than two characters."""
     return {term.lower() for term in re.findall(r"[A-Za-z0-9_]+", text) if len(term) > 2}
 
 
 def build_index(package: CanonicalPackage) -> IndexProjection:
+    """Build and schema-validate a deterministic index of node terms and native links."""
     terms: dict[str, list[str]] = defaultdict(list)
     for node in package.nodes:
         for term in sorted(_terms(node.plain_text)):
@@ -46,6 +48,7 @@ def build_index(package: CanonicalPackage) -> IndexProjection:
 
 
 def write_index(package: CanonicalPackage, output: Path) -> IndexProjection:
+    """Build an index and atomically replace its JSON file, returning the projection."""
     index = build_index(package)
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -59,6 +62,7 @@ def write_index(package: CanonicalPackage, output: Path) -> IndexProjection:
 
 
 def load_index(package: CanonicalPackage, path: Path) -> IndexProjection:
+    """Load a validated index and reject any difference from a fresh package projection."""
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     default_schema_store().validate_instance_with_short_name(raw, "index-projection")
     index = IndexProjection.model_validate(raw)
@@ -71,6 +75,7 @@ def search_index(
     package: CanonicalPackage, index: IndexProjection, query: str, *,
     principal_id: str, task_type: str, limit: int = 8,
 ) -> EvidenceBundle:
+    """Retrieve ranked, accessible node evidence from an index belonging to the package."""
     if index.source_package_id != package.manifest.package_id:
         raise PackageValidationError("INDEX_PACKAGE_MISMATCH", index.index_id)
     terms = _terms(query)
@@ -104,6 +109,7 @@ def related_content_ids(
     package: CanonicalPackage, index: IndexProjection, source_id: str, *,
     principal_id: str,
 ) -> list[str]:
+    """Return accessible canonical link targets when the principal can access the source."""
     if index.source_package_id != package.manifest.package_id:
         raise PackageValidationError("INDEX_PACKAGE_MISMATCH", index.index_id)
     nodes = {item.node_id: item for item in package.nodes}
@@ -111,6 +117,7 @@ def related_content_ids(
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
 
     def allowed(identifier: str) -> bool:
+        """Return whether an identifier names an accessible document or node."""
         doc = docs.get(identifier)
         if doc is None:
             node = nodes.get(identifier)

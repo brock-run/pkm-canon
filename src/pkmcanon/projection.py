@@ -20,14 +20,17 @@ ADAPTER_VERSION = "0.1.0"
 
 
 def _hash(data: bytes) -> str:
+    """Return the hexadecimal SHA-256 digest used in the projection inventory."""
     return hashlib.sha256(data).hexdigest()
 
 
 def _manifest_path(root: Path) -> Path:
+    """Return the projection manifest path beneath the supplied root."""
     return root / "projection-manifest.json"
 
 
 def validate_projection(root: Path) -> ProjectionManifest:
+    """Validate a projection manifest, file inventory, hashes, and record and issue counts."""
     root = Path(root)
     manifest_path = _manifest_path(root)
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -56,6 +59,7 @@ def validate_projection(root: Path) -> ProjectionManifest:
 
 
 def project_audit_markdown(package: CanonicalPackage, output_dir: Path) -> ProjectionManifest:
+    """Publish a validated audit projection with evidence sidecars, reusing an identical projection."""
     output_dir = Path(output_dir)
     projection_id = stable_id("projection", package.manifest.package_id, ADAPTER_NAME, ADAPTER_VERSION)
     if output_dir.exists():
@@ -77,6 +81,7 @@ def project_audit_markdown(package: CanonicalPackage, output_dir: Path) -> Proje
             document_id: str, filename: str, lines: list[str],
             parent: str | None, depth: int,
         ) -> None:
+            """Append nested Markdown bullets and record their rendered-line evidence mappings."""
             for node in [item for item in children.get(parent, []) if item.document_id == document_id]:
                 rendered_line = len(lines) + 1
                 text = node.plain_text.replace("\n", "\n" + "  " * (depth + 1))

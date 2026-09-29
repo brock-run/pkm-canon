@@ -24,10 +24,12 @@ from .schema_validation import default_schema_store
 
 
 def _json(model) -> str:
+    """Serialize a model as sorted, indented JSON, omitting None fields."""
     return json.dumps(model.model_dump(mode="json", exclude_none=True), sort_keys=True, ensure_ascii=False, indent=2) + "\n"
 
 
 def load_review_policy(path: Path) -> ReviewPolicy:
+    """Load a review policy and validate it against the schema and runtime model."""
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     default_schema_store().validate_instance_with_short_name(raw, "review-policy")
     return ReviewPolicy.model_validate(raw)
@@ -35,9 +37,11 @@ def load_review_policy(path: Path) -> ReviewPolicy:
 
 class ReviewLedger:
     def __init__(self, root: Path):
+        """Store the directory used for immutable review-event files."""
         self.root = Path(root)
 
     def events(self) -> list[ReviewEvent]:
+        """Load review events, checking their identities and rejecting repeated proposal decisions."""
         if not self.root.exists():
             return []
         events = []
@@ -64,6 +68,7 @@ class ReviewLedger:
         self, proposal: Proposal, package: CanonicalPackage, *,
         policy: ReviewPolicy, reviewer_id: str, decision: str, rationale: str | None = None,
     ) -> ReviewEvent:
+        """Record an authorized decision, reusing an identical review and rejecting conflicting decisions."""
         validate_proposal(package, proposal)
         if reviewer_id not in policy.approved_reviewers:
             raise PackageValidationError("UNAUTHORIZED_REVIEWER", reviewer_id)
@@ -100,6 +105,7 @@ class ReviewLedger:
 
 
 def approved_proposals(proposals: list[Proposal], ledger: ReviewLedger) -> list[tuple[Proposal, ReviewEvent]]:
+    """Pair approved proposals with ledger events after checking that their run IDs match."""
     events = {item.proposal_id: item for item in ledger.events()}
     for proposal in proposals:
         event = events.get(proposal.proposal_id)
@@ -115,6 +121,7 @@ def approved_proposals(proposals: list[Proposal], ledger: ReviewLedger) -> list[
 def publish_methodology(
     package: CanonicalPackage, proposals: list[Proposal], ledger: ReviewLedger, output: Path,
 ) -> MethodologyManifest:
+    """Validate approved methodology rules and atomically publish their manifest."""
     selected = []
     for proposal, event in approved_proposals(proposals, ledger):
         if proposal.proposal_type != "methodology_rule":
@@ -143,6 +150,7 @@ def publish_reviewed_domain_page(
     package: CanonicalPackage, proposals: list[Proposal], ledger: ReviewLedger,
     output: Path, *, principal_id: str = "local-operator",
 ) -> str:
+    """Publish approved domain claims with evidence, requiring access to every cited source."""
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
     selected = []
     for proposal, event in approved_proposals(proposals, ledger):

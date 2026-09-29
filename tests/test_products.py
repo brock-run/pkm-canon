@@ -25,6 +25,7 @@ from pkmcanon.writer import build_package
 
 
 def test_two_adapters_share_boundary_and_review_contract(tmp_path: Path) -> None:
+    """Verify both adapters support grounded proposals, authorized review, and publication."""
     roam = tmp_path / "roam.json"
     roam.write_text('[{"uid":"P","title":"Projects","children":[{"uid":"B1","string":"Status:: active"},{"uid":"B2","string":"Status:: planned"}]}]')
     roam_package = build_package(RoamParser(), roam, tmp_path / "roam-package", source_scope="personal")
@@ -78,6 +79,7 @@ def test_two_adapters_share_boundary_and_review_contract(tmp_path: Path) -> None
 
 
 def test_context_applies_access_before_retrieval(tmp_path: Path) -> None:
+    """Verify inaccessible content contributes no evidence or coverage to a context bundle."""
     source = tmp_path / "doc.md"
     source.write_text("# Service\n\nOwner: Platform Team\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
@@ -89,6 +91,7 @@ def test_context_applies_access_before_retrieval(tmp_path: Path) -> None:
 
 
 def test_tampered_proposal_evidence_is_rejected(tmp_path: Path) -> None:
+    """Verify proposal loading rejects an evidence hash that differs from the source."""
     source = tmp_path / "doc.md"
     source.write_text("# Service\n\nOwner: Platform Team\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
@@ -102,6 +105,7 @@ def test_tampered_proposal_evidence_is_rejected(tmp_path: Path) -> None:
 
 
 def test_markdown_partial_structure_has_preserved_payload(tmp_path: Path) -> None:
+    """Verify a partially normalized table retains its source text and preservation link."""
     source = tmp_path / "table.md"
     source.write_text("# Table\n\n| A | B |\n| - | - |\n| 1 | 2 |\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
@@ -111,6 +115,7 @@ def test_markdown_partial_structure_has_preserved_payload(tmp_path: Path) -> Non
 
 
 def test_code_example_does_not_become_domain_claim(tmp_path: Path) -> None:
+    """Verify an Owner line inside a code example produces no ownership proposal."""
     source = tmp_path / "example.md"
     source.write_text("# Example\n\n~~~\nOwner: Fictional Team\n~~~\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")

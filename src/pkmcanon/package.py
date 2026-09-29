@@ -37,16 +37,19 @@ RECORD_FAMILIES: dict[str, tuple[type[BaseModel], str, str]] = {
 
 class PackageValidationError(ValueError):
     def __init__(self, code: str, detail: str):
+        """Store a machine-readable code and include its detail in the exception message."""
         self.code = code
         super().__init__(f"{code}: {detail}")
 
 
 def _check(condition: bool, code: str, detail: str) -> None:
+    """Raise a package validation error with the supplied code when a condition fails."""
     if not condition:
         raise PackageValidationError(code, detail)
 
 
 def _safe_file(root: Path, relative: str) -> Path:
+    """Resolve an existing package file while rejecting unsafe paths and file symlinks."""
     part = PurePosixPath(relative)
     _check(
         bool(relative) and not part.is_absolute() and ".." not in part.parts
@@ -61,10 +64,12 @@ def _safe_file(root: Path, relative: str) -> Path:
 
 
 def _sha256(data: bytes) -> str:
+    """Return the hexadecimal SHA-256 digest of the supplied bytes."""
     return hashlib.sha256(data).hexdigest()
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    """Read nonblank JSONL rows, rejecting malformed JSON and values that are not objects."""
     rows: list[dict[str, Any]] = []
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
@@ -79,6 +84,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def _validate_storage(root: Path, storage: SourceNativeReference) -> bytes | None:
+    """Check local or embedded payload hashes and lengths; return None for external URIs."""
     if storage.storage_kind == "relative_path":
         data = _safe_file(root, storage.relative_path or "").read_bytes()
     elif storage.storage_kind == "embedded_utf8":
@@ -103,6 +109,7 @@ def _validate_storage(root: Path, storage: SourceNativeReference) -> bytes | Non
 
 class CanonicalPackage:
     def __init__(self, root: Path, *, validate: bool = True):
+        """Load a package and validate it by default, or load only its manifest when disabled."""
         self.root = Path(root)
         self.manifest: Manifest
         self._rows: dict[str, list[BaseModel]] = {}
@@ -112,6 +119,7 @@ class CanonicalPackage:
             self.manifest = Manifest.model_validate_json((self.root / "manifest.json").read_text())
 
     def validate(self) -> CanonicalPackage:
+        """Load and validate inventory, records, references, and fidelity, then return self."""
         root = self.root
         _check(root.is_dir(), "MISSING_PACKAGE", str(root))
         manifest_path = _safe_file(root, "manifest.json")
@@ -167,6 +175,7 @@ class CanonicalPackage:
         return self
 
     def _validate_references(self) -> None:
+        """Check source integrity, record links, parent trees, spans, and preservation payloads."""
         root = self.root
         sources = {item.source_version_id: item for item in self.manifest.source_versions}
         _check(len(sources) == len(self.manifest.source_versions), "DUPLICATE_SOURCE_VERSION", "source version IDs repeat")
@@ -220,6 +229,7 @@ class CanonicalPackage:
                 _check(diagnostic.preservation_id is not None, "UNPRESERVED_OUTCOME", diagnostic.diagnostic_id)
 
     def _validate_fidelity(self) -> None:
+        """Reconcile manifest fidelity totals with loaded records and diagnostics."""
         fidelity = self.manifest.fidelity
         _check(
             fidelity.source_object_count
@@ -239,40 +249,50 @@ class CanonicalPackage:
         _check(fidelity.error_count == sum(item.severity == "error" for item in diagnostics), "FIDELITY_MISMATCH", "errors")
 
     def _family(self, name: str):
+        """Return the loaded records for a JSONL family filename."""
         return self._rows[name]
 
     @property
     def documents(self) -> list[Document]:
+        """Return the loaded document records."""
         return self._family("documents.jsonl")
 
     @property
     def nodes(self) -> list[Node]:
+        """Return the loaded content nodes."""
         return self._family("nodes.jsonl")
 
     @property
     def spans(self) -> list[Span]:
+        """Return the loaded text spans."""
         return self._family("spans.jsonl")
 
     @property
     def relations(self) -> list[Relation]:
+        """Return the loaded relation records."""
         return self._family("relations.jsonl")
 
     @property
     def attributes(self) -> list[Attribute]:
+        """Return the loaded attribute records."""
         return self._family("attributes.jsonl")
 
     @property
     def preservation_records(self) -> list[PreservationRecord]:
+        """Return the loaded individual preservation records."""
         return self._family("preservation_records.jsonl")
 
     @property
     def preservation_bundles(self) -> list[PreservationBundle]:
+        """Return the loaded preservation bundles."""
         return self._family("preservation_bundles.jsonl")
 
     @property
     def preservation_artifacts(self) -> list[PreservationRecord | PreservationBundle]:
+        """Return individual preservation records followed by preservation bundles."""
         return self.preservation_records + self.preservation_bundles
 
     @property
     def diagnostics(self) -> list[Diagnostic]:
+        """Return the loaded ingestion diagnostics."""
         return self._family("diagnostics.jsonl")

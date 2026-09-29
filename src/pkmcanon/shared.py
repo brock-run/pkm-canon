@@ -12,6 +12,7 @@ from .schema_validation import default_schema_store
 
 
 def project_shared_content(package: CanonicalPackage) -> SharedContentSnapshot:
+    """Project documents, nodes, and links into a schema-validated shared content snapshot."""
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
     snapshot = SharedContentSnapshot(
         contract_version="0.1.0",
@@ -50,6 +51,7 @@ def project_shared_content(package: CanonicalPackage) -> SharedContentSnapshot:
 
 
 def write_shared_content(package: CanonicalPackage, output: Path) -> SharedContentSnapshot:
+    """Atomically write a shared content snapshot as JSON and return it."""
     snapshot = project_shared_content(package)
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)

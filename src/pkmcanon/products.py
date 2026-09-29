@@ -20,6 +20,7 @@ OWNER = re.compile(r"^Owner:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 
 
 def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local-operator") -> list[Proposal]:
+    """Draft attribute-convention rules with evidence from nodes accessible to the principal."""
     docs = {item.document_id: item for item in package.documents}
     nodes = {item.node_id: item for item in package.nodes}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
@@ -51,6 +52,7 @@ def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local
 
 
 def propose_domain_claims(package: CanonicalPackage, *, principal_id: str = "local-operator") -> list[Proposal]:
+    """Draft ownership claims from accessible Markdown Owner lines outside code nodes."""
     docs = {item.document_id: item for item in package.documents}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
     run_id = stable_id("run", package.manifest.package_id, "domain-claims-v1")
@@ -76,6 +78,7 @@ def propose_domain_claims(package: CanonicalPackage, *, principal_id: str = "loc
 
 
 def validate_proposal(package: CanonicalPackage, proposal: Proposal) -> None:
+    """Validate proposal identity, payload, status, trace IDs, and source-grounded evidence."""
     if proposal.source_package_id != package.manifest.package_id:
         raise PackageValidationError("PROPOSAL_PACKAGE_MISMATCH", proposal.proposal_id)
     if proposal.status != "proposed":
@@ -109,6 +112,7 @@ def validate_proposal(package: CanonicalPackage, proposal: Proposal) -> None:
 
 
 def write_proposals(path: Path, proposals: list[Proposal]) -> None:
+    """Write proposals in stable ID order, rejecting an existing file with different content."""
     path = Path(path)
     content = "".join(
         json.dumps(item.model_dump(mode="json"), sort_keys=True, ensure_ascii=False) + "\n"
@@ -124,6 +128,7 @@ def write_proposals(path: Path, proposals: list[Proposal]) -> None:
 
 
 def read_proposals(path: Path, package: CanonicalPackage) -> list[Proposal]:
+    """Load JSONL proposals and validate their schemas, evidence, and unique IDs."""
     proposals = []
     ids = set()
     for number, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):

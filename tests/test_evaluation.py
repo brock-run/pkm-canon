@@ -18,6 +18,7 @@ from pkmcanon.writer import build_package
 
 
 def test_retrieval_failure_becomes_grounded_review_proposal(tmp_path: Path) -> None:
+    """Verify missed gold evidence yields a valid proposal and empty results permit abstention."""
     source = tmp_path / "service.md"
     source.write_text("# Service\n\nOwner: Platform Team\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")
@@ -52,6 +53,7 @@ def test_retrieval_failure_becomes_grounded_review_proposal(tmp_path: Path) -> N
 
 
 def test_evaluation_cannot_label_inaccessible_evidence_as_expected(tmp_path: Path) -> None:
+    """Verify gold labels cannot require evidence inaccessible to the evaluation principal."""
     source = tmp_path / "service.md"
     source.write_text("# Service\n\nOwner: Platform Team\n")
     package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="platform")

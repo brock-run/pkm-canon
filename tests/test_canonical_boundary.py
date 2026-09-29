@@ -15,6 +15,7 @@ from pkmcanon.writer import build_package
 
 @pytest.fixture
 def roam_source(tmp_path: Path) -> Path:
+    """Write a Roam fixture with linked blocks, an attribute, and an unsupported macro."""
     source = [
         {
             "uid": "P1", "title": "Project",
@@ -29,10 +30,12 @@ def roam_source(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def package(tmp_path: Path, roam_source: Path) -> CanonicalPackage:
+    """Build a validated canonical package from the Roam fixture."""
     return build_package(RoamParser(), roam_source, tmp_path / "package", source_scope="test-graph")
 
 
 def _update_inventory(root: Path, relative: str) -> None:
+    """Refresh a mutated fixture file hash, byte length, and optional record count."""
     manifest_path = root / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
     content = (root / relative).read_bytes()
@@ -44,6 +47,7 @@ def _update_inventory(root: Path, relative: str) -> None:
 
 
 def _replace_record(root: Path, relative: str, update) -> None:
+    """Apply a mutation to JSONL rows and refresh the fixture inventory."""
     path = root / relative
     rows = [json.loads(line) for line in path.read_text().splitlines() if line]
     update(rows)
@@ -52,6 +56,7 @@ def _replace_record(root: Path, relative: str, update) -> None:
 
 
 def test_roam_package_is_complete_and_grounded(package: CanonicalPackage) -> None:
+    """Verify normalized records, preserved source bytes, and diagnostics reconcile."""
     assert package.manifest.fidelity.source_object_count == 4
     assert package.manifest.fidelity.partial == 1
     assert package.manifest.fidelity.normalized == 3
@@ -64,6 +69,7 @@ def test_roam_package_is_complete_and_grounded(package: CanonicalPackage) -> Non
 
 
 def test_replay_has_stable_records_and_is_idempotent(tmp_path: Path, roam_source: Path) -> None:
+    """Verify repeated ingestion yields identical records and reuses the same package."""
     one = build_package(RoamParser(), roam_source, tmp_path / "one", source_scope="test-graph")
     two = build_package(RoamParser(), roam_source, tmp_path / "two", source_scope="test-graph")
     for name in one.manifest.files:
@@ -73,6 +79,7 @@ def test_replay_has_stable_records_and_is_idempotent(tmp_path: Path, roam_source
 
 
 def test_access_policy_changes_package_identity(tmp_path: Path, roam_source: Path) -> None:
+    """Verify policy changes alter identity and cannot replace an existing package."""
     private = build_package(RoamParser(), roam_source, tmp_path / "private", source_scope="test-graph")
     wider = build_package(
         RoamParser(), roam_source, tmp_path / "wider", source_scope="test-graph",
@@ -87,6 +94,7 @@ def test_access_policy_changes_package_identity(tmp_path: Path, roam_source: Pat
 
 
 def test_missing_uid_and_timestamp_do_not_use_random_or_wall_clock(tmp_path: Path) -> None:
+    """Verify missing identity and time fields produce stable IDs and explicit diagnostics."""
     source = tmp_path / "missing.json"
     source.write_text('[{"title":"Untimed","children":[{"string":"Block"}]}]')
     first = build_package(RoamParser(), source, tmp_path / "first", source_scope="test")
@@ -99,6 +107,7 @@ def test_missing_uid_and_timestamp_do_not_use_random_or_wall_clock(tmp_path: Pat
 
 
 def test_invalid_block_order_and_time_are_diagnosed_and_preserved(tmp_path: Path) -> None:
+    """Verify malformed block metadata is diagnosed and its raw payload is retained."""
     source = tmp_path / "invalid-fields.json"
     source.write_text('[{"uid":"P","title":"Page","children":[{"uid":"B","order":"first","create-time":"yesterday","string":"Text"}]}]')
     package = build_package(RoamParser(), source, tmp_path / "package", source_scope="test")
@@ -108,6 +117,7 @@ def test_invalid_block_order_and_time_are_diagnosed_and_preserved(tmp_path: Path
 
 
 def test_bad_file_hash_fails(package: CanonicalPackage) -> None:
+    """Verify appended bytes are rejected by the package inventory length check."""
     with (package.root / "nodes.jsonl").open("a") as stream:
         stream.write("{}\n")
     with pytest.raises(PackageValidationError, match="FILE_LENGTH_MISMATCH"):
@@ -115,6 +125,7 @@ def test_bad_file_hash_fails(package: CanonicalPackage) -> None:
 
 
 def test_changed_source_blob_fails_after_inventory_is_updated(package: CanonicalPackage) -> None:
+    """Verify source storage checks detect tampering even with a refreshed inventory."""
     relative = "blobs/source-export.json"
     (package.root / relative).write_text("[]", encoding="utf-8")
     _update_inventory(package.root, relative)
@@ -123,6 +134,7 @@ def test_changed_source_blob_fails_after_inventory_is_updated(package: Canonical
 
 
 def test_fidelity_totals_must_reconcile(package: CanonicalPackage) -> None:
+    """Verify inconsistent manifest fidelity totals are rejected."""
     manifest_path = package.root / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
     manifest["fidelity"]["partial"] += 1
@@ -132,18 +144,21 @@ def test_fidelity_totals_must_reconcile(package: CanonicalPackage) -> None:
 
 
 def test_dangling_reference_fails_after_inventory_is_updated(package: CanonicalPackage) -> None:
+    """Verify record reference checks reject an unknown document after inventory refresh."""
     _replace_record(package.root, "nodes.jsonl", lambda rows: rows[0].update(document_id="missing"))
     with pytest.raises(PackageValidationError, match="DANGLING_DOCUMENT"):
         CanonicalPackage(package.root)
 
 
 def test_duplicate_id_fails_after_inventory_is_updated(package: CanonicalPackage) -> None:
+    """Verify duplicate node IDs are rejected even with a matching file inventory."""
     _replace_record(package.root, "nodes.jsonl", lambda rows: rows[1].update(node_id=rows[0]["node_id"]))
     with pytest.raises(PackageValidationError, match="DUPLICATE_ID"):
         CanonicalPackage(package.root)
 
 
 def test_inventory_count_fails(package: CanonicalPackage) -> None:
+    """Verify declared JSONL counts must match the actual record count."""
     manifest_path = package.root / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
     manifest["files"]["nodes.jsonl"]["record_count"] += 1
@@ -153,6 +168,7 @@ def test_inventory_count_fails(package: CanonicalPackage) -> None:
 
 
 def test_inventory_traversal_fails(package: CanonicalPackage) -> None:
+    """Verify inventory paths cannot traverse outside the package directory."""
     manifest_path = package.root / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
     manifest["files"]["../outside"] = manifest["files"]["nodes.jsonl"]
@@ -162,6 +178,7 @@ def test_inventory_traversal_fails(package: CanonicalPackage) -> None:
 
 
 def test_strict_models_and_schemas_reject_unknown_fields() -> None:
+    """Verify both runtime models and JSON Schemas reject undeclared document fields."""
     value = {"document_id": "a", "source_version_id": "b", "kind": "page", "title": "T", "surprise": True}
     with pytest.raises(ValidationError):
         Document.model_validate(value)
@@ -170,6 +187,7 @@ def test_strict_models_and_schemas_reject_unknown_fields() -> None:
 
 
 def test_storage_kind_matches_locator_in_model_and_schema() -> None:
+    """Verify models and schemas reject a locator inconsistent with its storage kind."""
     value = {"storage_kind": "relative_path", "external_uri": "https://example.test"}
     with pytest.raises(ValidationError):
         SourceNativeReference.model_validate(value)

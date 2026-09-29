@@ -10,6 +10,7 @@ from .package import CanonicalPackage, PackageValidationError
 
 
 def can_access(source: SourceVersion, principal_id: str) -> bool:
+    """Return whether the source is public or explicitly grants the principal access."""
     if source.access.visibility == "public":
         return True
     return principal_id in source.access.principal_ids
@@ -19,6 +20,7 @@ def evidence_for_node(
     package: CanonicalPackage, node_id: str, *,
     start: int = 0, end: int | None = None,
 ) -> EvidenceRef:
+    """Build source-grounded evidence for a node character range, rejecting invalid bounds."""
     node = next((item for item in package.nodes if item.node_id == node_id), None)
     if node is None:
         raise PackageValidationError("DANGLING_EVIDENCE_NODE", node_id)
@@ -53,6 +55,7 @@ def evidence_for_node(
 
 
 def validate_evidence(package: CanonicalPackage, evidence: EvidenceRef) -> None:
+    """Reject evidence that differs from the reference reconstructed from the package."""
     expected = evidence_for_node(
         package, evidence.node_id,
         start=evidence.start or 0, end=evidence.end,
@@ -65,6 +68,7 @@ def assemble_evidence_bundle(
     package: CanonicalPackage, query: str, *,
     principal_id: str, task_type: str, limit: int = 8,
 ) -> EvidenceBundle:
+    """Rank accessible nodes by query-term matches and report evidence coverage."""
     terms = {term.lower() for term in re.findall(r"[A-Za-z0-9_]+", query) if len(term) > 2}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
     docs = {item.document_id: item for item in package.documents}

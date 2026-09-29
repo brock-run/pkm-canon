@@ -8,6 +8,7 @@ from pkmcanon.package import CanonicalPackage
 
 
 def test_job_api_upload_worker_and_dedup(tmp_path: Path) -> None:
+    """Verify duplicate uploads share a job and the worker publishes a validated package."""
     root = tmp_path / "jobs"
     client = TestClient(create_app(root, max_upload_bytes=4096))
     payload = json.dumps([{"uid": "P", "title": "Page", "children": [{"uid": "B", "string": "Owner:: Team"}]}]).encode()
@@ -30,6 +31,7 @@ def test_job_api_upload_worker_and_dedup(tmp_path: Path) -> None:
 
 
 def test_job_api_rejects_large_upload_and_marks_bad_source(tmp_path: Path) -> None:
+    """Verify upload limits and durable, nonretryable errors for invalid source JSON."""
     root = tmp_path / "jobs"
     client = TestClient(create_app(root, max_upload_bytes=16))
     large = client.post(
@@ -53,6 +55,7 @@ def test_job_api_rejects_large_upload_and_marks_bad_source(tmp_path: Path) -> No
 
 
 def test_expired_job_lease_can_resume_idempotently(tmp_path: Path) -> None:
+    """Verify a worker reclaims an expired lease and completes the next attempt."""
     root = tmp_path / "jobs"
     store = JobStore(root)
     uploaded = root / "upload.tmp"

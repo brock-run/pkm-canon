@@ -29,6 +29,7 @@ class MarkdownAdapter:
     contract_version = "0.1.0"
 
     def parse(self, data: bytes, *, source_scope: str, source_version_id: str, native_id: str) -> AdapterResult:
+        """Parse UTF-8 Markdown into records, preserving text for partially normalized structures."""
         try:
             text = data.decode("utf-8")
         except UnicodeDecodeError as exc:

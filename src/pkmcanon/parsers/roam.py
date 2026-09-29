@@ -33,6 +33,7 @@ BLOCK_FIELDS = {"uid", "string", "order", "create-time", "edit-time", "children"
 
 
 def _timestamp(value: object) -> str | None:
+    """Convert numeric epoch milliseconds to UTC, returning None for nonnumeric values."""
     if value is None:
         return None
     if not isinstance(value, (int, float)):
@@ -41,6 +42,7 @@ def _timestamp(value: object) -> str | None:
 
 
 def _raw_payload(value: dict) -> tuple[str, str]:
+    """Return deterministic JSON text and its UTF-8 SHA-256 digest."""
     text = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     return text, hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -53,12 +55,15 @@ class RoamParser:
     contract_version = "0.1.0"
 
     def __init__(self, source_graph_name: str | None = None):
+        """Store an optional graph name for file-based parsing."""
         self.source_graph_name = source_graph_name
 
     def parse_file(self, filepath: Path, *, source_version_id: str = "source:uncommitted") -> AdapterResult:
+        """Read a Roam export and parse it using the configured graph name or file stem."""
         return self.parse(filepath.read_bytes(), source_scope=self.source_graph_name or filepath.stem, source_version_id=source_version_id, native_id=filepath.name)
 
     def parse(self, data: bytes, *, source_scope: str, source_version_id: str, native_id: str) -> AdapterResult:
+        """Convert Roam JSON pages into stable records with preservation and fidelity diagnostics."""
         try:
             pages = json.loads(data)
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -74,6 +79,7 @@ class RoamParser:
         blocks_by_uid: dict[str, list[str]] = {}
 
         def key_for(value: dict, path: str, seen: set[str], issues: list[str]) -> str:
+            """Use a unique UID or fall back to the JSON path while recording identity issues."""
             uid = value.get("uid")
             if not isinstance(uid, str) or not uid:
                 issues.append("MISSING_UID")
@@ -85,6 +91,7 @@ class RoamParser:
             return f"uid:{uid}"
 
         def scan_blocks(blocks: object, document_id: str, parent_id: str | None, parent_path: str) -> None:
+            """Collect ordered block entries recursively and index their UIDs for reference lookup."""
             if not isinstance(blocks, list) or not all(isinstance(block, dict) for block in blocks):
                 raise ValueError("INVALID_ROAM_CHILDREN")
             ordered = sorted(enumerate(blocks), key=lambda pair: (pair[1].get("order", 0) if isinstance(pair[1].get("order", 0), int) else 0, pair[0]))
@@ -113,6 +120,7 @@ class RoamParser:
                 scan_blocks(page["children"], doc_id, None, path)
 
         def preserve(subject_id: str, raw: dict, path: str, object_type: str) -> str:
+            """Append a raw JSON preservation record and return its stable identifier."""
             text, digest = _raw_payload(raw)
             preservation_id = stable_id("pres", subject_id, path, digest)
             result.records.append(PreservationRecord(
@@ -130,6 +138,7 @@ class RoamParser:
             return preservation_id
 
         def diagnose(subject_id: str, raw: dict, path: str, issues: list[str], preservation_id: str | None) -> None:
+            """Append one located diagnostic per distinct issue, linked to any preserved payload."""
             locator = SourceLocator(graph=source_scope, path=path, source_uid=raw.get("uid") if isinstance(raw.get("uid"), str) else None)
             for issue in sorted(set(issues)):
                 result.diagnostics.append(Diagnostic(
@@ -145,6 +154,7 @@ class RoamParser:
             kind: str, representation: str, target_ids: list[str] | None,
             target_kind: str = "canonical",
         ) -> None:
+            """Append a relation or record an issue when a canonical target cannot be resolved uniquely."""
             if target_kind == "canonical" and (target_ids is None or len(target_ids) != 1):
                 issues.append(f"UNRESOLVED_{kind.upper()}")
                 return

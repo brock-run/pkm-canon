@@ -69,6 +69,7 @@ def _source_reference_constraints(schema: dict) -> None:
 
 
 def _augment_source_references(schema: dict, *, root_is_reference: bool = False) -> None:
+    """Add storage-locator constraints to root and nested source-reference schemas."""
     if root_is_reference:
         _source_reference_constraints(schema)
     for name, definition in schema.get("$defs", {}).items():
@@ -77,6 +78,7 @@ def _augment_source_references(schema: dict, *, root_is_reference: bool = False)
 
 
 def rendered_schema(path: str, model: type) -> str:
+    """Render a model schema with stable identifiers and source-reference constraints."""
     schema = model.model_json_schema(by_alias=True)
     _augment_source_references(schema, root_is_reference=model is models.SourceNativeReference)
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
@@ -86,6 +88,7 @@ def rendered_schema(path: str, model: type) -> str:
 
 
 def main() -> int:
+    """Generate committed schemas, or return a nonzero status when --check finds drift."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="fail if committed schemas are stale")
     args = parser.parse_args()

@@ -16,6 +16,7 @@ from pkmcanon.writer import build_package
 
 
 def test_index_rebuilds_and_filters_before_serving(tmp_path: Path) -> None:
+    """Verify deterministic indexes, access filtering, result limits, and tampering detection."""
     source = tmp_path / "roam.json"
     source.write_text(json.dumps([
         {"uid": "P1", "title": "Project", "children": [{"uid": "B1", "string": "See [[Other]] for platform ownership"}]},

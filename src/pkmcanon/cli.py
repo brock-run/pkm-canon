@@ -43,6 +43,7 @@ app = typer.Typer(no_args_is_help=True)
 
 
 def _summary(package: CanonicalPackage) -> str:
+    """Serialize package identity, fidelity, and record counts for operator output."""
     return json.dumps({
         "package_id": package.manifest.package_id,
         "source_versions": [item.source_version_id for item in package.manifest.source_versions],

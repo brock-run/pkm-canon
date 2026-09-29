@@ -46,10 +46,12 @@ MODEL_FILES: dict[type[BaseModel], str] = {
 
 
 def _sha256(data: bytes) -> str:
+    """Return the hexadecimal SHA-256 digest of source or package bytes."""
     return hashlib.sha256(data).hexdigest()
 
 
 def _serialize(model: BaseModel) -> str:
+    """Serialize a record deterministically using aliases and omitting None fields."""
     return json.dumps(model.model_dump(mode="json", by_alias=True, exclude_none=True), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
 
 

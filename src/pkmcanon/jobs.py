@@ -26,6 +26,7 @@ _RETRYABLE = {"INGESTION_FAILED", "UPLOAD_MISSING"}
 
 
 def _now() -> str:
+    """Return the current UTC time as an ISO 8601 string."""
     return datetime.now(UTC).isoformat()
 
 
@@ -50,6 +51,7 @@ class JobStore:
     """One local worker may process a job at a time; expired leases permit recovery."""
 
     def __init__(self, root: Path):
+        """Create local input and package directories and initialize the SQLite job table."""
         self.root = Path(root)
         self.inputs = self.root / "inputs"
         self.packages = self.root / "packages"
@@ -76,17 +78,20 @@ class JobStore:
             """)
 
     def _connection(self) -> sqlite3.Connection:
+        """Open the job database with named-column rows and a ten-second lock timeout."""
         connection = sqlite3.connect(self.database, timeout=10)
         connection.row_factory = sqlite3.Row
         return connection
 
     @staticmethod
     def _public(row: sqlite3.Row) -> IngestionJob:
+        """Convert a database row to the public job model, excluding internal lease fields."""
         return IngestionJob.model_validate({
             key: row[key] for key in IngestionJob.model_fields
         })
 
     def get(self, job_id: str) -> IngestionJob | None:
+        """Return the stored job, or None when its ID is unknown."""
         with self._connection() as connection:
             row = connection.execute("SELECT * FROM jobs WHERE job_id = ?", (job_id,)).fetchone()
         return self._public(row) if row else None
@@ -95,6 +100,7 @@ class JobStore:
         self, temporary: Path, *, source_type: SourceType, source_scope: str,
         native_id: str, source_hash: str,
     ) -> IngestionJob:
+        """Retain an upload and create or reuse a job keyed by source and adapter identity."""
         adapter = _ADAPTERS[source_type]()
         job_id = stable_id(
             "job", source_type, source_scope, native_id, source_hash,
@@ -122,6 +128,7 @@ class JobStore:
         return job
 
     def claim(self) -> IngestionJob | None:
+        """Atomically lease the oldest queued or expired job for five minutes, if any."""
         now = _now()
         lease_until = (datetime.now(UTC) + timedelta(minutes=5)).isoformat()
         with self._connection() as connection:
@@ -144,6 +151,7 @@ class JobStore:
         return self._public(updated)
 
     def finish(self, job: IngestionJob, *, package_id: str | None = None, error_code: str | None = None) -> None:
+        """Record success or failure for the claimed attempt, rejecting a lost lease."""
         with self._connection() as connection:
             changed = connection.execute(
                 """UPDATE jobs SET state = ?, updated_at = ?, lease_until = NULL,
@@ -158,6 +166,7 @@ class JobStore:
             raise PackageValidationError("JOB_LEASE_LOST", job.job_id)
 
     def retry(self, job_id: str) -> IngestionJob | None:
+        """Requeue a retryable failed job, returning None if no job qualifies."""
         with self._connection() as connection:
             changed = connection.execute(
                 """UPDATE jobs SET state = 'received', updated_at = ?,
@@ -168,6 +177,7 @@ class JobStore:
         return self.get(job_id) if changed else None
 
     def run_next(self) -> IngestionJob | None:
+        """Process one available job and persist its package ID or failure code."""
         job = self.claim()
         if job is None:
             return None
@@ -203,6 +213,7 @@ def create_app(root: Path, *, max_upload_bytes: int = 32 * 1024 * 1024) -> FastA
 
     @app.get("/health")
     def health() -> dict[str, str]:
+        """Return the local API health response."""
         return {"status": "ok"}
 
     @app.post("/api/v1/ingest/{source_type}", response_model=IngestionJob, status_code=202)
@@ -212,6 +223,7 @@ def create_app(root: Path, *, max_upload_bytes: int = 32 * 1024 * 1024) -> FastA
         source_scope: Annotated[str, Query(min_length=1, max_length=200)],
         native_id: Annotated[str, Query(min_length=1, max_length=500)],
     ) -> IngestionJob:
+        """Stream a size-limited upload into the queue and remove its temporary file."""
         claimed_length = request.headers.get("content-length")
         if claimed_length and claimed_length.isdecimal() and int(claimed_length) > max_upload_bytes:
             raise HTTPException(status_code=413, detail="UPLOAD_TOO_LARGE")
@@ -237,6 +249,7 @@ def create_app(root: Path, *, max_upload_bytes: int = 32 * 1024 * 1024) -> FastA
 
     @app.get("/api/v1/ingest/jobs/{job_id}", response_model=IngestionJob)
     def status(job_id: str) -> IngestionJob:
+        """Return a job status or raise HTTP 404 for an unknown job."""
         job = store.get(job_id)
         if job is None:
             raise HTTPException(status_code=404, detail="JOB_NOT_FOUND")
@@ -244,6 +257,7 @@ def create_app(root: Path, *, max_upload_bytes: int = 32 * 1024 * 1024) -> FastA
 
     @app.post("/api/v1/ingest/jobs/{job_id}/retry", response_model=IngestionJob)
     def retry(job_id: str) -> IngestionJob:
+        """Requeue a retryable job or report an unknown or ineligible job through HTTP."""
         job = store.retry(job_id)
         if job is None:
             if store.get(job_id) is None:
