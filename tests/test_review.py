@@ -89,3 +89,38 @@ def test_approval_from_another_run_cannot_publish(review_context):
     ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved")
     with pytest.raises(PackageValidationError, match="REVIEW_RUN_MISMATCH"):
         approved_proposals([proposal.model_copy(update={"run_id": "other-run"})], ledger, policy)
+
+
+def test_revoked_reviewer_cannot_publish_previously_approved_claim(review_context, tmp_path):
+    package, proposal, policy, ledger = review_context
+    ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved")
+    revoked = policy.model_copy(update={"approved_reviewers": ["stranger"]})
+    output = tmp_path / "published.md"
+    output.write_text("Previously published content")
+    with pytest.raises(PackageValidationError, match="UNAUTHORIZED_REVIEWER"):
+        publish_reviewed_domain_page(package, [proposal], ledger, revoked, output)
+    assert output.read_text() == "Previously published content"
+    assert not output.with_name(output.name + ".tmp").exists()
+
+
+def test_publication_requires_publisher_access_even_after_authorized_review(review_context, tmp_path):
+    package, proposal, policy, ledger = review_context
+    ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved")
+    output = tmp_path / "published.md"
+    with pytest.raises(PackageValidationError, match="PUBLICATION_ACCESS_DENIED"):
+        publish_reviewed_domain_page(package, [proposal], ledger, policy, output, principal_id="stranger")
+    assert not output.exists()
+    assert not output.with_name(output.name + ".tmp").exists()
+
+
+def test_failed_atomic_review_creation_removes_temporary_file(review_context, monkeypatch):
+    package, proposal, policy, ledger = review_context
+
+    def conflict(*args):
+        raise FileExistsError("another writer won")
+
+    monkeypatch.setattr("pkmcanon.review.os.link", conflict)
+    with pytest.raises(PackageValidationError, match="REVIEW_EVENT_EXISTS"):
+        ledger.record(proposal, package, policy=policy, reviewer_id="local-operator", decision="approved")
+    assert list(ledger.root.iterdir()) == []
+    assert ledger.events() == []

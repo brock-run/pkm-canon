@@ -92,3 +92,26 @@ def test_both_retrieval_paths_enforce_source_access(tmp_path: Path, visibility, 
     for bundle in (assemble_evidence_bundle(package, "owner", **options), search_index(package, build_index(package), "owner", **options)):
         assert bool(bundle.evidence) is allowed
         assert bundle.coverage == ("complete" if allowed else "none")
+
+
+@pytest.mark.parametrize("field,value", [
+    ("path", "docs/other.md"), ("workspace", "other-repo"),
+    ("line_start", 99), ("line_end", 99),
+    ("char_start", 1), ("char_end", 1),
+])
+def test_evidence_rejects_tampered_source_locator(package, field, value):
+    node = next(row for row in package.nodes if "Café" in row.plain_text)
+    evidence = evidence_for_node(package, node.node_id)
+    locator = evidence.source_locator.model_copy(update={field: value})
+    with pytest.raises(PackageValidationError, match="EVIDENCE_MISMATCH"):
+        validate_evidence(package, evidence.model_copy(update={"source_locator": locator}))
+
+
+def test_evidence_offsets_count_unicode_characters_including_emoji(tmp_path):
+    source = tmp_path / "unicode.md"
+    source.write_text("A🧭e\u0301Z", encoding="utf-8")
+    package = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="repo")
+    evidence = evidence_for_node(package, package.nodes[0].node_id, start=1, end=4)
+    assert evidence.quote == "🧭e\u0301"
+    assert (evidence.source_locator.char_start, evidence.source_locator.char_end) == (1, 4)
+    validate_evidence(package, evidence)

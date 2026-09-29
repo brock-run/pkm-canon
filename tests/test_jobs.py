@@ -164,3 +164,73 @@ def test_upload_at_exact_limit_and_missing_job_routes(tmp_path):
 def test_upload_limit_must_be_positive(tmp_path, limit):
     with pytest.raises(ValueError, match="max_upload_bytes must be positive"):
         create_app(tmp_path / "jobs", max_upload_bytes=limit)
+
+
+@pytest.mark.parametrize("error,code,retryable", [
+    (ValueError("INVALID_MARKDOWN_ENCODING"), "INVALID_MARKDOWN_ENCODING", False),
+    (ValueError("private parser details"), "SOURCE_INVALID", False),
+    (PackageValidationError("CUSTOM_VALIDATION", "private details"), "CUSTOM_VALIDATION", False),
+])
+def test_worker_persists_safe_failure_codes(queued_job, monkeypatch, error, code, retryable):
+    store, job = queued_job
+
+    def fail(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr("pkmcanon.jobs.build_package", fail)
+    result = store.run_next()
+    assert (result.state, result.error_code, result.retryable, result.attempts) == ("failed", code, retryable, 1)
+    assert result.package_id is None
+    assert "private" not in result.model_dump_json()
+    assert JobStore(store.root).get(job.job_id) == result
+    assert store.run_next() is None
+    assert list(store.packages.iterdir()) == []
+
+
+def test_duplicate_enqueue_preserves_completed_state(queued_job, tmp_path):
+    store, job = queued_job
+    completed = store.run_next()
+    upload = tmp_path / "duplicate.md"
+    upload.write_bytes((store.inputs / f"{job.job_id}.md").read_bytes())
+    replay = store.enqueue(upload, source_type="markdown", source_scope=job.source_scope, native_id=job.native_id, source_hash=job.source_hash)
+    assert replay == completed
+    assert store.claim() is None
+    assert len(list(store.inputs.iterdir())) == 1
+
+
+def test_duplicate_enqueue_detects_corrupted_retained_upload(queued_job, tmp_path):
+    store, job = queued_job
+    retained = store.inputs / f"{job.job_id}.md"
+    upload = tmp_path / "duplicate.md"
+    upload.write_bytes(retained.read_bytes())
+    retained.write_bytes(b"corrupted")
+    with pytest.raises(PackageValidationError, match="UPLOAD_HASH_CONFLICT"):
+        store.enqueue(upload, source_type="markdown", source_scope=job.source_scope, native_id=job.native_id, source_hash=job.source_hash)
+    assert store.get(job.job_id) == job
+    assert retained.read_bytes() == b"corrupted"
+
+
+@pytest.mark.parametrize("field,value", [("source_scope", "other-repo"), ("native_id", "other.md")])
+def test_upload_identity_includes_scope_and_native_path(queued_job, tmp_path, field, value):
+    store, original = queued_job
+    upload = tmp_path / "copy.md"
+    upload.write_bytes((store.inputs / f"{original.job_id}.md").read_bytes())
+    options = {
+        "source_type": "markdown", "source_scope": original.source_scope,
+        "native_id": original.native_id, "source_hash": original.source_hash,
+    }
+    options[field] = value
+    separate = store.enqueue(upload, **options)
+    assert separate.job_id != original.job_id
+    assert store.get(original.job_id) == original
+    assert len(list(store.inputs.iterdir())) == 2
+
+
+def test_finished_attempt_cannot_overwrite_its_result(queued_job):
+    store, job = queued_job
+    claimed = store.claim()
+    store.finish(claimed, package_id="committed")
+    completed = store.get(job.job_id)
+    with pytest.raises(PackageValidationError, match="JOB_LEASE_LOST"):
+        store.finish(claimed, error_code="INGESTION_FAILED")
+    assert store.get(job.job_id) == completed

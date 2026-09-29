@@ -69,3 +69,58 @@ def test_store_wraps_rename_failure_without_publishing(source, tmp_path, monkeyp
         FilesystemPackageStore().commit(staged.root, destination)
     assert staged.root.exists()
     assert not destination.exists()
+
+
+@pytest.mark.parametrize("same_package", [True, False], ids=["same-package", "conflicting-package"])
+def test_store_handles_destination_created_during_atomic_commit(source, tmp_path, monkeypatch, same_package):
+    staged = build_package(MarkdownAdapter(), source, tmp_path / "stage", source_scope="repo")
+    winner = build_package(MarkdownAdapter(), source, tmp_path / "winner", source_scope="repo" if same_package else "other")
+    destination = tmp_path / "destination"
+    original_manifest = (winner.root / "manifest.json").read_bytes()
+
+    def competing_commit(staged_path, destination_path):
+        assert staged_path == staged.root
+        assert destination_path == destination
+        shutil.copytree(winner.root, destination_path)
+        raise OSError("destination appeared during rename")
+
+    monkeypatch.setattr("pkmcanon.storage.os.replace", competing_commit)
+    store = FilesystemPackageStore()
+    if same_package:
+        committed = store.commit(staged.root, destination)
+        assert committed.root == destination
+        assert committed.manifest.package_id == staged.manifest.package_id
+    else:
+        with pytest.raises(PackageValidationError, match="PACKAGE_COMMIT_FAILED"):
+            store.commit(staged.root, destination)
+    assert (destination / "manifest.json").read_bytes() == original_manifest
+    assert store.open(destination).manifest.package_id == winner.manifest.package_id
+    assert staged.root.exists()
+
+
+def test_idempotent_writer_does_not_parse_again(source, tmp_path, monkeypatch):
+    adapter = MarkdownAdapter()
+    package = build_package(adapter, source, tmp_path / "package", source_scope="repo")
+    original = (package.root / "manifest.json").read_bytes()
+
+    def unexpected_parse(*args, **kwargs):
+        pytest.fail("An existing package with the same identity must be reused")
+
+    monkeypatch.setattr(adapter, "parse", unexpected_parse)
+    replay = build_package(adapter, source, package.root, source_scope="repo")
+    assert replay.manifest == package.manifest
+    assert (package.root / "manifest.json").read_bytes() == original
+    assert not list(tmp_path.glob(".package.staging-*"))
+
+
+def test_adapter_failure_leaves_no_package_or_staging_directory(source, tmp_path, monkeypatch):
+    adapter = MarkdownAdapter()
+
+    def fail(*args, **kwargs):
+        raise ValueError("INVALID_SOURCE")
+
+    monkeypatch.setattr(adapter, "parse", fail)
+    with pytest.raises(ValueError, match="^INVALID_SOURCE$"):
+        build_package(adapter, source, tmp_path / "package", source_scope="repo")
+    assert not (tmp_path / "package").exists()
+    assert not list(tmp_path.glob(".package.staging-*"))

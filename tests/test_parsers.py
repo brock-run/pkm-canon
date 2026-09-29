@@ -142,3 +142,74 @@ def test_stable_identity_preserves_component_boundaries_and_unicode():
     assert stable_id("node", "a:b", "c") != stable_id("node", "a", "b:c")
     assert stable_id("node", "café") != stable_id("node", "cafe")
     assert stable_id("node", "a", "b") != stable_id("node", "b", "a")
+
+
+@pytest.mark.parametrize("timestamp,expected", [
+    (0, "1970-01-01T00:00:00+00:00"),
+    (-1000, "1969-12-31T23:59:59+00:00"),
+    (1500, "1970-01-01T00:00:01.500000+00:00"),
+])
+def test_roam_page_and_block_timestamps_use_epoch_milliseconds(timestamp, expected):
+    result = parse_roam([{
+        "uid": "P", "title": "Page", "create-time": timestamp, "edit-time": timestamp,
+        "children": [{"uid": "B", "string": "Text", "create-time": timestamp, "edit-time": timestamp}],
+    }])
+    document = next(row for row in result.records if isinstance(row, Document))
+    node = next(row for row in result.records if isinstance(row, Node))
+    assert document.created_at == document.updated_at == expected
+    details = node.facets["pkm/source-roam"].model_extra
+    assert details["created_at"] == details["updated_at"] == expected
+    assert result.diagnostics == []
+
+
+def test_roam_uid_identity_survives_reordering_and_content_edits():
+    original = parse_roam([
+        {"uid": "P", "title": "Page", "children": [{"uid": "B", "string": "Before"}]},
+        {"uid": "Q", "title": "Other"},
+    ])
+    edited = parse_roam([
+        {"uid": "Q", "title": "Renamed"},
+        {"uid": "P", "title": "Page", "children": [{"uid": "B", "string": "After"}]},
+    ])
+    def identities(result, record_type, id_field):
+        return {
+            row.facets["pkm/source-roam"].model_extra["roam_uid"]: getattr(row, id_field)
+            for row in result.records if isinstance(row, record_type)
+        }
+    assert identities(original, Document, "document_id") == identities(edited, Document, "document_id")
+    assert identities(original, Node, "node_id") == identities(edited, Node, "node_id")
+    assert next(row for row in edited.records if isinstance(row, Node)).plain_text == "After"
+
+
+@pytest.mark.parametrize("adapter,data,native_id", [
+    (RoamParser(), b'[{"uid":"P","title":"Page","children":[{"uid":"B","string":"Text"}]}]', "export.json"),
+    (MarkdownAdapter(), b"# Page\n\nText", "page.md"),
+])
+def test_source_scope_separates_document_and_node_identities(adapter, data, native_id):
+    results = [adapter.parse(data, source_scope=scope, source_version_id="version", native_id=native_id) for scope in ("one", "two")]
+    for record_type, id_field in ((Document, "document_id"), (Node, "node_id")):
+        ids = [{getattr(row, id_field) for row in result.records if isinstance(row, record_type)} for result in results]
+        assert ids[0] and ids[1]
+        assert ids[0].isdisjoint(ids[1])
+
+
+def test_markdown_adjacent_headings_split_paragraphs_without_blank_lines():
+    result = parse_markdown(b"Intro\n# First\n## Second\nBody\nlast line")
+    nodes = [row for row in result.records if isinstance(row, Node)]
+    assert [(row.node_type, row.plain_text, row.position) for row in nodes] == [
+        ("block", "Intro", 0), ("heading", "# First", 1),
+        ("heading", "## Second", 2), ("block", "Body\nlast line", 3),
+    ]
+    assert [row.facets["pkm/source-markdown"].model_extra["line_start"] for row in nodes] == [1, 2, 3, 4]
+    assert next(row for row in result.records if isinstance(row, Document)).title == "First"
+
+
+def test_roam_parse_file_uses_explicit_graph_or_file_stem(tmp_path):
+    path = tmp_path / "graph.json"
+    path.write_bytes(b'[{"uid":"P","title":"Page"}]')
+    for configured, expected_scope in ((None, "graph"), ("custom", "custom")):
+        parser = RoamParser(configured)
+        assert parser.parse_file(path, source_version_id="snapshot") == parser.parse(
+            path.read_bytes(), source_scope=expected_scope,
+            source_version_id="snapshot", native_id="graph.json",
+        )

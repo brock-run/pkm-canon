@@ -294,3 +294,44 @@ def test_inventory_symlink_is_rejected_even_when_bytes_match(package, tmp_path):
 def test_missing_schema_root_has_actionable_error(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError, match="Generate or restore docs/specs/schemas"):
         default_schema_store(tmp_path / "missing")
+
+
+@pytest.mark.parametrize("relative", ["/absolute", "./nodes.jsonl", "blobs//source-export.json", "blobs\\source-export.json"])
+def test_inventory_rejects_noncanonical_paths(package, relative):
+    path = package.root / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["files"][relative] = manifest["files"]["nodes.jsonl"]
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(PackageValidationError, match="UNSAFE_PATH"):
+        CanonicalPackage(package.root)
+
+
+def test_inventory_rejects_directory_symlink_escape(package, tmp_path):
+    directory = package.root / "blobs"
+    outside = tmp_path / "outside-blobs"
+    directory.rename(outside)
+    directory.symlink_to(outside, target_is_directory=True)
+    with pytest.raises(PackageValidationError, match="UNSAFE_PATH"):
+        CanonicalPackage(package.root)
+
+
+@pytest.mark.parametrize("mutation,code", [
+    ("missing-family", "INVENTORY_MISSING_FAMILY"),
+    ("blob-record-count", "INVENTORY_MISMATCH"),
+    ("duplicate-source", "DUPLICATE_SOURCE_VERSION"),
+    ("source-hash", "SOURCE_HASH_MISMATCH"),
+])
+def test_manifest_integrity_constraints(package, mutation, code):
+    path = package.root / "manifest.json"
+    manifest = json.loads(path.read_text())
+    if mutation == "missing-family":
+        del manifest["files"]["nodes.jsonl"]
+    elif mutation == "blob-record-count":
+        manifest["files"]["blobs/source-export.json"]["record_count"] = 1
+    elif mutation == "duplicate-source":
+        manifest["source_versions"].append(manifest["source_versions"][0].copy())
+    else:
+        manifest["source_versions"][0]["content_hash"] = "0" * 64
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(PackageValidationError, match=code):
+        CanonicalPackage(package.root)
