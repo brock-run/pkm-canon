@@ -203,7 +203,25 @@ Workstream 0 resolves these gaps before new platform work depends on the contrac
 - **Acceptance:** Tests cover providers with and without usage APIs; budget breaches emit a configured event; sensitive fixture text is absent from default logs.
 - **Depends on:** WI-008, WI-013, WI-016.
 
-## 9. CI quality gates
+## 9. Workstream 6 — Release operations and end-to-end acceptance
+
+### WI-020: Establish deployable configuration, access control, and recovery
+
+- **Objective:** Make the V1 service safe and operable outside a developer workstation.
+- **Files:** deployment configuration, environment example, authentication/authorization modules, CI workflow, and operations runbook.
+- **Approach:** Define configuration for package storage, database, provider adapters, retention, budgets, and secrets; authenticate callers; authorize ingestion and review actions; provide health/readiness checks; document database migration, backup, and restore procedures. The release environment MUST run Python 3.11+ and install the declared test dependencies reproducibly.
+- **Acceptance:** A clean production-like environment starts from documented configuration; unauthenticated or unauthorized ingestion/review requests fail; an authorized operator can complete the workflow; a restore drill recovers a package and its review history; CI runs on the supported Python version.
+- **Depends on:** WI-008, WI-010, WI-017.
+
+### WI-021: Run an end-to-end V1 release candidate and evaluation
+
+- **Objective:** Prove the product outcome, not merely individual components.
+- **Files:** sanitized fixture corpus, labeled evaluation set, end-to-end tests, release checklist, and operator runbook.
+- **Approach:** Exercise upload through package publication, database load, retrieval, inference, review, active-manifest publication, replay, and Markdown projection. Include expected failures and retry paths. Establish written acceptance thresholds for retrieval quality, rule usefulness/grounding, stage timing, and fidelity diagnostics before the release candidate is judged.
+- **Acceptance:** The end-to-end suite passes on a sanitized representative corpus; every published rule has valid evidence and approval history; package replay is deterministic; recovery and authorization tests pass; the agreed evaluation thresholds and operator sign-off are recorded in the release checklist.
+- **Depends on:** WI-018, WI-019, WI-020.
+
+## 10. CI quality gates
 
 Before V1 release, CI MUST run:
 
@@ -216,6 +234,17 @@ Before V1 release, CI MUST run:
 - projection determinism and diagnostic tests;
 - security fixtures for path traversal, oversized input, and external URI behavior.
 
-## 10. Explicitly deferred work
+## 11. Owner decisions required before the V1 release candidate
+
+The plan now covers the required implementation work, but these product and deployment decisions need an explicit owner decision before WI-020/WI-021 can close:
+
+- **Activation meaning:** Specify the consumer of an approved manifest. In V1, activation publishes a reviewed manifest; it does not automatically alter an external PKM or platform configuration.
+- **Operator authorization:** Define who may ingest private exports, view preserved payloads, and approve rules, along with the identity provider or local access model.
+- **Data boundary and retention:** Set storage location, encryption, backups, retention duration, and deletion workflow for raw exports, preserved blobs, prompts, and review history.
+- **Provider boundary:** Select deployment providers and state whether private source text may leave the controlled environment for embeddings or inference.
+- **Release measurements:** Approve a representative sanitized corpus and concrete thresholds for retrieval quality, grounded-rule usefulness, throughput, and recovery time.
+- **Projection expectation:** Confirm that V1's Markdown output is for audit, not a guaranteed round-trip import into Obsidian or Logseq.
+
+## 12. Explicitly deferred work
 
 Do not silently pull these into V1 work items: cross-source identity resolution, full provenance/capability layers, additional source adapters, full target-specific round trips, real-time sync, end-user chat, or automatic rule application. Each requires a separate product decision and scheduled workstream.

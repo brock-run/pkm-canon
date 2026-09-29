@@ -8,7 +8,7 @@ Normalization must remain portable, replayable, and auditable without requiring 
 
 ## Decision
 
-The validated filesystem canonical package—`manifest.json`, JSONL record files, diagnostics, and preserved blobs—is the authoritative result of ingestion. PostgreSQL, indexes, embeddings, AI analyses, and exports are derived products.
+The validated filesystem canonical package—`manifest.json`, JSONL record files, diagnostics, and preserved blobs—is the authoritative result of ingestion. PostgreSQL, indexes, embeddings, AI analyses, and exports are derived products. The manifest records a content-addressed hash of the source export and the package identifier.
 
 An ingest publishes a package only after record, reference, inventory, count, path, and hash validation succeeds.
 

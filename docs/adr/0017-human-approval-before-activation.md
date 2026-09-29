@@ -14,5 +14,6 @@ Rules begin as `proposed` and remain inactive until an authorized operator recor
 
 - LangGraph pauses at an `awaiting_review` boundary.
 - Rejected rules remain auditable but are excluded from active manifests.
+- Approved manifests are immutable, versioned snapshots; a later review publishes a successor rather than mutating history.
 - Repeated decision requests must be idempotent.
 - Operator authentication and authorization are required before release.
