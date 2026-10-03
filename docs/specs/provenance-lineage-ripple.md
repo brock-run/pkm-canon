@@ -1,6 +1,6 @@
-# Provenance, lineage, and ripple in Rosetta
+# Provenance, lineage, and ripple in PKM Canon
 
-**Status:** Proposed contract. Rosetta already records source versions, hashes,
+**Status:** Proposed contract. PKM Canon already records source versions, hashes,
 evidence references, and package IDs; a durable version-level dependency
 ledger and reverse-impact service are not implemented yet.
 
@@ -19,9 +19,9 @@ review.
 These are three views of related evidence, not interchangeable names. The
 [portable canon contracts](canon-contracts-v0.1.md) define version references,
 snapshots, publication pins, dependency edges, and impact queries that can be
-shared without imposing Rosetta's package format on another product.
+shared without imposing PKM Canon's package format on another product.
 
-## Rosetta application
+## PKM Canon application
 
 - **Provenance:** identify the source system, source scope/native ID, captured
   bytes and hash, parser/profile version, transformation activity, and actor or
@@ -53,14 +53,14 @@ flowchart LR
 ## Standards and storage boundary
 
 [W3C PROV-O](https://www.w3.org/TR/prov-o/) supplies interoperable vocabulary
-for entities, activities, agents, use, generation, and derivation. Rosetta can
+for entities, activities, agents, use, generation, and derivation. PKM Canon can
 map a source version or package to an Entity, parsing to an Activity, and the
 operator or parser service to an Agent, while retaining its own product IDs.
 
 [OpenLineage's job/run/dataset model](https://openlineage.io/docs/spec/object-model/)
 can describe ingestion and index-build runs, input/output datasets, and
 dataset versions. Emit it from durable events when an operational lineage
-backend is useful. Rosetta still needs exact record/evidence dependencies for
+backend is useful. PKM Canon still needs exact record/evidence dependencies for
 questions such as “Which approved rule cited this changed node?” OpenLineage
 is a compatible projection of pipeline activity, not the sole impact ledger.
 

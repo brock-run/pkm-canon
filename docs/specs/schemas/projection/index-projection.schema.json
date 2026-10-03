@@ -52,7 +52,7 @@
       "type": "object"
     }
   },
-  "$id": "urn:pkm-rosetta:schema:v1:projection:index-projection",
+  "$id": "urn:pkm-canon:schema:v1:projection:index-projection",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {

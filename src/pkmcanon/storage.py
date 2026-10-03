@@ -1,4 +1,4 @@
-"""Product-neutral canon store port and Rosetta's package adapter."""
+"""Product-neutral canon store port and PKM Canon's package adapter."""
 
 from __future__ import annotations
 

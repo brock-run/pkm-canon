@@ -72,8 +72,8 @@ def test_audit_fidelity_ranks_diagnostics_without_exposing_source_text(tmp_path)
     result = runner.invoke(app, ["audit-fidelity", str(package), "--top", "1"])
     assert result.exit_code == 0, result.output
     audit = json.loads(result.stdout)
-    assert audit["fidelity"]["warning_count"] == 2
-    assert audit["distinct_diagnostic_codes"] == 2
+    assert audit["fidelity"]["warning_count"] == 1
+    assert audit["distinct_diagnostic_codes"] == 1
     assert audit["diagnostics"] == [{
         "code": "UNRESOLVED_PAGE_REF", "severity": "warning",
         "outcome": "unresolved_reference", "count": 1,

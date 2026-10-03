@@ -18,7 +18,7 @@ from .models import (
 from .package import CanonicalPackage, PackageValidationError
 from .schema_validation import default_schema_store
 
-CHANGE_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:retrieval-change"
+CHANGE_SCHEMA = "urn:pkm-canon:schema:v1:knowledge:retrieval-change"
 
 
 def read_evaluation_cases(path: Path) -> list[EvaluationCase]:

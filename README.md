@@ -1,7 +1,7 @@
-# PKM Rosetta
+# PKM Canon
 
-Rosetta converts source exports into independently validated, portable
-canonical packages. The package is Rosetta's authoritative ingestion result;
+PKM Canon converts source exports into independently validated, portable
+canonical packages. The package is PKM Canon's authoritative ingestion result;
 search, inference, review outputs, and Markdown pages are derived products.
 
 The current implementation has two source adapters: Roam JSON and one
@@ -41,11 +41,13 @@ pkmcanon propose-domain-claims output/markdown-package output/domain-proposals.j
 ```
 
 Each proposal file contains stable IDs, a typed payload, exact evidence
-references, and a source-package ID. The review HTML ranks draft rules by
-evidence count and shows a few escaped citation previews. The command does not
+references, and a source-package ID. The review HTML ranks draft rules by a
+support heuristic and shows a few escaped citation previews. The command does not
 upload it or record decisions. The file contains source excerpts; keep the
 output private and inspect full evidence before review. Methodology statements
-identify their Roam graph scope.
+identify their Roam graph scope. The queue shows distinct-page, blank/template,
+key-variant, and co-occurrence counts and places weak candidates after those
+ready for review. The heuristic is not a probability.
 Record an approval or rejection with:
 
 ```sh
@@ -107,8 +109,13 @@ silently changes the index or source model.
 - Source identity and known losses are specified in
   `docs/specs/source-profiles/`. Each package retains the original source
   bytes and records its hash.
+- The product rename changes emitted schema and facet URNs. Parser versions
+  change with that output, so new packages have distinct immutable package IDs
+  even when their source bytes are unchanged. Existing local packages are not
+  rewritten; use a new output directory to generate a package under the new
+  namespace and retain older packages for historical audit.
 - The validated package is committed atomically through the product-neutral
-  `CanonStore[Ref, Commit, Artifact]` port. Rosetta binds it as
+  `CanonStore[Ref, Commit, Artifact]` port. PKM Canon binds it as
   `CanonicalStore = CanonStore[Path, PackageCommit, CanonicalPackage]` and
   provides a filesystem implementation. No database or hosted service is
   needed to validate a package.

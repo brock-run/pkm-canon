@@ -46,7 +46,7 @@
       "type": "object"
     }
   },
-  "$id": "urn:pkm-rosetta:schema:v1:core:spans",
+  "$id": "urn:pkm-canon:schema:v1:core:spans",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {

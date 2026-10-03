@@ -1,5 +1,5 @@
 {
-  "$id": "urn:pkm-rosetta:schema:v1:knowledge:domain-claim",
+  "$id": "urn:pkm-canon:schema:v1:knowledge:domain-claim",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {

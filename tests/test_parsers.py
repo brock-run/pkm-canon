@@ -99,6 +99,52 @@ def test_roam_duplicate_uids_have_distinct_repeatable_ids_and_ambiguous_refs():
     assert not any(isinstance(row, Relation) for row in result.records)
 
 
+def test_roam_maps_actor_reference_and_presentation_fields_with_defined_semantics():
+    result = parse_roam([
+        {"uid": "P", "title": "Page", ":create/user": {":user/uid": "creator"},
+         "refs": [{"uid": "B"}], ":block/refs": [{":block/uid": "B"}],
+         "children": [{"uid": "B", "string": "Heading", "heading": 2,
+                       ":edit/user": {":user/uid": "editor"}, "text-align": "left",
+                       ":children/view-type": ":numbered", ":block/view-type": ":outline",
+                       "refs": [{"uid": "P"}], ":block/refs": [{":block/uid": "P"}]}]},
+    ])
+    assert result.diagnostics == []
+    document = next(row for row in result.records if isinstance(row, Document))
+    node = next(row for row in result.records if isinstance(row, Node))
+    assert document.facets["pkm/source-roam"].model_extra["created_by_uid"] == "creator"
+    facet = node.facets["pkm/source-roam"].model_extra
+    assert node.semantic_kind == "heading"
+    assert (facet["heading_level"], facet["edited_by_uid"], facet["text_align"]) == (2, "editor", "left")
+    assert (facet["children_view_type"], facet["block_view_type"]) == (":numbered", ":outline")
+    native = [row for row in result.records if isinstance(row, Relation) and row.relation_type == "native_ref"]
+    assert {(row.source_id, row.target_id) for row in native} == {
+        (document.document_id, node.node_id), (node.node_id, document.document_id),
+    }
+
+
+def test_roam_rejects_conflicting_or_invalid_interpreted_fields_with_raw_preservation():
+    raw = {"uid": "B", "string": "Text", ":create/user": {":user/uid": ""},
+           "refs": [{"uid": "P"}], ":block/refs": [{":block/uid": "other"}],
+           "heading": 7, "text-align": "diagonal", ":children/view-type": ":grid"}
+    result = parse_roam([{"uid": "P", "title": "Page", "children": [raw]}])
+    assert {row.code for row in result.diagnostics} == {
+        "INVALID_CREATE_USER", "CONFLICTING_NATIVE_REFS", "INVALID_HEADING",
+        "INVALID_TEXT_ALIGN", "INVALID_CHILDREN_VIEW_TYPE",
+    }
+    preserved = [row for row in result.records if isinstance(row, PreservationRecord)]
+    assert len(preserved) == 1
+    assert json.loads(preserved[0].storage.inline_utf8) == raw
+    assert all(row.preservation_id == preserved[0].id for row in result.diagnostics)
+    assert not any(isinstance(row, Relation) for row in result.records)
+
+
+def test_roam_unresolved_native_reference_is_diagnosed_and_preserved():
+    result = parse_roam([{"uid": "P", "title": "Page", "refs": [{"uid": "missing"}]}])
+    assert [row.code for row in result.diagnostics] == ["UNRESOLVED_NATIVE_REF"]
+    assert result.diagnostics[0].outcome == "unresolved_reference"
+    assert result.diagnostics[0].preservation_id is not None
+
+
 def test_markdown_keeps_unicode_text_line_ranges_and_external_links():
     """Verify Unicode text, source line ranges, spans, and external links survive parsing."""
     result = parse_markdown("# Café\r\n\r\nOwner: Équipe\r\nSee [guide](../guide.md).\r\n".encode())

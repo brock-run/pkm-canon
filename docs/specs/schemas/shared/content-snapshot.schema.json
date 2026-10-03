@@ -740,7 +740,7 @@
       "type": "object"
     }
   },
-  "$id": "urn:pkm-rosetta:schema:v1:shared:content-snapshot",
+  "$id": "urn:pkm-canon:schema:v1:shared:content-snapshot",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {

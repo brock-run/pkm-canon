@@ -34,7 +34,7 @@
       "type": "object"
     }
   },
-  "$id": "urn:pkm-rosetta:schema:v1:projection:projection-manifest",
+  "$id": "urn:pkm-canon:schema:v1:projection:projection-manifest",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {

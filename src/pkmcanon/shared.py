@@ -1,4 +1,4 @@
-"""Source-neutral content projection over a validated Rosetta package."""
+"""Source-neutral content projection over a validated PKM Canon package."""
 
 from __future__ import annotations
 

@@ -24,6 +24,7 @@ from pkmcanon.review import (
     publish_methodology,
     publish_reviewed_domain_page,
 )
+from pkmcanon.review_packet import render_methodology_review_packet
 from pkmcanon.shared import project_shared_content
 from pkmcanon.writer import build_package
 
@@ -175,18 +176,65 @@ def methodology_package(tmp_path):
     return build_package(RoamParser(), source, tmp_path / "package", source_scope="graph")
 
 
-def test_methodology_groups_evidence_caps_confidence_and_respects_access(methodology_package):
-    """Verify graph-scoped rules group evidence, cap confidence, and enforce access."""
+def test_methodology_groups_evidence_without_treating_repeated_blocks_as_independent_support(methodology_package):
+    """Count distinct supporting pages while preserving citations and access checks."""
     proposals = propose_methodology(methodology_package)
     assert len(proposals) == 1
     proposal = proposals[0]
     assert len(proposal.evidence) == 8
-    assert proposal.confidence == proposal.payload["confidence"] == 0.95
+    assert proposal.confidence == proposal.payload["confidence"] == 0.61
+    assert proposal.payload["distinct_document_count"] == 1
+    assert proposal.payload["substantive_value_count"] == 8
     assert proposal.payload["statement"].startswith("For Roam graph graph, consider using Status::")
     assert proposal.payload["status"] == proposal.status == "proposed"
     assert proposal.payload["source_trace_ids"] == sorted(node.node_id for node in methodology_package.nodes)
     assert propose_methodology(methodology_package, principal_id="stranger") == []
     validate_proposal(methodology_package, proposal)
+
+
+def test_methodology_defers_blank_templates_and_surfaces_scope_variants_and_cooccurrence(tmp_path):
+    source = tmp_path / "templates.json"
+    source.write_text(json.dumps([
+        {"uid": "P1", "title": "One", "children": [
+            {"uid": "B1", "string": "Command:: "},
+            {"uid": "B2", "string": "command:: TBD"},
+            {"uid": "B3", "string": "Status:: active"},
+            {"uid": "B4", "string": "Status:: planned"},
+        ]},
+        {"uid": "P2", "title": "Two", "children": [
+            {"uid": "B5", "string": "COMMAND:: <value>"},
+            {"uid": "B6", "string": "status:: done"},
+        ]},
+        {"uid": "P3", "title": "Three", "children": [
+            {"uid": "B7", "string": "Status:: active"},
+            {"uid": "B8", "string": "Status:: active"},
+        ]},
+    ]))
+    package = build_package(RoamParser(), source, tmp_path / "package", source_scope="graph")
+    proposals = propose_methodology(package)
+    assert len(proposals) == 2
+    by_key = {item.payload["key_variants"][0].casefold(): item for item in proposals}
+    command = by_key["command"]
+    assert command.payload["observation_count"] == 3
+    assert command.payload["distinct_document_count"] == 2
+    assert command.payload["blank_value_count"] == 1
+    assert command.payload["placeholder_value_count"] == 2
+    assert command.payload["substantive_value_count"] == 0
+    assert command.payload["key_variants"] == ["COMMAND", "Command", "command"]
+    assert command.payload["cooccurring_keys"] == {"Status": 2}
+    assert command.payload["review_priority"] == "defer"
+    assert command.confidence == 0
+    status = by_key["status"]
+    assert status.payload["distinct_document_count"] == 3
+    assert status.payload["cooccurring_keys"] == {"Command": 2}
+    assert status.payload["review_priority"] == "review"
+    assert status.confidence > command.confidence
+    assert all(item.status == "proposed" for item in proposals)
+    assert all(len(item.evidence) == item.payload["observation_count"] for item in proposals)
+    packet = render_methodology_review_packet(proposals)
+    assert "1 deferred for weak or template-like support" in packet
+    assert packet.index("Status::") < packet.index("Command::")
+    assert "support heuristic" in packet
 
 
 @pytest.mark.parametrize("field,value,code", [

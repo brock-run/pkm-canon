@@ -315,6 +315,15 @@ class MethodologyRule(StrictModel):
     statement: str
     confidence: float = Field(ge=0, le=1)
     source_trace_ids: list[str] = Field(min_length=1)
+    source_scope: str | None = None
+    observation_count: int = Field(default=0, ge=0)
+    distinct_document_count: int = Field(default=0, ge=0)
+    substantive_value_count: int = Field(default=0, ge=0)
+    blank_value_count: int = Field(default=0, ge=0)
+    placeholder_value_count: int = Field(default=0, ge=0)
+    key_variants: list[str] = Field(default_factory=list)
+    cooccurring_keys: dict[str, int] = Field(default_factory=dict)
+    review_priority: Literal["review", "defer"] = "review"
     status: Literal["proposed", "approved", "rejected"] = "proposed"
 
 

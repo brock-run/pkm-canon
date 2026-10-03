@@ -9,7 +9,7 @@ V1 ingests a Roam Research JSON export, converts it into a validated canonical p
 
 The canonical package on disk is the authoritative result of ingestion. PostgreSQL, embeddings, AI outputs, and exports are reproducible derivatives, not alternate sources of truth.
 
-Here “canonical” refers to Rosetta's **source representation canon**: a
+Here “canonical” refers to PKM Canon's **source representation canon**: a
 validated record of what an identified source version contained. It does not
 approve the source's factual assertions or promote generated outputs into a
 domain or creative canon. See [ADR 0020](../adr/0020-canon-semantics-and-portable-contracts.md)

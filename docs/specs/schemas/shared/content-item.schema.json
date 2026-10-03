@@ -30,7 +30,7 @@
       "type": "object"
     }
   },
-  "$id": "urn:pkm-rosetta:schema:v1:shared:content-item",
+  "$id": "urn:pkm-canon:schema:v1:shared:content-item",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {

@@ -209,7 +209,7 @@ def create_app(root: Path, *, max_upload_bytes: int = 32 * 1024 * 1024) -> FastA
     if max_upload_bytes < 1:
         raise ValueError("max_upload_bytes must be positive")
     store = JobStore(root)
-    app = FastAPI(title="PKM Rosetta ingestion", version="0.1.0")
+    app = FastAPI(title="PKM Canon ingestion", version="0.1.0")
 
     @app.get("/health")
     def health() -> dict[str, str]:

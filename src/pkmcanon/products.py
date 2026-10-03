@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from .adapters import stable_id
@@ -13,18 +13,29 @@ from .models import DomainClaim, MethodologyRule, Proposal, RetrievalChange
 from .package import CanonicalPackage, PackageValidationError
 from .schema_validation import default_schema_store
 
-RULE_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:methodology-rule"
-CLAIM_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:domain-claim"
-RETRIEVAL_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:retrieval-change"
+RULE_SCHEMA = "urn:pkm-canon:schema:v1:knowledge:methodology-rule"
+CLAIM_SCHEMA = "urn:pkm-canon:schema:v1:knowledge:domain-claim"
+RETRIEVAL_SCHEMA = "urn:pkm-canon:schema:v1:knowledge:retrieval-change"
 OWNER = re.compile(r"^Owner:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+PLACEHOLDER = re.compile(r"^(?:\.{2,}|-+|<[^<>]+>|(?:your|insert|enter|add|fill in)\b.*\b(?:here|name|value|text))$", re.IGNORECASE)
+PLACEHOLDER_WORDS = {"tbd", "todo", "n/a", "na", "none", "placeholder", "example", "sample"}
+
+
+def _value_quality(value: object) -> str:
+    """Classify only obvious empty/template values; uncertain values remain substantive."""
+    text = str(value).strip()
+    if not text:
+        return "blank"
+    if text.casefold() in PLACEHOLDER_WORDS or PLACEHOLDER.fullmatch(text):
+        return "placeholder"
+    return "substantive"
 
 
 def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local-operator") -> list[Proposal]:
-    """Draft attribute-convention rules with evidence from nodes accessible to the principal.
+    """Propose source-scoped attribute rules from accessible, cited observations.
 
-    Return one proposal per accessible attribute key, ordered by key, or an
-    empty list if none qualify. Rule statements name the first source version's
-    scope as the Roam graph; proposals are not persisted or activated.
+    Return one proposal per key with document support and a transparent value-
+    quality heuristic; proposals are neither persisted nor approved here.
     """
     if not package.manifest.source_versions:
         return []
@@ -32,26 +43,59 @@ def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local
     nodes = {item.node_id: item for item in package.nodes}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
     source_scope = package.manifest.source_versions[0].source_scope
-    attributes: dict[str, list[str]] = defaultdict(list)
+    attributes: dict[str, list[tuple[str, str, str, object]]] = defaultdict(list)
+    document_keys: dict[str, set[str]] = defaultdict(set)
     for attribute in package.attributes:
         if attribute.subject_id not in nodes:
             continue
         document = docs[nodes[attribute.subject_id].document_id]
         if can_access(sources[document.source_version_id], principal_id):
-            attributes[attribute.key].append(attribute.subject_id)
-    run_id = stable_id("run", package.manifest.package_id, "methodology-v1")
+            key = attribute.key.strip().casefold()
+            if key:
+                attributes[key].append((attribute.subject_id, document.document_id, attribute.key, attribute.value))
+                document_keys[document.document_id].add(key)
+    variants = {key: Counter(row[2] for row in rows) for key, rows in attributes.items()}
+    display_keys = {key: max(counts, key=counts.get) for key, counts in variants.items()}
+    run_id = stable_id("run", package.manifest.package_id, "methodology-v2")
     proposals = []
-    for key, node_ids in sorted(attributes.items()):
-        evidence = [evidence_for_node(package, node_id) for node_id in sorted(set(node_ids))]
+    for key, rows in sorted(attributes.items()):
+        node_ids = sorted({row[0] for row in rows})
+        evidence = [evidence_for_node(package, node_id) for node_id in node_ids]
+        documents = {row[1] for row in rows}
+        quality = Counter(_value_quality(row[3]) for row in rows)
+        substantive_docs = {row[1] for row in rows if _value_quality(row[3]) == "substantive"}
+        observations = len(rows)
+        substantive = quality["substantive"]
+        score = round(
+            0.45 * substantive / observations
+            + 0.4 * min(len(substantive_docs), 5) / 5
+            + 0.1 * min(substantive, 10) / 10,
+            2,
+        )
+        cooccurrence = Counter(other for doc_id in documents for other in document_keys[doc_id] if other != key)
+        cooccurring_keys = {
+            display_keys[other]: count
+            for other, count in sorted(cooccurrence.items(), key=lambda item: (-item[1], display_keys[item[0]]))[:5]
+        }
+        priority = "defer" if substantive < 2 or substantive * 2 < observations else "review"
         rule = MethodologyRule(
-            rule_id=stable_id("rule", package.manifest.package_id, "attribute", key),
+            rule_id=stable_id("rule", package.manifest.package_id, "attribute-v2", key),
             rule_type="attribute_convention",
             statement=(
-                f"For Roam graph {source_scope}, consider using {key}:: as a block attribute; "
-                f"observed in {len(evidence)} block(s)."
+                f"For Roam graph {source_scope}, consider using {display_keys[key]}:: as a block attribute; "
+                f"observed in {len(evidence)} block(s) across {len(documents)} page(s)."
             ),
-            confidence=min(0.95, 0.4 + 0.1 * len(evidence)),
+            confidence=score,
             source_trace_ids=[item.node_id for item in evidence],
+            source_scope=source_scope,
+            observation_count=observations,
+            distinct_document_count=len(documents),
+            substantive_value_count=substantive,
+            blank_value_count=quality["blank"],
+            placeholder_value_count=quality["placeholder"],
+            key_variants=sorted(variants[key]),
+            cooccurring_keys=cooccurring_keys,
+            review_priority=priority,
         )
         proposals.append(Proposal(
             proposal_id=stable_id("prop", package.manifest.package_id, rule.rule_id),
