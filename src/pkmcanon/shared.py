@@ -43,9 +43,10 @@ def project_shared_content(package: CanonicalPackage) -> SharedContentSnapshot:
         if source.source_system == "roam":
             facet = node.facets.get("pkm/source-roam")
             details = (facet.model_extra or {}) if facet else {}
+            roam_uid = details.get("roam_uid")
             return SourceLocator(
                 graph=source.source_scope, path=details.get("json_pointer"),
-                source_uid=details.get("roam_uid"),
+                source_uid=roam_uid if isinstance(roam_uid, str) else None,
             )
         return None
 

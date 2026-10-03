@@ -54,6 +54,21 @@ def test_shared_markdown_element_has_source_line_range(tmp_path):
     assert element.source_locator.line_end == 5
 
 
+def test_shared_projection_keeps_invalid_roam_uid_out_of_typed_locator(tmp_path):
+    """Preserve a malformed native UID in the source facet without aborting projection."""
+    source = tmp_path / "roam.json"
+    source.write_text(json.dumps([{"uid": "P", "title": "Page", "children": [
+        {"uid": 42, "string": "Synthetic block"},
+    ]}]))
+    package = build_package(RoamParser(), source, tmp_path / "package", source_scope="graph")
+    assert any(item.code == "MISSING_UID" for item in package.diagnostics)
+    snapshot = project_shared_content(package)
+    locator = next(row.source_locator for row in snapshot.elements if row.text == "Synthetic block")
+    assert locator.graph == "graph"
+    assert locator.path is not None
+    assert locator.source_uid is None
+
+
 def test_portable_snapshot_and_evidence_bundle_resolve_same_immutable_source(tmp_path):
     """Verify snapshots and authorized evidence agree on source identity and location."""
     source = tmp_path / "character.md"

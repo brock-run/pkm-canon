@@ -37,6 +37,8 @@ def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local
     Return one proposal per key with document support and a transparent value-
     quality heuristic; proposals are neither persisted nor approved here.
     """
+    if not package.manifest.source_versions:
+        return []
     docs = {item.document_id: item for item in package.documents}
     nodes = {item.node_id: item for item in package.nodes}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}

@@ -120,6 +120,27 @@ def test_methodology_review_packet_is_local_escaped_and_read_only(tmp_path):
     assert rerendered.exit_code == 0, rerendered.output
     assert "Decision: approved" in packet.read_text()
 
+    other_source = tmp_path / "other.json"
+    other_source.write_text(json.dumps([{"uid": "P2", "title": "Other", "children": [
+        {"uid": "B2", "string": "Priority:: high"},
+    ]}]))
+    other_package = tmp_path / "other-package"
+    other_proposals = tmp_path / "other-proposals.jsonl"
+    assert runner.invoke(app, ["ingest-roam", str(other_source), "other-graph", str(other_package)]).exit_code == 0
+    assert runner.invoke(app, ["propose-methodology", str(other_package), str(other_proposals)]).exit_code == 0
+    other_id = json.loads(other_proposals.read_text().splitlines()[0])["proposal_id"]
+    assert runner.invoke(app, [
+        "review", str(other_package), str(other_proposals), other_id,
+        str(policy), str(tmp_path / "reviews"), "local-operator", "rejected",
+    ]).exit_code == 0
+    shared_ledger_render = runner.invoke(app, [
+        "render-methodology-review", str(package), str(proposals), str(packet),
+        "--ledger", str(tmp_path / "reviews"), "--policy", str(policy),
+    ])
+    assert shared_ledger_render.exit_code == 0, shared_ledger_render.output
+    assert "Decision: approved" in packet.read_text()
+    assert "Priority::" not in packet.read_text()
+
 
 def test_context_command_index_option_and_principal_filter(tmp_path):
     source = tmp_path / "page.md"
