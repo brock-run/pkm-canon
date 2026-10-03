@@ -15,10 +15,12 @@ ArtifactT = TypeVar("ArtifactT")
 def round_trip(
     store: CanonStore[RefT, CommitT, ArtifactT], request: CommitT, ref: RefT
 ) -> tuple[ArtifactT, ArtifactT]:
+    """Commit an artifact and reopen its reference through the generic store port."""
     return store.commit(request), store.open(ref)
 
 
 def test_rosetta_store_validates_and_reopens_package(tmp_path: Path) -> None:
+    """Verify package commits can be reopened and conflicting package IDs are rejected."""
     import shutil
 
     staged = tmp_path / "staged"
@@ -51,17 +53,21 @@ class StoryCommit:
 
 class StoryStore:
     def __init__(self) -> None:
+        """Initialize an empty in-memory store of story versions."""
         self.versions: dict[str, StoryVersion] = {}
 
     def open(self, ref: str) -> StoryVersion:
+        """Return the story version stored under the supplied version ID."""
         return self.versions[ref]
 
     def commit(self, request: StoryCommit) -> StoryVersion:
+        """Store and return the requested story version, replacing any matching ID."""
         self.versions[request.version.version_id] = request.version
         return request.version
 
 
 def test_port_returns_product_artifact_without_package_shape() -> None:
+    """Verify the generic store port supports artifacts with no package fields."""
     store: CanonStore[str, StoryCommit, StoryVersion] = StoryStore()
     version = StoryVersion("character-elara-v2")
     committed, reopened = round_trip(store, StoryCommit(version), version.version_id)

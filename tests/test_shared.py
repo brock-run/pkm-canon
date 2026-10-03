@@ -9,6 +9,7 @@ from pkmcanon.writer import build_package
 
 
 def test_shared_projection_preserves_hierarchy_links_access_and_event_time(tmp_path):
+    """Verify shared snapshots preserve source metadata and serialize deterministically."""
     source = tmp_path / "roam.json"
     source.write_text(json.dumps([{
         "uid": "P", "title": "Page", "create-time": 0, "edit-time": 1000,
@@ -39,6 +40,7 @@ def test_shared_projection_preserves_hierarchy_links_access_and_event_time(tmp_p
 
 
 def test_shared_markdown_element_has_source_line_range(tmp_path):
+    """Verify Markdown elements retain their source path and exact line range."""
     source = tmp_path / "character.md"
     source.write_text("# Cast\n\n## Kessa\n\n- Precise under pressure\n")
     package = build_package(
@@ -53,6 +55,7 @@ def test_shared_markdown_element_has_source_line_range(tmp_path):
 
 
 def test_portable_snapshot_and_evidence_bundle_resolve_same_immutable_source(tmp_path):
+    """Verify snapshots and authorized evidence agree on source identity and location."""
     source = tmp_path / "character.md"
     source.write_text(
         "# Cast\n\n## Tavi Vale\n\n### Voice\n\n"

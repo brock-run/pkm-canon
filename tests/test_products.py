@@ -163,6 +163,7 @@ def methodology_package(tmp_path):
 
 
 def test_methodology_groups_evidence_without_treating_repeated_blocks_as_independent_support(methodology_package):
+    """Count distinct supporting pages while preserving citations and access checks."""
     proposals = propose_methodology(methodology_package)
     assert len(proposals) == 1
     proposal = proposals[0]

@@ -61,7 +61,13 @@ def _summary(package: CanonicalPackage) -> str:
 
 @app.command("ingest-roam")
 def ingest_roam(filepath: Path, graph_name: str, output_dir: Path, principal: str = "local-operator") -> None:
-    """Write and validate an authoritative package from a Roam JSON export."""
+    """Write and validate an authoritative package from a Roam JSON export.
+
+    Grant private-source access to the stripped principal and print a JSON
+    package summary. A blank principal raises typer.BadParameter. OSError and
+    ValueError (including PackageValidationError) during ingestion produce a
+    JSON error on stderr and raise typer.Exit with code 1.
+    """
     principal = principal.strip()
     if not principal:
         raise typer.BadParameter("principal must be nonempty")
@@ -89,7 +95,15 @@ def validate(path: Path) -> None:
 
 @app.command("audit-fidelity")
 def audit_fidelity(path: Path, top: int = 20) -> None:
-    """Summarize a validated package's diagnostic codes without source content."""
+    """Summarize a validated package's diagnostic codes without source content.
+
+    Print JSON with fidelity totals and at most top code/severity/outcome
+    groups, ordered by descending count and then by the group tuple. The
+    distinct-code count covers all diagnostics. A nonpositive top raises
+    typer.BadParameter. OSError and ValueError (including PackageValidationError)
+    while loading the package produce a JSON error on stderr and raise
+    typer.Exit with code 1.
+    """
     if top < 1:
         raise typer.BadParameter("top must be positive")
     try:
@@ -115,7 +129,15 @@ def ingest_markdown(
     filepath: Path, repository: str, output_dir: Path,
     source_path: str | None = None, principal: str = "local-operator",
 ) -> None:
-    """Capture one repository Markdown document using the shared package contract."""
+    """Capture one repository Markdown document using the shared package contract.
+
+    Use source_path as the source's identity within repository, falling back
+    to filepath.name when empty or omitted. Grant private-source access to the
+    stripped principal and print a JSON package summary. A blank principal
+    raises typer.BadParameter. OSError and ValueError (including
+    PackageValidationError) during ingestion produce a JSON error on stderr
+    and raise typer.Exit with code 1.
+    """
     principal = principal.strip()
     if not principal:
         raise typer.BadParameter("principal must be nonempty")
@@ -176,7 +198,16 @@ def render_methodology_review_command(
     ledger_path: Annotated[Path | None, typer.Option("--ledger")] = None,
     policy_path: Annotated[Path | None, typer.Option("--policy")] = None,
 ) -> None:
-    """Write a read-only local HTML queue with escaped evidence previews."""
+    """Write a read-only local HTML queue with escaped evidence previews.
+
+    Validate methodology proposals against the package and show at most
+    evidence_limit citations per proposal. Optional ledger decisions are
+    checked against the supplied policy; no decisions are recorded. Create
+    output's parents, overwrite output, and print its path and proposal count
+    as JSON. A nonpositive limit or an unpaired ledger/policy raises
+    typer.BadParameter. Processing or write errors produce a JSON error on
+    stderr and raise typer.Exit with code 1.
+    """
     if evidence_limit < 1:
         raise typer.BadParameter("evidence_limit must be positive")
     if (ledger_path is None) != (policy_path is None):

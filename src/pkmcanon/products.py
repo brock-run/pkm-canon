@@ -32,7 +32,11 @@ def _value_quality(value: object) -> str:
 
 
 def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local-operator") -> list[Proposal]:
-    """Draft scoped rules with cited observations and an explicit support heuristic."""
+    """Propose source-scoped attribute rules from accessible, cited observations.
+
+    Return one proposal per key with document support and a transparent value-
+    quality heuristic; proposals are neither persisted nor approved here.
+    """
     docs = {item.document_id: item for item in package.documents}
     nodes = {item.node_id: item for item in package.nodes}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
