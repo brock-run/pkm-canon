@@ -16,3 +16,5 @@ jobs:
         run: uv sync --extra dev --locked
       - name: Check schemas and tests
         run: make check
+      - name: Check architecture diagrams and links
+        run: node scripts/check-architecture.mjs

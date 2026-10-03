@@ -4,6 +4,12 @@ PKM Canon converts source exports into independently validated, portable
 canonical packages. The package is PKM Canon's authoritative ingestion result;
 search, inference, review outputs, and Markdown pages are derived products.
 
+The repo-owned [current architecture](docs/architecture/current-state.md),
+[target architecture](docs/architecture/target-state.md), and
+[component map](docs/architecture/component-map.md) show implemented and
+proposed components, their code and checks, and the next Linear work. Run
+`node scripts/check-architecture.mjs` to check diagram IDs and local links.
+
 The current implementation has two source adapters: Roam JSON and one
 repository Markdown file. Both produce source-version capture, structured
 content, preservation artifacts, fidelity diagnostics, and a manifest with
