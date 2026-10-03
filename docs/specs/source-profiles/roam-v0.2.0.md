@@ -1,6 +1,6 @@
 # Roam JSON source profile 0.2.0
 
-This profile extends [0.1.0](roam-v0.1.0.md). Parser `roam-json:0.3.0`
+This profile extends [0.1.0](roam-v0.1.0.md). Parser `roam-json:0.3.1`
 interprets common export metadata and native references. The profile and parser
 version change the package identity; existing review decisions are not carried
 onto a new package without a fresh review.

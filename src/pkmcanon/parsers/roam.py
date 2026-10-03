@@ -59,7 +59,7 @@ class RoamParser:
     source_system = "roam"
     profile_version = "0.2.0"
     name = "roam-json"
-    version = "0.3.0"
+    version = "0.3.1"
     contract_version = "0.1.0"
 
     def __init__(self, source_graph_name: str | None = None):
@@ -245,7 +245,7 @@ class RoamParser:
                 title=page.get("title") if isinstance(page.get("title"), str) else "Untitled",
                 created_at=_timestamp(page.get("create-time")), updated_at=_timestamp(page.get("edit-time")),
                 facets={"pkm/source-roam": {
-                    "_schemaURL": "urn:pkm-rosetta:facet:roam:v1",
+                    "_schemaURL": "urn:pkm-canon:facet:roam:v1",
                     "_producer": f"{self.name}:{self.version}",
                     "roam_uid": page.get("uid"),
                     "created_by_uid": created_by_uid,
@@ -282,7 +282,7 @@ class RoamParser:
                 node_type="block", semantic_kind="heading" if heading else None,
                 position=position, plain_text=text,
                 facets={"pkm/source-roam": {
-                    "_schemaURL": "urn:pkm-rosetta:facet:roam:v1",
+                    "_schemaURL": "urn:pkm-canon:facet:roam:v1",
                     "_producer": f"{self.name}:{self.version}",
                     "roam_uid": block.get("uid"),
                     "json_pointer": path,

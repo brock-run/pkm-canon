@@ -1,5 +1,5 @@
 {
-  "$id": "urn:pkm-rosetta:schema:v1:knowledge:review-event",
+  "$id": "urn:pkm-canon:schema:v1:knowledge:review-event",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {

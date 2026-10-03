@@ -1,7 +1,7 @@
-# PKM Rosetta
+# PKM Canon
 
-Rosetta converts source exports into independently validated, portable
-canonical packages. The package is Rosetta's authoritative ingestion result;
+PKM Canon converts source exports into independently validated, portable
+canonical packages. The package is PKM Canon's authoritative ingestion result;
 search, inference, review outputs, and Markdown pages are derived products.
 
 The current implementation has two source adapters: Roam JSON and one
@@ -109,8 +109,13 @@ silently changes the index or source model.
 - Source identity and known losses are specified in
   `docs/specs/source-profiles/`. Each package retains the original source
   bytes and records its hash.
+- The product rename changes emitted schema and facet URNs. Parser versions
+  change with that output, so new packages have distinct immutable package IDs
+  even when their source bytes are unchanged. Existing local packages are not
+  rewritten; use a new output directory to generate a package under the new
+  namespace and retain older packages for historical audit.
 - The validated package is committed atomically through the product-neutral
-  `CanonStore[Ref, Commit, Artifact]` port. Rosetta binds it as
+  `CanonStore[Ref, Commit, Artifact]` port. PKM Canon binds it as
   `CanonicalStore = CanonStore[Path, PackageCommit, CanonicalPackage]` and
   provides a filesystem implementation. No database or hosted service is
   needed to validate a package.

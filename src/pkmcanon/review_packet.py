@@ -43,7 +43,7 @@ def render_methodology_review_packet(
     parts = [
         '<!doctype html><html lang="en"><head><meta charset="utf-8">',
         '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'">',
-        '<title>Rosetta methodology review</title>',
+        '<title>PKM Canon methodology review</title>',
         style,
         f'<h1>Methodology review queue</h1><p>{len(ordered)} proposed rules; {deferred} deferred for weak or template-like support.</p>',
         '<p>Review candidates are ranked by a support heuristic, not a probability. Decisions come from the review ledger when provided. Evidence below is a preview; inspect the full source before approving a rule.</p>',

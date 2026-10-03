@@ -25,7 +25,7 @@ class MarkdownAdapter:
     source_system = "markdown"
     profile_version = "0.1.0"
     name = "repository-markdown"
-    version = "0.1.0"
+    version = "0.1.1"
     contract_version = "0.1.0"
 
     def parse(self, data: bytes, *, source_scope: str, source_version_id: str, native_id: str) -> AdapterResult:
@@ -42,8 +42,8 @@ class MarkdownAdapter:
             document_id=doc_id, source_version_id=source_version_id,
             kind="markdown", title=title,
             facets={"pkm/source-markdown": {
-                "_schemaURL": "urn:pkm-rosetta:facet:markdown:v1",
-                "_producer": "repository-markdown:0.1.0",
+                "_schemaURL": "urn:pkm-canon:facet:markdown:v1",
+                "_producer": f"{self.name}:{self.version}",
                 "path": native_id,
             }},
         ))
@@ -87,8 +87,8 @@ class MarkdownAdapter:
                 node_id=node_id, document_id=doc_id, node_type=kind,
                 semantic_kind=kind, position=position, plain_text=block,
                 facets={"pkm/source-markdown": {
-                    "_schemaURL": "urn:pkm-rosetta:facet:markdown:v1",
-                    "_producer": "repository-markdown:0.1.0",
+                    "_schemaURL": "urn:pkm-canon:facet:markdown:v1",
+                    "_producer": f"{self.name}:{self.version}",
                     "line_start": line_start, "line_end": line_end,
                 }},
             ))

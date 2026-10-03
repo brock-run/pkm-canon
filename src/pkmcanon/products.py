@@ -13,9 +13,9 @@ from .models import DomainClaim, MethodologyRule, Proposal, RetrievalChange
 from .package import CanonicalPackage, PackageValidationError
 from .schema_validation import default_schema_store
 
-RULE_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:methodology-rule"
-CLAIM_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:domain-claim"
-RETRIEVAL_SCHEMA = "urn:pkm-rosetta:schema:v1:knowledge:retrieval-change"
+RULE_SCHEMA = "urn:pkm-canon:schema:v1:knowledge:methodology-rule"
+CLAIM_SCHEMA = "urn:pkm-canon:schema:v1:knowledge:domain-claim"
+RETRIEVAL_SCHEMA = "urn:pkm-canon:schema:v1:knowledge:retrieval-change"
 OWNER = re.compile(r"^Owner:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 PLACEHOLDER = re.compile(r"^(?:\.{2,}|-+|<[^<>]+>|(?:your|insert|enter|add|fill in)\b.*\b(?:here|name|value|text))$", re.IGNORECASE)
 PLACEHOLDER_WORDS = {"tbd", "todo", "n/a", "na", "none", "placeholder", "example", "sample"}

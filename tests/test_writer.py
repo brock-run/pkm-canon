@@ -61,6 +61,19 @@ def test_store_does_not_replace_different_existing_package(source, tmp_path):
     assert candidate.root.exists()
 
 
+def test_parser_revision_cannot_reuse_prior_package_identity(source, tmp_path):
+    """Keep source identity stable while a changed parser output gets a new package ID."""
+    class PriorMarkdownAdapter(MarkdownAdapter):
+        version = "0.1.0"
+
+    prior = build_package(PriorMarkdownAdapter(), source, tmp_path / "prior", source_scope="repo")
+    current = build_package(MarkdownAdapter(), source, tmp_path / "current", source_scope="repo")
+    assert prior.manifest.source_versions[0].source_version_id == current.manifest.source_versions[0].source_version_id
+    assert prior.manifest.package_id != current.manifest.package_id
+    with pytest.raises(PackageValidationError, match="PACKAGE_EXISTS"):
+        build_package(MarkdownAdapter(), source, prior.root, source_scope="repo")
+
+
 def test_store_wraps_rename_failure_without_publishing(source, tmp_path, monkeypatch):
     """Verify rename errors become package errors without publishing or losing staging."""
     staged = build_package(MarkdownAdapter(), source, tmp_path / "stage", source_scope="repo")

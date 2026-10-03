@@ -19,7 +19,7 @@ def round_trip(
     return store.commit(request), store.open(ref)
 
 
-def test_rosetta_store_validates_and_reopens_package(tmp_path: Path) -> None:
+def test_pkm_canon_store_validates_and_reopens_package(tmp_path: Path) -> None:
     """Verify package commits can be reopened and conflicting package IDs are rejected."""
     import shutil
 

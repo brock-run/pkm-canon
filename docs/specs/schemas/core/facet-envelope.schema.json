@@ -1,5 +1,5 @@
 {
-  "$id": "urn:pkm-rosetta:schema:v1:core:facet-envelope",
+  "$id": "urn:pkm-canon:schema:v1:core:facet-envelope",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
   "properties": {

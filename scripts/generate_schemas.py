@@ -82,7 +82,7 @@ def rendered_schema(path: str, model: type) -> str:
     schema = model.model_json_schema(by_alias=True)
     _augment_source_references(schema, root_is_reference=model is models.SourceNativeReference)
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
-    schema["$id"] = f"urn:pkm-rosetta:schema:v1:{path.removesuffix('.schema.json').replace('/', ':')}"
+    schema["$id"] = f"urn:pkm-canon:schema:v1:{path.removesuffix('.schema.json').replace('/', ':')}"
     schema["title"] = path.removesuffix(".schema.json").split("/")[-1]
     return json.dumps(schema, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
 

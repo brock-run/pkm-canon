@@ -198,7 +198,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pkm-canonical-starter"
+name = "pkm-canon"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
