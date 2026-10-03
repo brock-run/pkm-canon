@@ -14,7 +14,16 @@ def render_methodology_review_packet(
     """Render escaped proposal and evidence previews without recording decisions."""
     if evidence_limit < 1:
         raise ValueError("evidence_limit must be positive")
-    ordered = sorted(proposals, key=lambda item: (-len(item.evidence), item.proposal_id))
+    ordered = sorted(
+        proposals,
+        key=lambda item: (
+            MethodologyRule.model_validate(item.payload).review_priority == "defer",
+            -item.confidence,
+            -MethodologyRule.model_validate(item.payload).distinct_document_count,
+            item.proposal_id,
+        ),
+    )
+    deferred = sum(MethodologyRule.model_validate(item.payload).review_priority == "defer" for item in ordered)
     style = (
         '<style>body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1rem;color:#18202a}'
         'article{border-top:1px solid #c9d0d7;padding:1.2rem 0}h1,h2{line-height:1.2}'
@@ -27,8 +36,8 @@ def render_methodology_review_packet(
         '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'">',
         '<title>Rosetta methodology review</title>',
         style,
-        f'<h1>Methodology review queue</h1><p>{len(ordered)} proposed rules, ranked by supporting evidence.</p>',
-        '<p>Decisions come from the review ledger when provided. Evidence below is a preview; inspect the full source before approving a rule.</p>',
+        f'<h1>Methodology review queue</h1><p>{len(ordered)} proposed rules; {deferred} deferred for weak or template-like support.</p>',
+        '<p>Review candidates are ranked by a support heuristic, not a probability. Decisions come from the review ledger when provided. Evidence below is a preview; inspect the full source before approving a rule.</p>',
     ]
     for proposal in ordered:
         rule = MethodologyRule.model_validate(proposal.payload)
@@ -36,7 +45,12 @@ def render_methodology_review_packet(
         parts.extend([
             '<article>',
             f'<h2>{escape(rule.statement)}</h2>',
-            f'<p class="meta">Decision: {escape(decision)} · {len(proposal.evidence)} evidence block(s) · confidence {proposal.confidence:.2f} · <code>{escape(proposal.proposal_id)}</code></p>',
+            f'<p class="meta">Decision: {escape(decision)} · Queue: {escape(rule.review_priority)} · support heuristic {proposal.confidence:.2f} · <code>{escape(proposal.proposal_id)}</code></p>',
+            (f'<p>Observations: {rule.observation_count} across {rule.distinct_document_count} page(s); '
+             f'{rule.substantive_value_count} substantive, {rule.blank_value_count} blank, '
+             f'{rule.placeholder_value_count} placeholder.</p>'),
+            (f'<p>Key variants: {escape(", ".join(rule.key_variants) or "none")}. '
+             f'Co-occurring keys by page: {escape(", ".join(f"{key} ({count})" for key, count in rule.cooccurring_keys.items()) or "none")}.</p>'),
             f'<details><summary>Preview {min(len(proposal.evidence), evidence_limit)} citation(s)</summary>',
         ])
         for evidence in proposal.evidence[:evidence_limit]:

@@ -41,11 +41,13 @@ pkmcanon propose-domain-claims output/markdown-package output/domain-proposals.j
 ```
 
 Each proposal file contains stable IDs, a typed payload, exact evidence
-references, and a source-package ID. The review HTML ranks draft rules by
-evidence count and shows a few escaped citation previews. The command does not
+references, and a source-package ID. The review HTML ranks draft rules by a
+support heuristic and shows a few escaped citation previews. The command does not
 upload it or record decisions. The file contains source excerpts; keep the
 output private and inspect full evidence before review. Methodology statements
-identify their Roam graph scope.
+identify their Roam graph scope. The queue shows distinct-page, blank/template,
+key-variant, and co-occurrence counts and places weak candidates after those
+ready for review. The heuristic is not a probability.
 Record an approval or rejection with:
 
 ```sh

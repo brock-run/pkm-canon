@@ -3,11 +3,58 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "blank_value_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Blank Value Count",
+      "type": "integer"
+    },
     "confidence": {
       "maximum": 1,
       "minimum": 0,
       "title": "Confidence",
       "type": "number"
+    },
+    "cooccurring_keys": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Cooccurring Keys",
+      "type": "object"
+    },
+    "distinct_document_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Distinct Document Count",
+      "type": "integer"
+    },
+    "key_variants": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Key Variants",
+      "type": "array"
+    },
+    "observation_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Observation Count",
+      "type": "integer"
+    },
+    "placeholder_value_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Placeholder Value Count",
+      "type": "integer"
+    },
+    "review_priority": {
+      "default": "review",
+      "enum": [
+        "review",
+        "defer"
+      ],
+      "title": "Review Priority",
+      "type": "string"
     },
     "rule_id": {
       "title": "Rule Id",
@@ -21,6 +68,18 @@
       ],
       "title": "Rule Type",
       "type": "string"
+    },
+    "source_scope": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Scope"
     },
     "source_trace_ids": {
       "items": {
@@ -43,6 +102,12 @@
       ],
       "title": "Status",
       "type": "string"
+    },
+    "substantive_value_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Substantive Value Count",
+      "type": "integer"
     }
   },
   "required": [
