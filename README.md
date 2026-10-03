@@ -21,25 +21,36 @@ source .venv/bin/activate
 make check
 pkmcanon ingest-roam graph.json my-graph output/roam-package
 pkmcanon validate output/roam-package
+pkmcanon audit-fidelity output/roam-package --top 20
 pkmcanon ingest-markdown docs/context-api.md platform output/markdown-package --source-path docs/context-api.md
 ```
 
 The `pkmcanon` command is installed into `.venv/bin`. Use that explicit path
 when the virtual environment is not activated.
+For a private source, pass the intended reviewer identity with
+`ingest-roam --principal REVIEWER_ID` (or `ingest-markdown --principal`), then
+use the same ID with `propose-methodology --principal` and in the review policy.
+The default `local-operator` identity is for local demonstrations.
 
 ## Reviewable product flow
 
 ```sh
 pkmcanon propose-methodology output/roam-package output/methodology-proposals.jsonl
+pkmcanon render-methodology-review output/roam-package output/methodology-proposals.jsonl output/methodology-review.html
 pkmcanon propose-domain-claims output/markdown-package output/domain-proposals.jsonl
 ```
 
 Each proposal file contains stable IDs, a typed payload, exact evidence
-references, and a source-package ID. Inspect its proposals before review.
+references, and a source-package ID. The review HTML ranks draft rules by
+evidence count and shows a few escaped citation previews. The command does not
+upload it or record decisions. The file contains source excerpts; keep the
+output private and inspect full evidence before review. Methodology statements
+identify their Roam graph scope.
 Record an approval or rejection with:
 
 ```sh
 pkmcanon review PACKAGE PROPOSALS PROPOSAL_ID POLICY_JSON REVIEW_LEDGER REVIEWER_ID approved
+pkmcanon render-methodology-review PACKAGE PROPOSALS output/methodology-review.html --ledger REVIEW_LEDGER --policy POLICY_JSON
 ```
 
 `examples/local-review-policy.json` is a local demonstration policy.

@@ -1,7 +1,8 @@
 # Portable canon contracts, v0.1
 
-**Status:** Proposed. This is a cross-product design incubated in Rosetta; only
-the generic store port and Rosetta filesystem binding are implemented today.
+**Status:** Proposed design with a verified Rosetta-to-CanonFlow source/evidence
+boundary. The generic store port has a Rosetta filesystem binding; CanonFlow
+currently has a local checkpoint adapter, not a production store binding.
 
 ## Vocabulary
 
@@ -145,3 +146,47 @@ re-retrieve, regenerate, or leave the dependent valid in its original context.
 5. Build reverse impact and authority-aware retrieval over those records.
 6. Extract shared contract types and conformance fixtures into a separately
    versioned package only after two products implement the same semantics.
+
+## BRO-35 two-product conformance decision
+
+Rosetta's `project-shared` snapshot (`0.2.0`) and access-aware `context`
+evidence bundle form the first executable exchange. The synthetic fixture in
+CanonFlow `tests/fixtures/` has one immutable source version and one exact
+evidence reference. `make check-cross-product` in CanonFlow regenerates both
+with the Rosetta CLI and compares all semantic fields. It excludes only
+`observed_at`, the time the same source bytes were captured. The package ID,
+source-version ID, content hash, element ID, quote, range, and line locator
+must match. Independent producer and consumer suites also verify access
+filtering and deterministic serialization.
+
+CanonFlow maps the exchange into its own records:
+
+| Portable concern | Rosetta source side | CanonFlow creative side |
+| --- | --- | --- |
+| Version reference | `SourceVersion` ID and content hash | Source evidence on a candidate; approved entity-version ID after creator review |
+| Admission | Validated source package asserts faithful capture | Review event admits a candidate version; a checkpoint selects it for a branch |
+| Snapshot | Source package ID | Immutable checkpoint with selected versions, context, policy, and digest |
+| Actual use | Evidence bundle identifies eligible source excerpts | Publication pin lists exact used versions, evidence, review events, and retrieval/template inputs |
+| Dependency | Source-native links remain source structure | Typed `used_input` edges are projected from closed publication pins |
+
+The conformance cases cover stable source and checkpoint identity, deterministic
+round trips, rejection of an unreviewed or forged admission, source access
+filtering before use, exact pin closure, and explained version-to-output edges.
+They also run against the private local pilot without checking its content
+into either repository.
+
+**Decision:** keep the boundary as versioned schemas plus checked-in synthetic
+integration fixtures and product-owned adapters. Do not publish a shared
+runtime package yet. The concrete overlap is source/evidence exchange; the
+admission, snapshot, and publication policies still differ. Reconsider a
+separate package after a second product needs the same runtime value types,
+especially when Living Knowledge implements its steward-governed side.
+
+Remaining differences are explicit. Rosetta's source canon confirms fidelity,
+not the truth or creative authority of source statements. Its `EvidenceRef`
+can carry a span ID; the shared snapshot currently resolves the exact quote
+through element ID and character range but does not expose that span ID.
+CanonFlow's local pilot fixes story time, point of view, audience, and spoiler
+context; a production retriever must enforce those dimensions. Rosetta's
+source-native links are not CanonFlow's output-use dependencies. A checkpoint
+and a workflow execution checkpoint remain different artifacts.

@@ -167,6 +167,7 @@ def test_methodology_groups_evidence_caps_confidence_and_respects_access(methodo
     proposal = proposals[0]
     assert len(proposal.evidence) == 8
     assert proposal.confidence == proposal.payload["confidence"] == 0.95
+    assert proposal.payload["statement"].startswith("For Roam graph graph, consider using Status::")
     assert proposal.payload["status"] == proposal.status == "proposed"
     assert proposal.payload["source_trace_ids"] == sorted(node.node_id for node in methodology_package.nodes)
     assert propose_methodology(methodology_package, principal_id="stranger") == []
