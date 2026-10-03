@@ -162,6 +162,7 @@ def methodology_package(tmp_path):
 
 
 def test_methodology_groups_evidence_caps_confidence_and_respects_access(methodology_package):
+    """Verify graph-scoped rules group evidence, cap confidence, and enforce access."""
     proposals = propose_methodology(methodology_package)
     assert len(proposals) == 1
     proposal = proposals[0]

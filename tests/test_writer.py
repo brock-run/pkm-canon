@@ -16,10 +16,12 @@ def source(tmp_path):
 
 
 def test_writer_cleans_stage_and_does_not_publish_after_commit_failure(source, tmp_path):
+    """Verify a failed commit leaves neither a published package nor staging files."""
     class FailingStore:
         staged = None
 
         def commit(self, request):
+            """Capture the staged package path and simulate a disk-full commit failure."""
             self.staged = request.staged
             assert (request.staged / "manifest.json").is_file()
             raise OSError("disk full")
@@ -34,6 +36,7 @@ def test_writer_cleans_stage_and_does_not_publish_after_commit_failure(source, t
 
 
 def test_store_validates_before_publishing_and_keeps_existing_package(source, tmp_path):
+    """Verify same-ID reuse preserves staging and corrupt packages are not published."""
     original = build_package(MarkdownAdapter(), source, tmp_path / "package", source_scope="repo")
     staged = tmp_path / "stage"
     shutil.copytree(original.root, staged)
@@ -49,6 +52,7 @@ def test_store_validates_before_publishing_and_keeps_existing_package(source, tm
 
 
 def test_store_does_not_replace_different_existing_package(source, tmp_path):
+    """Verify a conflicting package ID leaves both existing and staged packages intact."""
     original = build_package(MarkdownAdapter(), source, tmp_path / "original", source_scope="repo")
     candidate = build_package(MarkdownAdapter(), source, tmp_path / "candidate", source_scope="other")
     with pytest.raises(PackageValidationError, match="PACKAGE_EXISTS"):
@@ -58,6 +62,7 @@ def test_store_does_not_replace_different_existing_package(source, tmp_path):
 
 
 def test_store_wraps_rename_failure_without_publishing(source, tmp_path, monkeypatch):
+    """Verify rename errors become package errors without publishing or losing staging."""
     staged = build_package(MarkdownAdapter(), source, tmp_path / "stage", source_scope="repo")
 
     def fail(*args):

@@ -27,6 +27,7 @@ def test_ingest_and_validate_commands_report_same_package(tmp_path, command, dat
 
 
 def test_ingest_roam_named_principal_controls_private_review_source(tmp_path):
+    """Verify only the named ingestion principal receives private-source proposals."""
     source = tmp_path / "source.json"
     source.write_text('[{"uid":"P","title":"Page","children":[{"uid":"B","string":"Type:: note"}]}]')
     package_path = tmp_path / "package"
@@ -60,6 +61,7 @@ def test_invalid_ingestion_reports_json_error_and_no_package(tmp_path, command, 
 
 
 def test_audit_fidelity_ranks_diagnostics_without_exposing_source_text(tmp_path):
+    """Verify bounded diagnostic ranking hides source text and rejects invalid limits."""
     source = tmp_path / "source.json"
     source.write_text(json.dumps([{"uid": "P", "title": "Private page", "children": [
         {"uid": "B", "string": "Secret [[missing]]", "heading": 1},
@@ -83,6 +85,7 @@ def test_audit_fidelity_ranks_diagnostics_without_exposing_source_text(tmp_path)
 
 
 def test_methodology_review_packet_is_local_escaped_and_read_only(tmp_path):
+    """Verify escaped previews create no ledger and display existing review decisions."""
     source = tmp_path / "source.json"
     source.write_text(json.dumps([{"uid": "P", "title": "Page", "children": [
         {"uid": "B", "string": "Unsafe<script>:: <img src=x>"},

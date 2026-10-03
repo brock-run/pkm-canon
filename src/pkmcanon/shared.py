@@ -24,6 +24,7 @@ def project_shared_content(package: CanonicalPackage) -> SharedContentSnapshot:
     documents = {item.document_id: item for item in package.documents}
 
     def locator_for(node: Node) -> SourceLocator | None:
+        """Build a Markdown or Roam source locator, or return None for other sources."""
         document = documents[node.document_id]
         source = sources[document.source_version_id]
         if document.kind == "markdown":
