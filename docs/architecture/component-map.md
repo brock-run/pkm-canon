@@ -1,6 +1,6 @@
 # PKM Canon component map
 
-The IDs appear in both [current](current-state.md) and [target](target-state.md) Mermaid views. **Implemented** means present on this branch's open PR stack, not released from `main`. Proposed rows are architectural intent; their work item is the next review or scoping gate. Keep source examples synthetic in this map.
+The IDs appear in both [current](current-state.md) and [target](target-state.md) Mermaid views. **Implemented** is backed by code and checks linked below. Proposed rows are architectural intent; their work item is the next review or scoping gate. Keep source examples synthetic in this map.
 
 | ID | State and responsibility | Code or design source | Verification | Linear work | Decision |
 | --- | --- | --- | --- | --- | --- |

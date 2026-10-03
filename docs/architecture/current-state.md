@@ -1,6 +1,6 @@
 # PKM Canon architecture: current state
 
-**Evidence base:** `codex/architecture-atlas`, based on `f6af6f1` (the open PR #4 stack), 2026-10-03. These components are implemented on this branch; this is not a claim that they have merged to `main`. [Component map](component-map.md) names code, checks, work items, and decisions.
+**Evidence base:** the [PKM Canon tests](../../tests/) and repository checks, verified 2026-10-03. These components are implemented in this repository. The [component map](component-map.md) names code, checks, work items, and decisions.
 
 ```mermaid
 flowchart LR
