@@ -40,7 +40,13 @@ for (const name of files.slice(0, 2)) {
   if (!/^flowchart\s+(?:LR|RL|TB|TD|BT)\b/m.test(graph)) {
     errors.push(`${name}: expected a Mermaid flowchart declaration`);
   }
-  const defined = new Set([...graph.matchAll(/\b([A-Z]{2}\d{2})\s*\[/g)].map((m) => m[1]));
+  const definitions = [...graph.matchAll(/\b([A-Z]{2}\d{2})\s*\[/g)].map((m) => m[1]);
+  const defined = new Set(definitions);
+  for (const id of defined) {
+    if (definitions.filter((candidate) => candidate === id).length > 1) {
+      errors.push(name + ": duplicate node definition " + id);
+    }
+  }
   const referenced = new Set([...graph.matchAll(/\b([A-Z]{2}\d{2})\b/g)].map((m) => m[1]));
   if (defined.size === 0) errors.push(`${name}: no stable component IDs`);
   for (const id of referenced) {
@@ -51,7 +57,13 @@ for (const name of files.slice(0, 2)) {
 
 const map = markdown.get("component-map.md");
 if (map) {
-  const mapped = new Set([...map.matchAll(/^\|\s*([A-Z]{2}\d{2})\s*\|/gm)].map((m) => m[1]));
+  const rows = [...map.matchAll(/^\|\s*([A-Z]{2}\d{2})\s*\|/gm)].map((m) => m[1]);
+  const mapped = new Set(rows);
+  for (const id of mapped) {
+    if (rows.filter((candidate) => candidate === id).length > 1) {
+      errors.push("component-map.md: duplicate row " + id);
+    }
+  }
   const shown = new Set([...diagrams.values()].flatMap((ids) => [...ids]));
   for (const id of shown) {
     if (!mapped.has(id)) errors.push(`component-map.md: missing ${id}`);
