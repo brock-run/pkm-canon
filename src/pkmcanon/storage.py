@@ -45,7 +45,14 @@ class FilesystemPackageStore:
         return CanonicalPackage(location)
 
     def commit(self, request: PackageCommit) -> CanonicalPackage:
-        """Validate and atomically move a staged package, reusing one with the same ID."""
+        """Validate and atomically move a staged package, reusing one with the same ID.
+
+        Return the package at request.destination. Reusing an existing package
+        leaves request.staged in place. Validation and read errors propagate;
+        a different existing package raises PackageValidationError with code
+        PACKAGE_EXISTS. A failed move raises PACKAGE_COMMIT_FAILED unless a
+        valid destination with the same ID can be reused after the failure.
+        """
         staged, destination = request.staged, request.destination
         candidate = CanonicalPackage(staged)
         if destination.exists():

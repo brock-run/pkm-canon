@@ -65,7 +65,18 @@ def build_package(
     access: AccessPolicy | None = None,
     store: CanonicalStore | None = None,
 ) -> CanonicalPackage:
-    """Parse a source snapshot, validate a staged package, then publish it."""
+    """Parse a source snapshot and publish it through the supplied store.
+
+    source_scope identifies the graph or repository; native_id identifies the
+    source within it and defaults to source_path.name when empty or omitted.
+    Access defaults to private access for local-operator. Reuse an existing
+    package with the same ID; reject a different ID with PackageValidationError.
+
+    The default filesystem store validates and atomically publishes the staged
+    package. Return the store's package and remove any remaining staging
+    directory on success or failure. Parsing, validation, store, and filesystem
+    errors propagate to the caller.
+    """
     source_path = Path(source_path)
     output_dir = Path(output_dir)
     store = store or FilesystemPackageStore()

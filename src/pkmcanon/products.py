@@ -20,7 +20,12 @@ OWNER = re.compile(r"^Owner:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 
 
 def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local-operator") -> list[Proposal]:
-    """Draft attribute-convention rules with evidence from nodes accessible to the principal."""
+    """Draft attribute-convention rules with evidence from nodes accessible to the principal.
+
+    Return one proposal per accessible attribute key, ordered by key, or an
+    empty list if none qualify. Rule statements name the first source version's
+    scope as the Roam graph; proposals are not persisted or activated.
+    """
     docs = {item.document_id: item for item in package.documents}
     nodes = {item.node_id: item for item in package.nodes}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}

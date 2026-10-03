@@ -11,7 +11,16 @@ def render_methodology_review_packet(
     proposals: list[Proposal], *, evidence_limit: int = 3,
     decisions: dict[str, str] | None = None,
 ) -> str:
-    """Render escaped proposal and evidence previews without recording decisions."""
+    """Render escaped proposal and evidence previews without recording decisions.
+
+    Return HTML ordered by descending evidence count, then proposal ID. Show
+    the first evidence_limit citations per proposal, truncating quotes after
+    350 characters with an added ellipsis. decisions maps proposal IDs to
+    display labels; missing entries display as unreviewed.
+
+    Raise ValueError for a nonpositive evidence_limit and propagate Pydantic
+    ValidationError when a payload is not a valid MethodologyRule.
+    """
     if evidence_limit < 1:
         raise ValueError("evidence_limit must be positive")
     ordered = sorted(proposals, key=lambda item: (-len(item.evidence), item.proposal_id))

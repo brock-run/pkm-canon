@@ -19,7 +19,13 @@ from .schema_validation import default_schema_store
 
 
 def project_shared_content(package: CanonicalPackage) -> SharedContentSnapshot:
-    """Project documents, nodes, and links into a schema-validated shared content snapshot."""
+    """Project documents, nodes, and links into a schema-validated shared content snapshot.
+
+    Include Markdown or Roam source locators when applicable, leaving missing
+    facet details unset. Preserve access policies without filtering content.
+    Model and JSON Schema validation errors and schema-loading errors propagate
+    to the caller; no snapshot is written to disk.
+    """
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
     documents = {item.document_id: item for item in package.documents}
 
