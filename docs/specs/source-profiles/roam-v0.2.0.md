@@ -15,7 +15,8 @@ onto a new package without a fresh review.
 | `refs`, `:block/refs` | Two representations of the same ordered target UID list | One `native_ref` relation per unique target, from page or block to a uniquely resolved page/block in the export. Conflicts, malformed arrays, and missing or ambiguous targets are diagnosed; source-native edges remain distinct from links parsed from text. |
 | `heading` | Integer level 0–3 | `heading_level` in `pkm/source-roam`; levels 1–3 also set `Node.semantic_kind=heading`. Other values are diagnosed. |
 | `text-align` | Known alignment (`left`, `center`, `right`, `justify`) | Validated source presentation in `pkm/source-roam` as `text_align`; not portable layout. Unknown values are diagnosed. |
-| `:children/view-type`, `:block/view-type` | Known source views (`:bullet`, `:numbered`, `:outline`) | Validated source presentation in `pkm/source-roam`; not a portable rendering instruction. Unknown values are diagnosed. |
+| `:children/view-type` | Known values (`:bullet`, `:numbered`) | Validated source presentation in `pkm/source-roam` as `children_view_type`; not a portable rendering instruction. Unknown values are diagnosed. |
+| `:block/view-type` | Known value (`:outline`) | Validated source presentation in `pkm/source-roam` as `block_view_type`; not a portable rendering instruction. Unknown values are diagnosed. |
 | `:log/id`, `props`, `:block/props`, `emojis`, unknown fields | Source-specific data with no defined canonical meaning here | `UNSUPPORTED_FIELD_*` diagnostic and exact linked raw-object preservation. |
 | Inline rich text and unsupported macros | Source syntax retained verbatim in the text span | Explicit partial diagnostic and linked raw-object preservation until structured interpretation exists. |
 
