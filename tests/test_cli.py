@@ -26,6 +26,25 @@ def test_ingest_and_validate_commands_report_same_package(tmp_path, command, dat
     assert json.loads(checked.stdout) == summary
 
 
+def test_ingest_roam_named_principal_controls_private_review_source(tmp_path):
+    """Verify only the named ingestion principal receives private-source proposals."""
+    source = tmp_path / "source.json"
+    source.write_text('[{"uid":"P","title":"Page","children":[{"uid":"B","string":"Type:: note"}]}]')
+    package_path = tmp_path / "package"
+    proposals_path = tmp_path / "proposals.jsonl"
+    runner = CliRunner()
+    ingest = runner.invoke(app, ["ingest-roam", str(source), "my-graph", str(package_path), "--principal", "brock-butler"])
+    assert ingest.exit_code == 0, ingest.output
+    package = CanonicalPackage(package_path)
+    assert package.manifest.source_versions[0].access.principal_ids == ["brock-butler"]
+    proposed = runner.invoke(app, ["propose-methodology", str(package_path), str(proposals_path), "--principal", "brock-butler"])
+    assert proposed.exit_code == 0, proposed.output
+    assert json.loads(proposed.stdout)["proposal_count"] == 1
+    denied = runner.invoke(app, ["propose-methodology", str(package_path), str(tmp_path / "denied.jsonl")])
+    assert denied.exit_code == 0, denied.output
+    assert json.loads(denied.stdout)["proposal_count"] == 0
+
+
 @pytest.mark.parametrize("command,data,code", [
     ("ingest-roam", b"{}", "INVALID_ROAM_ROOT"),
     ("ingest-markdown", b"\xff", "INVALID_MARKDOWN_ENCODING"),
@@ -39,6 +58,88 @@ def test_invalid_ingestion_reports_json_error_and_no_package(tmp_path, command, 
     assert code in json.loads(result.stderr)["error"]
     assert result.stdout == ""
     assert not output.exists()
+
+
+def test_audit_fidelity_ranks_diagnostics_without_exposing_source_text(tmp_path):
+    """Verify bounded diagnostic ranking hides source text and rejects invalid limits."""
+    source = tmp_path / "source.json"
+    source.write_text(json.dumps([{"uid": "P", "title": "Private page", "children": [
+        {"uid": "B", "string": "Secret [[missing]]", "heading": 1},
+    ]}]))
+    package = tmp_path / "package"
+    runner = CliRunner()
+    assert runner.invoke(app, ["ingest-roam", str(source), "graph", str(package)]).exit_code == 0
+    result = runner.invoke(app, ["audit-fidelity", str(package), "--top", "1"])
+    assert result.exit_code == 0, result.output
+    audit = json.loads(result.stdout)
+    assert audit["fidelity"]["warning_count"] == 2
+    assert audit["distinct_diagnostic_codes"] == 2
+    assert audit["diagnostics"] == [{
+        "code": "UNRESOLVED_PAGE_REF", "severity": "warning",
+        "outcome": "unresolved_reference", "count": 1,
+    }]
+    assert "Secret" not in result.stdout
+    assert "Private page" not in result.stdout
+    invalid = runner.invoke(app, ["audit-fidelity", str(package), "--top", "0"])
+    assert invalid.exit_code == 2
+
+
+def test_methodology_review_packet_is_local_escaped_and_read_only(tmp_path):
+    """Verify escaped previews create no ledger and display existing review decisions."""
+    source = tmp_path / "source.json"
+    source.write_text(json.dumps([{"uid": "P", "title": "Page", "children": [
+        {"uid": "B", "string": "Unsafe<script>:: <img src=x>"},
+    ]}]))
+    package = tmp_path / "package"
+    proposals = tmp_path / "proposals.jsonl"
+    packet = tmp_path / "review.html"
+    runner = CliRunner()
+    assert runner.invoke(app, ["ingest-roam", str(source), "graph", str(package)]).exit_code == 0
+    assert runner.invoke(app, ["propose-methodology", str(package), str(proposals)]).exit_code == 0
+    rendered = runner.invoke(app, ["render-methodology-review", str(package), str(proposals), str(packet)])
+    assert rendered.exit_code == 0, rendered.output
+    assert json.loads(rendered.stdout)["proposal_count"] == 1
+    html = packet.read_text()
+    assert "Unsafe&lt;script&gt;::" in html
+    assert "&lt;img src=x&gt;" in html
+    assert "<script>" not in html
+    assert "Decision: unreviewed" in html
+    assert not (tmp_path / "reviews").exists()
+    policy = tmp_path / "policy.json"
+    policy.write_text(json.dumps({"policy_version": "test-v1", "approved_reviewers": ["local-operator"]}))
+    proposal_id = json.loads(proposals.read_text().splitlines()[0])["proposal_id"]
+    reviewed = runner.invoke(app, [
+        "review", str(package), str(proposals), proposal_id,
+        str(policy), str(tmp_path / "reviews"), "local-operator", "approved",
+    ])
+    assert reviewed.exit_code == 0, reviewed.output
+    rerendered = runner.invoke(app, [
+        "render-methodology-review", str(package), str(proposals), str(packet),
+        "--ledger", str(tmp_path / "reviews"), "--policy", str(policy),
+    ])
+    assert rerendered.exit_code == 0, rerendered.output
+    assert "Decision: approved" in packet.read_text()
+
+    other_source = tmp_path / "other.json"
+    other_source.write_text(json.dumps([{"uid": "P2", "title": "Other", "children": [
+        {"uid": "B2", "string": "Priority:: high"},
+    ]}]))
+    other_package = tmp_path / "other-package"
+    other_proposals = tmp_path / "other-proposals.jsonl"
+    assert runner.invoke(app, ["ingest-roam", str(other_source), "other-graph", str(other_package)]).exit_code == 0
+    assert runner.invoke(app, ["propose-methodology", str(other_package), str(other_proposals)]).exit_code == 0
+    other_id = json.loads(other_proposals.read_text().splitlines()[0])["proposal_id"]
+    assert runner.invoke(app, [
+        "review", str(other_package), str(other_proposals), other_id,
+        str(policy), str(tmp_path / "reviews"), "local-operator", "rejected",
+    ]).exit_code == 0
+    shared_ledger_render = runner.invoke(app, [
+        "render-methodology-review", str(package), str(proposals), str(packet),
+        "--ledger", str(tmp_path / "reviews"), "--policy", str(policy),
+    ])
+    assert shared_ledger_render.exit_code == 0, shared_ledger_render.output
+    assert "Decision: approved" in packet.read_text()
+    assert "Priority::" not in packet.read_text()
 
 
 def test_context_command_index_option_and_principal_filter(tmp_path):

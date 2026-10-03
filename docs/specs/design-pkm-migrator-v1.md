@@ -9,6 +9,20 @@ V1 ingests a Roam Research JSON export, converts it into a validated canonical p
 
 The canonical package on disk is the authoritative result of ingestion. PostgreSQL, embeddings, AI outputs, and exports are reproducible derivatives, not alternate sources of truth.
 
+Here “canonical” refers to Rosetta's **source representation canon**: a
+validated record of what an identified source version contained. It does not
+approve the source's factual assertions or promote generated outputs into a
+domain or creative canon. See [ADR 0020](../adr/0020-canon-semantics-and-portable-contracts.md)
+and the [portable contract design](canon-contracts-v0.1.md).
+
+Every future activated methodology or export SHOULD carry an immutable
+publication pin: source package/snapshot ID, exact evidence refs, retrieval
+configuration and actual results, rule/prompt/model versions where used, and
+review decisions. Source-to-record and evidence-to-output dependency edges
+SHOULD be retained for reverse impact queries. Retrieval MUST apply source
+access and requested context before ranking; a source record alone cannot
+masquerade as an approved domain claim.
+
 ## 2. Document authority
 
 - ADRs record durable architecture decisions and their consequences.

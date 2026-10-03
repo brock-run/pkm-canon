@@ -9,7 +9,7 @@ from pkmcanon.evidence import (
     validate_evidence,
 )
 from pkmcanon.models import ReviewPolicy
-from pkmcanon.package import PackageValidationError
+from pkmcanon.package import CanonicalPackage, PackageValidationError
 from pkmcanon.parsers.markdown import MarkdownAdapter
 from pkmcanon.parsers.roam import RoamParser
 from pkmcanon.products import (
@@ -94,6 +94,20 @@ def test_context_applies_access_before_retrieval(tmp_path: Path) -> None:
     assert denied.coverage == "none"
 
 
+def test_methodology_handles_valid_empty_package_without_source_versions(tmp_path: Path) -> None:
+    """A validated empty capture has no source scope and yields no candidate rules."""
+    source = tmp_path / "empty.json"
+    source.write_text("[]")
+    package = build_package(RoamParser(), source, tmp_path / "package", source_scope="empty-graph")
+    manifest_path = package.root / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["source_versions"] = []
+    manifest_path.write_text(json.dumps(manifest))
+    empty_package = CanonicalPackage(package.root)
+    assert empty_package.manifest.source_versions == []
+    assert propose_methodology(empty_package) == []
+
+
 def test_tampered_proposal_evidence_is_rejected(tmp_path: Path) -> None:
     """Verify proposal loading rejects an evidence hash that differs from the source."""
     source = tmp_path / "doc.md"
@@ -162,11 +176,13 @@ def methodology_package(tmp_path):
 
 
 def test_methodology_groups_evidence_caps_confidence_and_respects_access(methodology_package):
+    """Verify graph-scoped rules group evidence, cap confidence, and enforce access."""
     proposals = propose_methodology(methodology_package)
     assert len(proposals) == 1
     proposal = proposals[0]
     assert len(proposal.evidence) == 8
     assert proposal.confidence == proposal.payload["confidence"] == 0.95
+    assert proposal.payload["statement"].startswith("For Roam graph graph, consider using Status::")
     assert proposal.payload["status"] == proposal.status == "proposed"
     assert proposal.payload["source_trace_ids"] == sorted(node.node_id for node in methodology_package.nodes)
     assert propose_methodology(methodology_package, principal_id="stranger") == []

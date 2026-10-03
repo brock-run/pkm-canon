@@ -20,10 +20,18 @@ OWNER = re.compile(r"^Owner:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 
 
 def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local-operator") -> list[Proposal]:
-    """Draft attribute-convention rules with evidence from nodes accessible to the principal."""
+    """Draft attribute-convention rules with evidence from nodes accessible to the principal.
+
+    Return one proposal per accessible attribute key, ordered by key, or an
+    empty list if none qualify. Rule statements name the first source version's
+    scope as the Roam graph; proposals are not persisted or activated.
+    """
+    if not package.manifest.source_versions:
+        return []
     docs = {item.document_id: item for item in package.documents}
     nodes = {item.node_id: item for item in package.nodes}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
+    source_scope = package.manifest.source_versions[0].source_scope
     attributes: dict[str, list[str]] = defaultdict(list)
     for attribute in package.attributes:
         if attribute.subject_id not in nodes:
@@ -38,7 +46,10 @@ def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local
         rule = MethodologyRule(
             rule_id=stable_id("rule", package.manifest.package_id, "attribute", key),
             rule_type="attribute_convention",
-            statement=f"Consider using {key}:: as a block attribute; observed in {len(evidence)} block(s).",
+            statement=(
+                f"For Roam graph {source_scope}, consider using {key}:: as a block attribute; "
+                f"observed in {len(evidence)} block(s)."
+            ),
             confidence=min(0.95, 0.4 + 0.1 * len(evidence)),
             source_trace_ids=[item.node_id for item in evidence],
         )

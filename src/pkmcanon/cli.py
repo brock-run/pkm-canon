@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Annotated
 
@@ -19,6 +20,7 @@ from .evaluation import (
 from .evidence import assemble_evidence_bundle
 from .index import load_index, search_index, write_index
 from .jobs import JobStore, create_app
+from .models import AccessPolicy
 from .package import CanonicalPackage, PackageValidationError
 from .parsers.markdown import MarkdownAdapter
 from .parsers.roam import RoamParser
@@ -32,10 +34,12 @@ from .products import (
 from .projection import project_audit_markdown
 from .review import (
     ReviewLedger,
+    approved_proposals,
     load_review_policy,
     publish_methodology,
     publish_reviewed_domain_page,
 )
+from .review_packet import render_methodology_review_packet
 from .shared import write_shared_content
 from .writer import build_package
 
@@ -56,10 +60,22 @@ def _summary(package: CanonicalPackage) -> str:
 
 
 @app.command("ingest-roam")
-def ingest_roam(filepath: Path, graph_name: str, output_dir: Path) -> None:
-    """Write and validate an authoritative package from a Roam JSON export."""
+def ingest_roam(filepath: Path, graph_name: str, output_dir: Path, principal: str = "local-operator") -> None:
+    """Write and validate an authoritative package from a Roam JSON export.
+
+    Grant private-source access to the stripped principal and print a JSON
+    package summary. A blank principal raises typer.BadParameter. OSError and
+    ValueError (including PackageValidationError) during ingestion produce a
+    JSON error on stderr and raise typer.Exit with code 1.
+    """
+    principal = principal.strip()
+    if not principal:
+        raise typer.BadParameter("principal must be nonempty")
     try:
-        package = build_package(RoamParser(), filepath, output_dir, source_scope=graph_name)
+        package = build_package(
+            RoamParser(), filepath, output_dir, source_scope=graph_name,
+            access=AccessPolicy(principal_ids=[principal]),
+        )
     except (OSError, ValueError, PackageValidationError) as exc:
         typer.echo(json.dumps({"error": str(exc)}), err=True)
         raise typer.Exit(code=1) from exc
@@ -77,13 +93,59 @@ def validate(path: Path) -> None:
     typer.echo(_summary(package))
 
 
+@app.command("audit-fidelity")
+def audit_fidelity(path: Path, top: int = 20) -> None:
+    """Summarize a validated package's diagnostic codes without source content.
+
+    Print JSON with fidelity totals and at most top code/severity/outcome
+    groups, ordered by descending count and then by the group tuple. The
+    distinct-code count covers all diagnostics. A nonpositive top raises
+    typer.BadParameter. OSError and ValueError (including PackageValidationError)
+    while loading the package produce a JSON error on stderr and raise
+    typer.Exit with code 1.
+    """
+    if top < 1:
+        raise typer.BadParameter("top must be positive")
+    try:
+        package = CanonicalPackage(path)
+    except (OSError, ValueError, PackageValidationError) as exc:
+        typer.echo(json.dumps({"error": str(exc)}), err=True)
+        raise typer.Exit(code=1) from exc
+    counts = Counter((row.code, row.severity, row.outcome) for row in package.diagnostics)
+    ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    typer.echo(json.dumps({
+        "package_id": package.manifest.package_id,
+        "fidelity": package.manifest.fidelity.model_dump(),
+        "distinct_diagnostic_codes": len({code for code, _, _ in counts}),
+        "diagnostics": [
+            {"code": code, "severity": severity, "outcome": outcome, "count": count}
+            for (code, severity, outcome), count in ordered[:top]
+        ],
+    }, sort_keys=True))
+
+
 @app.command("ingest-markdown")
-def ingest_markdown(filepath: Path, repository: str, output_dir: Path, source_path: str | None = None) -> None:
-    """Capture one repository Markdown document using the shared package contract."""
+def ingest_markdown(
+    filepath: Path, repository: str, output_dir: Path,
+    source_path: str | None = None, principal: str = "local-operator",
+) -> None:
+    """Capture one repository Markdown document using the shared package contract.
+
+    Use source_path as the source's identity within repository, falling back
+    to filepath.name when empty or omitted. Grant private-source access to the
+    stripped principal and print a JSON package summary. A blank principal
+    raises typer.BadParameter. OSError and ValueError (including
+    PackageValidationError) during ingestion produce a JSON error on stderr
+    and raise typer.Exit with code 1.
+    """
+    principal = principal.strip()
+    if not principal:
+        raise typer.BadParameter("principal must be nonempty")
     try:
         package = build_package(
             MarkdownAdapter(), filepath, output_dir,
             source_scope=repository, native_id=source_path or filepath.name,
+            access=AccessPolicy(principal_ids=[principal]),
         )
     except (OSError, ValueError, PackageValidationError) as exc:
         typer.echo(json.dumps({"error": str(exc)}), err=True)
@@ -128,6 +190,53 @@ def propose_domain_claims_command(package_path: Path, proposals_path: Path, prin
         typer.echo(json.dumps({"error": str(exc)}), err=True)
         raise typer.Exit(code=1) from exc
     typer.echo(json.dumps({"proposal_count": len(proposals), "path": str(proposals_path)}))
+
+
+@app.command("render-methodology-review")
+def render_methodology_review_command(
+    package_path: Path, proposals_path: Path, output: Path, evidence_limit: int = 3,
+    ledger_path: Annotated[Path | None, typer.Option("--ledger")] = None,
+    policy_path: Annotated[Path | None, typer.Option("--policy")] = None,
+) -> None:
+    """Write a read-only local HTML queue with escaped evidence previews.
+
+    Validate methodology proposals against the package and show at most
+    evidence_limit citations per proposal. Optional ledger decisions are
+    checked against the supplied policy; no decisions are recorded. Create
+    output's parents, overwrite output, and print its path and proposal count
+    as JSON. A nonpositive limit or an unpaired ledger/policy raises
+    typer.BadParameter. Processing or write errors produce a JSON error on
+    stderr and raise typer.Exit with code 1.
+    """
+    if evidence_limit < 1:
+        raise typer.BadParameter("evidence_limit must be positive")
+    if (ledger_path is None) != (policy_path is None):
+        raise typer.BadParameter("ledger and policy must be supplied together")
+    try:
+        package = CanonicalPackage(package_path)
+        proposals = read_proposals(proposals_path, package)
+        if any(item.proposal_type != "methodology_rule" for item in proposals):
+            raise PackageValidationError("UNSUPPORTED_PROPOSAL_TYPE", "methodology review only")
+        decisions = None
+        if ledger_path is not None and policy_path is not None:
+            ledger = ReviewLedger(ledger_path)
+            approved_proposals(proposals, ledger, load_review_policy(policy_path))
+            events = ledger.events()
+            proposal_ids = {item.proposal_id for item in proposals}
+            decisions = {
+                event.proposal_id: event.decision
+                for event in events
+                if event.proposal_id in proposal_ids
+            }
+        content = render_methodology_review_packet(
+            proposals, evidence_limit=evidence_limit, decisions=decisions,
+        )
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(content, encoding="utf-8")
+    except Exception as exc:
+        typer.echo(json.dumps({"error": str(exc)}), err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(json.dumps({"path": str(output), "proposal_count": len(proposals)}))
 
 
 @app.command("review")

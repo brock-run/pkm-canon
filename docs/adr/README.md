@@ -23,3 +23,4 @@ All decisions are proposed until explicitly accepted. Existing ADR numbers are p
 | [0017](0017-human-approval-before-activation.md) | Human approval is required before activation | Proposed |
 | [0018](0018-external-providers-configurable.md) | External providers are configurable | Proposed |
 | [0019](0019-versioned-adapter-contracts.md) | Adapter contracts are independently versioned | Proposed |
+| [0020](0020-canon-semantics-and-portable-contracts.md) | Canon semantics and product-neutral store port | Proposed |

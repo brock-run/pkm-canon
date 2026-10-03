@@ -87,6 +87,7 @@ class ContentElement(StrictModel):
     kind: str
     position: int = Field(ge=0)
     text: str
+    source_locator: SourceLocator | None = None
 
 
 class NativeLink(StrictModel):
