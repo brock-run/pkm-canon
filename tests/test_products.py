@@ -9,7 +9,7 @@ from pkmcanon.evidence import (
     validate_evidence,
 )
 from pkmcanon.models import ReviewPolicy
-from pkmcanon.package import PackageValidationError
+from pkmcanon.package import CanonicalPackage, PackageValidationError
 from pkmcanon.parsers.markdown import MarkdownAdapter
 from pkmcanon.parsers.roam import RoamParser
 from pkmcanon.products import (
@@ -92,6 +92,20 @@ def test_context_applies_access_before_retrieval(tmp_path: Path) -> None:
     assert allowed.evidence
     assert denied.evidence == []
     assert denied.coverage == "none"
+
+
+def test_methodology_handles_valid_empty_package_without_source_versions(tmp_path: Path) -> None:
+    """A validated empty capture has no source scope and yields no candidate rules."""
+    source = tmp_path / "empty.json"
+    source.write_text("[]")
+    package = build_package(RoamParser(), source, tmp_path / "package", source_scope="empty-graph")
+    manifest_path = package.root / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["source_versions"] = []
+    manifest_path.write_text(json.dumps(manifest))
+    empty_package = CanonicalPackage(package.root)
+    assert empty_package.manifest.source_versions == []
+    assert propose_methodology(empty_package) == []
 
 
 def test_tampered_proposal_evidence_is_rejected(tmp_path: Path) -> None:

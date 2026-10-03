@@ -223,9 +223,11 @@ def render_methodology_review_command(
             approved_proposals(proposals, ledger, load_review_policy(policy_path))
             events = ledger.events()
             proposal_ids = {item.proposal_id for item in proposals}
-            if any(event.proposal_id not in proposal_ids for event in events):
-                raise PackageValidationError("UNKNOWN_REVIEW_PROPOSAL", str(ledger_path))
-            decisions = {event.proposal_id: event.decision for event in events}
+            decisions = {
+                event.proposal_id: event.decision
+                for event in events
+                if event.proposal_id in proposal_ids
+            }
         content = render_methodology_review_packet(
             proposals, evidence_limit=evidence_limit, decisions=decisions,
         )

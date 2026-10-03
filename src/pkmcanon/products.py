@@ -26,6 +26,8 @@ def propose_methodology(package: CanonicalPackage, *, principal_id: str = "local
     empty list if none qualify. Rule statements name the first source version's
     scope as the Roam graph; proposals are not persisted or activated.
     """
+    if not package.manifest.source_versions:
+        return []
     docs = {item.document_id: item for item in package.documents}
     nodes = {item.node_id: item for item in package.nodes}
     sources = {item.source_version_id: item for item in package.manifest.source_versions}
