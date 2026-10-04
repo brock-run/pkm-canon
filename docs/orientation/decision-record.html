@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PKM Canon decision record</title>
+  <style>
+    :root {
+      --ink: #1f2933;
+      --muted: #52606d;
+      --line: #cbd2d9;
+      --surface: #ffffff;
+      --paper: #f5f7fa;
+      --implemented: #0f766e;
+      --proposed: #b45309;
+      --selected: #2563eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.5 system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    header[data-shell="header"] {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 1.25rem 1.5rem;
+    }
+    header .repo-label {
+      margin: 0 0 0.35rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    header h1 {
+      margin: 0 0 0.75rem;
+      font-size: 1.35rem;
+      font-weight: 650;
+    }
+    header .banner a {
+      color: var(--selected);
+    }
+    [data-shell="legend"] {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .is-implemented,
+    .is-proposed {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.55rem;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      background: var(--surface);
+    }
+    .is-implemented { border-color: var(--implemented); }
+    .is-proposed { border-color: var(--proposed); }
+    [data-shell="stage"] {
+      padding: 1rem 1.5rem 2rem;
+    }
+    [hidden] { display: none !important; }
+    .map-layout,
+    .steps-layout {
+      display: grid;
+      gap: 1rem;
+      max-width: 52rem;
+    }
+    .map-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    }
+    .map-node,
+    .step-button {
+      text-align: left;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .map-node[aria-pressed="true"],
+    .step-button[aria-pressed="true"] {
+      outline: 2px solid var(--selected);
+      outline-offset: 2px;
+      border-color: var(--selected);
+    }
+    .inspector,
+    .selected-step {
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+    .inspector[hidden],
+    .selected-step[hidden] {
+      display: none !important;
+    }
+    .essay-section {
+      max-width: 40rem;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid var(--line);
+      background: var(--surface);
+    }
+    [data-shell="closing"] {
+      margin: 0;
+      padding: 1rem 1.5rem 1.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+    a[data-citation="repo"] {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85em;
+    }
+    .adr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; max-width: 40rem; }
+    .adr-list li { display: block; padding: 0.5rem 0.75rem; }
+    .adr-list .status { font-weight: 600; margin-right: 0.4rem; }
+    code { font-family: ui-monospace, monospace; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <header data-shell="header">
+    <p class="repo-label">PKM Canon</p>
+    <h1>Which decisions are recorded, and which are still open?</h1>
+    <p class="banner">
+      <a href="../adr/README.md">Authoritative Markdown: ADR index</a>
+    </p>
+  </header>
+
+  <section data-shell="legend" aria-label="Implementation legend">
+    <span class="is-implemented">Implemented</span>
+    <span class="is-proposed">Proposed</span>
+  </section>
+
+  <section data-shell="stage" aria-label="Page body">
+    <div data-stage="essay">
+      <section class="essay-section">
+        <h2>The ledger rule</h2>
+        <p>All twenty recorded decisions are still open. The ADR index states that every decision is proposed until it is explicitly accepted, and that numbers are preserved: later clarifications get new numbers instead of renumbering earlier ones (<a data-citation="repo" data-path="docs/adr/README.md" data-line="3">docs/adr/README.md:3</a>). The repo's agent guidance adds that ADR status stays as it is until the official Notion ledger records a decision (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). No page here is marked accepted, and none should be until that ledger says so.</p>
+      </section>
+      <section class="essay-section">
+        <h2>ADR-0001 through ADR-0020</h2>
+        <p>Each row cites the ADR file named in the index.</p>
+        <ul class="adr-list">
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0001-canonical-package-primary-source-of-truth.md">ADR-0001</a> — Canonical package is the primary source of truth</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0002-v1-canonical-record-scope.md">ADR-0002</a> — V1 canonical record scope is deliberately narrow</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0003-pydantic-models-publish-json-schema.md">ADR-0003</a> — Pydantic core models publish committed JSON Schema contracts</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0004-jsonl-record-files.md">ADR-0004</a> — Canonical packages use JSONL record files</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0005-base-envelope-and-modular-record-schemas.md">ADR-0005</a> — Core records share conventions but retain modular schemas</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0006-facets-use-namespaced-keys-and-schema-urls.md">ADR-0006</a> — Facets use namespaced keys and schema URLs</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0007-reusable-preservation-storage-descriptors.md">ADR-0007</a> — Preservation storage descriptors are reusable</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0008-preservation-bundles-for-multi-payload-subjects.md">ADR-0008</a> — Preservation bundles group multiple payloads per subject</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0009-strict-core-flexible-extensions.md">ADR-0009</a> — Core records are strict and extensions are controlled</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0010-pandoc-is-a-projection-layer.md">ADR-0010</a> — Pandoc is a downstream projection layer</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0011-source-native-payloads-outside-core-records.md">ADR-0011</a> — Source-native payloads remain outside core records</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0012-deterministic-normalization-no-silent-loss.md">ADR-0012</a> — Normalization is deterministic and never silently drops data</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0013-postgresql-operational-projection.md">ADR-0013</a> — PostgreSQL is an operational projection</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0014-separate-database-and-package-migrations.md">ADR-0014</a> — Database and package migrations are separate</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0015-source-scoped-stable-identity.md">ADR-0015</a> — V1 uses source-scoped stable identity</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0016-structured-evidence-grounded-methodology-manifest.md">ADR-0016</a> — Methodology output is structured and evidence-grounded</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0017-human-approval-before-activation.md">ADR-0017</a> — Human approval is required before activation</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0018-external-providers-configurable.md">ADR-0018</a> — External providers are configurable</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0019-versioned-adapter-contracts.md">ADR-0019</a> — Adapter contracts are independently versioned</li>
+          <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0020-canon-semantics-and-portable-contracts.md">ADR-0020</a> — Canon semantics and product-neutral store port</li>
+        </ul>
+      </section>
+      <section class="essay-section">
+        <h2>What is open</h2>
+        <p>Everything above is open. For example, <a data-citation="repo" data-path="docs/adr/0017-human-approval-before-activation.md" data-line="3">ADR-0017</a> (human approval before activation) is a Proposed decision even though the review commands in the README already behave that way; the code showing a behavior does not accept the decision.</p>
+      </section>
+    </div>
+  </section>
+
+  <p data-shell="closing">
+    Sources not checked: Notion ledger (no Notion citation was fetched, so acceptance state is unverified beyond the repo index), other repositories, and the ADR bodies beyond the index and ADR-0017 status line. Code graph: not indexed.
+  </p>
+
+  <script>
+    (function () {
+      function wireMap(root) {
+        var buttons = root.querySelectorAll(".map-node[data-map-id]");
+        var panels = root.querySelectorAll("[data-map-inspector]");
+        if (!buttons.length) return;
+        function select(id) {
+          buttons.forEach(function (btn) {
+            var on = btn.getAttribute("data-map-id") === id;
+            btn.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          panels.forEach(function (panel) {
+            panel.hidden = panel.getAttribute("data-map-inspector") !== id;
+          });
+        }
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            select(btn.getAttribute("data-map-id"));
+          });
+        });
+        select(buttons[0].getAttribute("data-map-id"));
+      }
+
+      function wireSteps(root) {
+        var buttons = root.querySelectorAll(".step-button[data-step-id]");
+        var panels = root.querySelectorAll("[data-step-panel]");
+        if (!buttons.length) return;
+        function select(id) {
+          buttons.forEach(function (btn) {
+            var on = btn.getAttribute("data-step-id") === id;
+            btn.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          panels.forEach(function (panel) {
+            panel.hidden = panel.getAttribute("data-step-panel") !== id;
+          });
+        }
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            select(btn.getAttribute("data-step-id"));
+          });
+        });
+        select(buttons[0].getAttribute("data-step-id"));
+      }
+
+      document.querySelectorAll('[data-interactive="map"]').forEach(wireMap);
+      document.querySelectorAll('[data-interactive="steps"]').forEach(wireSteps);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PKM Canon working agreement</title>
+  <style>
+    :root {
+      --ink: #1f2933;
+      --muted: #52606d;
+      --line: #cbd2d9;
+      --surface: #ffffff;
+      --paper: #f5f7fa;
+      --implemented: #0f766e;
+      --proposed: #b45309;
+      --selected: #2563eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.5 system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    header[data-shell="header"] {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 1.25rem 1.5rem;
+    }
+    header .repo-label {
+      margin: 0 0 0.35rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    header h1 {
+      margin: 0 0 0.75rem;
+      font-size: 1.35rem;
+      font-weight: 650;
+    }
+    header .banner a {
+      color: var(--selected);
+    }
+    [data-shell="legend"] {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .is-implemented,
+    .is-proposed {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.55rem;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      background: var(--surface);
+    }
+    .is-implemented { border-color: var(--implemented); }
+    .is-proposed { border-color: var(--proposed); }
+    [data-shell="stage"] {
+      padding: 1rem 1.5rem 2rem;
+    }
+    [hidden] { display: none !important; }
+    .map-layout,
+    .steps-layout {
+      display: grid;
+      gap: 1rem;
+      max-width: 52rem;
+    }
+    .map-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    }
+    .map-node,
+    .step-button {
+      text-align: left;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .map-node[aria-pressed="true"],
+    .step-button[aria-pressed="true"] {
+      outline: 2px solid var(--selected);
+      outline-offset: 2px;
+      border-color: var(--selected);
+    }
+    .inspector,
+    .selected-step {
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+    .inspector[hidden],
+    .selected-step[hidden] {
+      display: none !important;
+    }
+    .essay-section {
+      max-width: 40rem;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid var(--line);
+      background: var(--surface);
+    }
+    [data-shell="closing"] {
+      margin: 0;
+      padding: 1rem 1.5rem 1.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+    a[data-citation="repo"] {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85em;
+    }
+    .adr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; max-width: 40rem; }
+    .adr-list li { display: block; padding: 0.5rem 0.75rem; }
+    .adr-list .status { font-weight: 600; margin-right: 0.4rem; }
+    code { font-family: ui-monospace, monospace; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <header data-shell="header">
+    <p class="repo-label">PKM Canon</p>
+    <h1>How should a developer or agent work in this repo?</h1>
+    <p class="banner">
+      <a href="../../AGENTS.md">Authoritative Markdown: AGENTS.md</a>
+    </p>
+  </header>
+
+  <section data-shell="legend" aria-label="Implementation legend">
+    <span class="is-implemented">Implemented</span>
+    <span class="is-proposed">Proposed</span>
+  </section>
+
+  <section data-shell="stage" aria-label="Page body">
+    <div data-stage="essay">
+      <section class="essay-section">
+        <h2>Before changing boundaries, schemas, or flows</h2>
+        <p>For changes to product boundaries, admission or authority rules, schemas, data flows, or shared contracts, read <code>docs/architecture/current-state.md</code>, <code>target-state.md</code>, and <code>component-map.md</code>, and update affected Mermaid nodes and the map in the same change (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). Mark proposed and implemented behavior separately, with code or design sources, verification, Linear work, and ADR links. Keep private source material out of diagrams.</p>
+      </section>
+      <section class="essay-section">
+        <h2>Set up and check</h2>
+        <p>The Quick start syncs the locked environment with <code>uv sync --extra dev --locked</code>, activates <code>.venv</code>, and runs <code>make check</code> (<a data-citation="repo" data-path="README.md" data-line="20">README.md:20</a>). Also run <code>node scripts/check-architecture.mjs</code> to check diagram IDs and local links, as AGENTS.md and the README both ask. When the virtual environment is not activated, use the explicit <code>.venv/bin</code> path to <code>pkmcanon</code>.</p>
+      </section>
+      <section class="essay-section">
+        <h2>Ingest and validate</h2>
+        <p>The Quick start commands are <code>ingest-roam</code>, <code>validate</code>, <code>audit-fidelity</code>, and <code>ingest-markdown</code> (<a data-citation="repo" data-path="README.md" data-line="28">README.md:28</a>). They are Typer commands registered on one app in <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="46">src/pkmcanon/cli.py:46</a>; for example <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="63">ingest-roam</a> writes and validates an authoritative package, and <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="86">validate</a> checks schemas, references, inventory, hashes, and fidelity. For a private source, pass the reviewer identity with <code>--principal</code> instead of relying on the default <code>local-operator</code> (<a data-citation="repo" data-path="README.md" data-line="36">README.md:36</a>).</p>
+      </section>
+      <section class="essay-section">
+        <h2>Review before anything becomes active</h2>
+        <p>The reviewable flow (<a data-citation="repo" data-path="README.md" data-line="41">README.md:41</a>) proposes methodology rules or domain claims, renders a review page, records an approval or rejection with <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="243">review</a>, and only then publishes. Publication reads the append-only review ledger and selects approved proposals only (<a data-citation="repo" data-path="README.md" data-line="70">README.md:70</a>). The review HTML contains source excerpts, so keep the output private. Do not hand-edit the ledger, and do not treat an unreviewed proposal as active.</p>
+      </section>
+      <section class="essay-section">
+        <h2>Docs, Notion, and sibling repos</h2>
+        <p>Repo docs are authoritative; important changes are mirrored to Canonworks Notion with the source branch, revision, and content digest (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). The detailed workflow lives in the sibling canon-flow repo, and the cross-product flows are described in <code>canon-flow/docs/orientation/system-flows.html</code>.</p>
+      </section>
+    </div>
+  </section>
+
+  <p data-shell="closing">
+    Sources not checked: Notion pages, the sibling canon-flow skill, and other repositories; no command was run to produce this page. Code graph: not indexed.
+  </p>
+
+  <script>
+    (function () {
+      function wireMap(root) {
+        var buttons = root.querySelectorAll(".map-node[data-map-id]");
+        var panels = root.querySelectorAll("[data-map-inspector]");
+        if (!buttons.length) return;
+        function select(id) {
+          buttons.forEach(function (btn) {
+            var on = btn.getAttribute("data-map-id") === id;
+            btn.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          panels.forEach(function (panel) {
+            panel.hidden = panel.getAttribute("data-map-inspector") !== id;
+          });
+        }
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            select(btn.getAttribute("data-map-id"));
+          });
+        });
+        select(buttons[0].getAttribute("data-map-id"));
+      }
+
+      function wireSteps(root) {
+        var buttons = root.querySelectorAll(".step-button[data-step-id]");
+        var panels = root.querySelectorAll("[data-step-panel]");
+        if (!buttons.length) return;
+        function select(id) {
+          buttons.forEach(function (btn) {
+            var on = btn.getAttribute("data-step-id") === id;
+            btn.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          panels.forEach(function (panel) {
+            panel.hidden = panel.getAttribute("data-step-panel") !== id;
+          });
+        }
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            select(btn.getAttribute("data-step-id"));
+          });
+        });
+        select(buttons[0].getAttribute("data-step-id"));
+      }
+
+      document.querySelectorAll('[data-interactive="map"]').forEach(wireMap);
+      document.querySelectorAll('[data-interactive="steps"]').forEach(wireSteps);
+    })();
+  </script>
+</body>
+</html>

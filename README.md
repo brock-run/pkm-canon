@@ -17,6 +17,14 @@ file hashes and counts. The Roam product proposes methodology rules from
 attributes. The Markdown product proposes explicit ownership claims. Neither
 proposal becomes active without a review event.
 
+Orientation pages for this repo: the
+[decision record](docs/orientation/decision-record.html) lists ADR-0001
+through ADR-0020 and their Proposed status, and the
+[working agreement](docs/orientation/working-agreement.html) explains how a
+developer or agent should work here. Cross-product flows are described in
+`canon-flow/docs/orientation/system-flows.html` in the sibling canon-flow
+repository.
+
 ## Quick start
 
 Use the repository's Python environment and committed lockfile:
