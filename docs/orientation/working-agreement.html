@@ -100,11 +100,40 @@
     .selected-step[hidden] {
       display: none !important;
     }
+    .essay-layout {
+      display: grid;
+      gap: 1rem;
+      max-width: 52rem;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    }
     .essay-section {
       max-width: 40rem;
       padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
       border-left: 3px solid var(--line);
+      border-radius: 6px;
       background: var(--surface);
+      cursor: pointer;
+    }
+    .essay-section[aria-pressed="true"] {
+      outline: 2px solid var(--selected);
+      outline-offset: 2px;
+      border-color: var(--selected);
+    }
+    .essay-inspector {
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      align-self: start;
+    }
+    .essay-inspector h3 {
+      margin: 0 0 0.65rem;
+      font-size: 0.95rem;
+    }
+    .essay-inspector ul {
+      margin: 0;
+      padding-left: 1.2rem;
     }
     [data-shell="closing"] {
       margin: 0;
@@ -139,26 +168,34 @@
 
   <section data-shell="stage" aria-label="Page body">
     <div data-stage="essay">
-      <section class="essay-section">
+      <div class="essay-layout" data-interactive="essay">
+      <div class="essay-sections">
+      <section class="essay-section" data-essay-id="boundaries" aria-pressed="false" tabindex="0">
         <h2>Before changing boundaries, schemas, or flows</h2>
         <p>For changes to product boundaries, admission or authority rules, schemas, data flows, or shared contracts, read <code>docs/architecture/current-state.md</code>, <code>target-state.md</code>, and <code>component-map.md</code>, and update affected Mermaid nodes and the map in the same change (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). Mark proposed and implemented behavior separately, with code or design sources, verification, Linear work, and ADR links. Keep private source material out of diagrams.</p>
       </section>
-      <section class="essay-section">
+      <section class="essay-section" data-essay-id="setup" aria-pressed="false" tabindex="0">
         <h2>Set up and check</h2>
-        <p>The Quick start syncs the locked environment with <code>uv sync --extra dev --locked</code>, activates <code>.venv</code>, and runs <code>make check</code> (<a data-citation="repo" data-path="README.md" data-line="20">README.md:20</a>). Also run <code>node scripts/check-architecture.mjs</code> to check diagram IDs and local links, as AGENTS.md and the README both ask. When the virtual environment is not activated, use the explicit <code>.venv/bin</code> path to <code>pkmcanon</code>.</p>
+        <p>The Quick start syncs the locked environment with <code>uv sync --extra dev --locked</code>, activates <code>.venv</code>, and runs <code>make check</code> (<a data-citation="repo" data-path="README.md" data-line="33">README.md:33</a>). Also run <code>node scripts/check-architecture.mjs</code> to check diagram IDs and local links, as AGENTS.md and the README both ask. When the virtual environment is not activated, use the explicit <code>.venv/bin</code> path to <code>pkmcanon</code> (<a data-citation="repo" data-path="README.md" data-line="42">README.md:42</a>).</p>
       </section>
-      <section class="essay-section">
+      <section class="essay-section" data-essay-id="ingest" aria-pressed="false" tabindex="0">
         <h2>Ingest and validate</h2>
-        <p>The Quick start commands are <code>ingest-roam</code>, <code>validate</code>, <code>audit-fidelity</code>, and <code>ingest-markdown</code> (<a data-citation="repo" data-path="README.md" data-line="28">README.md:28</a>). They are Typer commands registered on one app in <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="46">src/pkmcanon/cli.py:46</a>; for example <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="63">ingest-roam</a> writes and validates an authoritative package, and <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="86">validate</a> checks schemas, references, inventory, hashes, and fidelity. For a private source, pass the reviewer identity with <code>--principal</code> instead of relying on the default <code>local-operator</code> (<a data-citation="repo" data-path="README.md" data-line="36">README.md:36</a>).</p>
+        <p>The Quick start commands are <code>ingest-roam</code>, <code>validate</code>, <code>audit-fidelity</code>, and <code>ingest-markdown</code> (<a data-citation="repo" data-path="README.md" data-line="36">README.md:36</a>). They are Typer commands registered on one app in <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="46">src/pkmcanon/cli.py:46</a>; for example <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="62">ingest-roam</a> writes and validates an authoritative package, and <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="85">validate</a> checks schemas, references, inventory, hashes, and fidelity. For a private source, pass the reviewer identity with <code>--principal</code> instead of relying on the default <code>local-operator</code> (<a data-citation="repo" data-path="README.md" data-line="44">README.md:44</a>).</p>
       </section>
-      <section class="essay-section">
+      <section class="essay-section" data-essay-id="review" aria-pressed="false" tabindex="0">
         <h2>Review before anything becomes active</h2>
-        <p>The reviewable flow (<a data-citation="repo" data-path="README.md" data-line="41">README.md:41</a>) proposes methodology rules or domain claims, renders a review page, records an approval or rejection with <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="243">review</a>, and only then publishes. Publication reads the append-only review ledger and selects approved proposals only (<a data-citation="repo" data-path="README.md" data-line="70">README.md:70</a>). The review HTML contains source excerpts, so keep the output private. Do not hand-edit the ledger, and do not treat an unreviewed proposal as active.</p>
+        <p>The reviewable flow (<a data-citation="repo" data-path="README.md" data-line="49">README.md:49</a>) proposes methodology rules or domain claims, renders a review page, records an approval or rejection with <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="242">review</a>, and only then publishes. Publication reads the append-only review ledger and selects approved proposals only (<a data-citation="repo" data-path="README.md" data-line="74">README.md:74</a>). The review HTML contains source excerpts, so keep the output private. Do not hand-edit the ledger, and do not treat an unreviewed proposal as active.</p>
       </section>
-      <section class="essay-section">
+      <section class="essay-section" data-essay-id="docs" aria-pressed="false" tabindex="0">
         <h2>Docs, Notion, and sibling repos</h2>
         <p>Repo docs are authoritative; important changes are mirrored to Canonworks Notion with the source branch, revision, and content digest (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). The detailed workflow lives in the sibling canon-flow repo, and the cross-product flows are described in <code>canon-flow/docs/orientation/system-flows.html</code>.</p>
       </section>
+      </div>
+      <aside class="essay-inspector" data-essay-inspector aria-label="Citations for selected section">
+        <h3>Citations</h3>
+        <ul></ul>
+      </aside>
+      </div>
     </div>
   </section>
 
@@ -210,8 +247,60 @@
         select(buttons[0].getAttribute("data-step-id"));
       }
 
+      function repoHref(path) {
+        return "../../" + path;
+      }
+
+      function wireRepoCitations(root) {
+        (root || document).querySelectorAll('a[data-citation="repo"][data-path]').forEach(function (a) {
+          if (!a.getAttribute("href")) {
+            a.setAttribute("href", repoHref(a.getAttribute("data-path")));
+          }
+        });
+      }
+
+      function wireEssay(root) {
+        var sections = root.querySelectorAll(".essay-section[data-essay-id]");
+        var panel = root.querySelector("[data-essay-inspector]");
+        if (!sections.length || !panel) return;
+        var list = panel.querySelector("ul");
+        function select(id) {
+          sections.forEach(function (sec) {
+            var on = sec.getAttribute("data-essay-id") === id;
+            sec.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          if (!list) return;
+          list.innerHTML = "";
+          var selected = root.querySelector('.essay-section[data-essay-id="' + id + '"]');
+          if (!selected) return;
+          selected.querySelectorAll('a[data-citation]').forEach(function (a) {
+            var li = document.createElement("li");
+            var link = a.cloneNode(true);
+            if (!link.getAttribute("href") && link.getAttribute("data-path")) {
+              link.setAttribute("href", repoHref(link.getAttribute("data-path")));
+            }
+            li.appendChild(link);
+            list.appendChild(li);
+          });
+        }
+        sections.forEach(function (sec) {
+          sec.addEventListener("click", function () {
+            select(sec.getAttribute("data-essay-id"));
+          });
+          sec.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              select(sec.getAttribute("data-essay-id"));
+            }
+          });
+        });
+        select(sections[0].getAttribute("data-essay-id"));
+      }
+
+      wireRepoCitations(document);
       document.querySelectorAll('[data-interactive="map"]').forEach(wireMap);
       document.querySelectorAll('[data-interactive="steps"]').forEach(wireSteps);
+      document.querySelectorAll('[data-interactive="essay"]').forEach(wireEssay);
     })();
   </script>
 </body>

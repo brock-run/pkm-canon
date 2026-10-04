@@ -100,11 +100,40 @@
     .selected-step[hidden] {
       display: none !important;
     }
+    .essay-layout {
+      display: grid;
+      gap: 1rem;
+      max-width: 52rem;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    }
     .essay-section {
       max-width: 40rem;
       padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
       border-left: 3px solid var(--line);
+      border-radius: 6px;
       background: var(--surface);
+      cursor: pointer;
+    }
+    .essay-section[aria-pressed="true"] {
+      outline: 2px solid var(--selected);
+      outline-offset: 2px;
+      border-color: var(--selected);
+    }
+    .essay-inspector {
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      align-self: start;
+    }
+    .essay-inspector h3 {
+      margin: 0 0 0.65rem;
+      font-size: 0.95rem;
+    }
+    .essay-inspector ul {
+      margin: 0;
+      padding-left: 1.2rem;
     }
     [data-shell="closing"] {
       margin: 0;
@@ -139,11 +168,13 @@
 
   <section data-shell="stage" aria-label="Page body">
     <div data-stage="essay">
-      <section class="essay-section">
+      <div class="essay-layout" data-interactive="essay">
+      <div class="essay-sections">
+      <section class="essay-section" data-essay-id="ledger" aria-pressed="false" tabindex="0">
         <h2>The ledger rule</h2>
         <p>All twenty recorded decisions are still open. The ADR index states that every decision is proposed until it is explicitly accepted, and that numbers are preserved: later clarifications get new numbers instead of renumbering earlier ones (<a data-citation="repo" data-path="docs/adr/README.md" data-line="3">docs/adr/README.md:3</a>). The repo's agent guidance adds that ADR status stays as it is until the official Notion ledger records a decision (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). No page here is marked accepted, and none should be until that ledger says so.</p>
       </section>
-      <section class="essay-section">
+      <section class="essay-section" data-essay-id="adr-list" aria-pressed="false" tabindex="0">
         <h2>ADR-0001 through ADR-0020</h2>
         <p>Each row cites the ADR file named in the index.</p>
         <ul class="adr-list">
@@ -169,10 +200,16 @@
           <li class="is-proposed"><span class="status">Proposed</span><a data-citation="repo" data-path="docs/adr/0020-canon-semantics-and-portable-contracts.md">ADR-0020</a> — Canon semantics and product-neutral store port</li>
         </ul>
       </section>
-      <section class="essay-section">
+      <section class="essay-section" data-essay-id="open" aria-pressed="false" tabindex="0">
         <h2>What is open</h2>
         <p>Everything above is open. For example, <a data-citation="repo" data-path="docs/adr/0017-human-approval-before-activation.md" data-line="3">ADR-0017</a> (human approval before activation) is a Proposed decision even though the review commands in the README already behave that way; the code showing a behavior does not accept the decision.</p>
       </section>
+      </div>
+      <aside class="essay-inspector" data-essay-inspector aria-label="Citations for selected section">
+        <h3>Citations</h3>
+        <ul></ul>
+      </aside>
+      </div>
     </div>
   </section>
 
@@ -224,8 +261,60 @@
         select(buttons[0].getAttribute("data-step-id"));
       }
 
+      function repoHref(path) {
+        return "../../" + path;
+      }
+
+      function wireRepoCitations(root) {
+        (root || document).querySelectorAll('a[data-citation="repo"][data-path]').forEach(function (a) {
+          if (!a.getAttribute("href")) {
+            a.setAttribute("href", repoHref(a.getAttribute("data-path")));
+          }
+        });
+      }
+
+      function wireEssay(root) {
+        var sections = root.querySelectorAll(".essay-section[data-essay-id]");
+        var panel = root.querySelector("[data-essay-inspector]");
+        if (!sections.length || !panel) return;
+        var list = panel.querySelector("ul");
+        function select(id) {
+          sections.forEach(function (sec) {
+            var on = sec.getAttribute("data-essay-id") === id;
+            sec.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          if (!list) return;
+          list.innerHTML = "";
+          var selected = root.querySelector('.essay-section[data-essay-id="' + id + '"]');
+          if (!selected) return;
+          selected.querySelectorAll('a[data-citation]').forEach(function (a) {
+            var li = document.createElement("li");
+            var link = a.cloneNode(true);
+            if (!link.getAttribute("href") && link.getAttribute("data-path")) {
+              link.setAttribute("href", repoHref(link.getAttribute("data-path")));
+            }
+            li.appendChild(link);
+            list.appendChild(li);
+          });
+        }
+        sections.forEach(function (sec) {
+          sec.addEventListener("click", function () {
+            select(sec.getAttribute("data-essay-id"));
+          });
+          sec.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              select(sec.getAttribute("data-essay-id"));
+            }
+          });
+        });
+        select(sections[0].getAttribute("data-essay-id"));
+      }
+
+      wireRepoCitations(document);
       document.querySelectorAll('[data-interactive="map"]').forEach(wireMap);
       document.querySelectorAll('[data-interactive="steps"]').forEach(wireSteps);
+      document.querySelectorAll('[data-interactive="essay"]').forEach(wireEssay);
     })();
   </script>
 </body>
