@@ -1,14 +1,12 @@
 # Reviewer guidance
 
-Common standards: [Canonworks Reviewer Standards — CW-RS-0.1 draft](https://app.notion.com/p/3ef899c28af3810dac04e9cac557d530).
-The common wording lives in Notion; this file records only this repository's
-applicability and verification. CW-RS-0.1 is a proposal for owner review, not an
-ADR acceptance or a new claim about implemented capabilities.
-
-Review the actual base/head and this repo's instructions, current architecture,
-code and tests. A rule from another repository is not a local requirement.
-If Notion is unavailable, disclose that limitation and apply the available local
-instructions; do not invent requirements from the inaccessible draft.
+Common standards: [Canonworks Reviewer Standards — CW-RS-0.2 draft](canonworks/reviewer-standards.md).
+The local document is a generated, byte-identical snapshot of the CanonFlow
+master, with its immutable source revision and SHA-256 in
+[provenance](canonworks/reviewer-standards-source.json). It is readable offline.
+This is a proposal for owner review, not ADR acceptance or a claim about
+implemented capabilities. Read the actual base/head, local instructions, current
+architecture, code and tests. Another repo's rule is not a local requirement.
 
 ## PKM Canon applicability
 
@@ -29,6 +27,8 @@ instructions; do not invent requirements from the inaccessible draft.
 
 ## Verification for the changed scope
 
+- `node scripts/check-reviewer-standards.mjs`: read the versioned policy; verify the generated snapshot against its provenance.
+
 Use the existing `.venv`, committed lockfile and Make targets. Use synthetic
 fixtures; keep private source exports/packages and their excerpts out of PRs.
 
@@ -46,7 +46,10 @@ fixtures; keep private source exports/packages and their excerpts out of PRs.
 
 ## Maintaining this reference
 
-Propose shared wording changes in Notion with a new CW-RS version; update this
-reference through a PR after owner review. Keep local exceptions here with their
-reason and decision link. PR descriptions link relevant work and report actual
-checks, limitations and feedback on the latest pushed revision.
+Propose common wording changes in CanonFlow's master through a PR and increment
+CW-RS. Consumer updates use the committed source and regeneration procedure in
+the common document; never hand-edit a generated snapshot. Review the pin and
+content changes together. CI verifies local integrity, not upstream freshness
+or adoption. Keep local exceptions here with their reason and decision link.
+PR descriptions link relevant work and report actual checks, limitations and
+feedback on the latest pushed revision.

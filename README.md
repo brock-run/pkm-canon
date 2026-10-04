@@ -132,5 +132,5 @@ silently changes the index or source model.
 ## Review guidance
 
 [Repo reviewer guidance](docs/reviewing.md) references the shared
-[Canonworks reviewer standards draft](https://app.notion.com/p/3ef899c28af3810dac04e9cac557d530) and records local applicability
-and supported checks. Common wording is maintained in Notion.
+[Canonworks reviewer standards draft](docs/canonworks/reviewer-standards.md) and records local applicability
+and supported checks. CanonFlow owns the master; local Git files provide offline access.
