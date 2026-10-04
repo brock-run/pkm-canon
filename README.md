@@ -128,3 +128,9 @@ silently changes the index or source model.
 - The V1 design and implementation plan under `docs/specs/` describe later
   API, PostgreSQL, retrieval, inference, and export work. Those sections are
   proposals, not claims that the features are already implemented.
+
+## Review guidance
+
+[Repo reviewer guidance](docs/reviewing.md) references the shared
+[Canonworks reviewer standards draft](docs/canonworks/reviewer-standards.md) and records local applicability
+and supported checks. CanonFlow owns the master; local Git files provide offline access.
