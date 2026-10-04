@@ -65,41 +65,6 @@
       padding: 1rem 1.5rem 2rem;
     }
     [hidden] { display: none !important; }
-    .map-layout,
-    .steps-layout {
-      display: grid;
-      gap: 1rem;
-      max-width: 52rem;
-    }
-    .map-layout {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-    }
-    .map-node,
-    .step-button {
-      text-align: left;
-      padding: 0.65rem 0.85rem;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--surface);
-      cursor: pointer;
-    }
-    .map-node[aria-pressed="true"],
-    .step-button[aria-pressed="true"] {
-      outline: 2px solid var(--selected);
-      outline-offset: 2px;
-      border-color: var(--selected);
-    }
-    .inspector,
-    .selected-step {
-      padding: 0.85rem 1rem;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--surface);
-    }
-    .inspector[hidden],
-    .selected-step[hidden] {
-      display: none !important;
-    }
     .essay-layout {
       display: grid;
       gap: 1rem;
@@ -172,23 +137,23 @@
       <div class="essay-sections">
       <section class="essay-section" data-essay-id="boundaries" aria-pressed="false" tabindex="0">
         <h2>Before changing boundaries, schemas, or flows</h2>
-        <p>For changes to product boundaries, admission or authority rules, schemas, data flows, or shared contracts, read <code>docs/architecture/current-state.md</code>, <code>target-state.md</code>, and <code>component-map.md</code>, and update affected Mermaid nodes and the map in the same change (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). Mark proposed and implemented behavior separately, with code or design sources, verification, Linear work, and ADR links. Keep private source material out of diagrams.</p>
+        <p>For changes to product boundaries, admission or authority rules, schemas, data flows, or shared contracts, read <code>docs/architecture/current-state.md</code>, <code>target-state.md</code>, and <code>component-map.md</code>, and update affected Mermaid nodes and the map in the same change (<a href="../../AGENTS.md" data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). Mark proposed and implemented behavior separately, with code or design sources, verification, Linear work, and ADR links. Keep private source material out of diagrams.</p>
       </section>
       <section class="essay-section" data-essay-id="setup" aria-pressed="false" tabindex="0">
         <h2>Set up and check</h2>
-        <p>The Quick start syncs the locked environment with <code>uv sync --extra dev --locked</code>, activates <code>.venv</code>, and runs <code>make check</code> (<a data-citation="repo" data-path="README.md" data-line="33">README.md:33</a>). Also run <code>node scripts/check-architecture.mjs</code> to check diagram IDs and local links, as AGENTS.md and the README both ask. When the virtual environment is not activated, use the explicit <code>.venv/bin</code> path to <code>pkmcanon</code> (<a data-citation="repo" data-path="README.md" data-line="42">README.md:42</a>).</p>
+        <p>The Quick start syncs the locked environment with <code>uv sync --extra dev --locked</code>, activates <code>.venv</code>, and runs <code>make check</code> (<a href="../../README.md" data-citation="repo" data-path="README.md" data-line="33">README.md:33</a>). Also run <code>node scripts/check-architecture.mjs</code> to check diagram IDs and local links, as AGENTS.md and the README both ask. When the virtual environment is not activated, use the explicit <code>.venv/bin</code> path to <code>pkmcanon</code> (<a href="../../README.md" data-citation="repo" data-path="README.md" data-line="42">README.md:42</a>).</p>
       </section>
       <section class="essay-section" data-essay-id="ingest" aria-pressed="false" tabindex="0">
         <h2>Ingest and validate</h2>
-        <p>The Quick start commands are <code>ingest-roam</code>, <code>validate</code>, <code>audit-fidelity</code>, and <code>ingest-markdown</code> (<a data-citation="repo" data-path="README.md" data-line="36">README.md:36</a>). They are Typer commands registered on one app in <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="46">src/pkmcanon/cli.py:46</a>; for example <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="62">ingest-roam</a> writes and validates an authoritative package, and <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="85">validate</a> checks schemas, references, inventory, hashes, and fidelity. For a private source, pass the reviewer identity with <code>--principal</code> instead of relying on the default <code>local-operator</code> (<a data-citation="repo" data-path="README.md" data-line="44">README.md:44</a>).</p>
+        <p>The Quick start commands are <code>ingest-roam</code>, <code>validate</code>, <code>audit-fidelity</code>, and <code>ingest-markdown</code> (<a href="../../README.md" data-citation="repo" data-path="README.md" data-line="36">README.md:36</a>). They are Typer commands registered on one app in <a href="../../src/pkmcanon/cli.py" data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="46">src/pkmcanon/cli.py:46</a>; for example <a href="../../src/pkmcanon/cli.py" data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="62">ingest-roam</a> writes and validates an authoritative package, and <a href="../../src/pkmcanon/cli.py" data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="85">validate</a> checks schemas, references, inventory, hashes, and fidelity. For a private source, pass the reviewer identity with <code>--principal</code> instead of relying on the default <code>local-operator</code> (<a href="../../README.md" data-citation="repo" data-path="README.md" data-line="44">README.md:44</a>).</p>
       </section>
       <section class="essay-section" data-essay-id="review" aria-pressed="false" tabindex="0">
         <h2>Review before anything becomes active</h2>
-        <p>The reviewable flow (<a data-citation="repo" data-path="README.md" data-line="49">README.md:49</a>) proposes methodology rules or domain claims, renders a review page, records an approval or rejection with <a data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="242">review</a>, and only then publishes. Publication reads the append-only review ledger and selects approved proposals only (<a data-citation="repo" data-path="README.md" data-line="74">README.md:74</a>). The review HTML contains source excerpts, so keep the output private. Do not hand-edit the ledger, and do not treat an unreviewed proposal as active.</p>
+        <p>The reviewable flow (<a href="../../README.md" data-citation="repo" data-path="README.md" data-line="49">README.md:49</a>) proposes methodology rules or domain claims, renders a review page, records an approval or rejection with <a href="../../src/pkmcanon/cli.py" data-citation="repo" data-path="src/pkmcanon/cli.py" data-line="242">review</a>, and only then publishes. Publication reads the append-only review ledger and selects approved proposals only (<a href="../../README.md" data-citation="repo" data-path="README.md" data-line="74">README.md:74</a>). The review HTML contains source excerpts, so keep the output private. Do not hand-edit the ledger, and do not treat an unreviewed proposal as active.</p>
       </section>
       <section class="essay-section" data-essay-id="docs" aria-pressed="false" tabindex="0">
         <h2>Docs, Notion, and sibling repos</h2>
-        <p>Repo docs are authoritative; important changes are mirrored to Canonworks Notion with the source branch, revision, and content digest (<a data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). The detailed workflow lives in the sibling canon-flow repo, and the cross-product flows are described in <code>canon-flow/docs/orientation/system-flows.html</code>.</p>
+        <p>Repo docs are authoritative; important changes are mirrored to Canonworks Notion with the source branch, revision, and content digest (<a href="../../AGENTS.md" data-citation="repo" data-path="AGENTS.md" data-line="3">AGENTS.md:3</a>). The detailed workflow lives in the sibling canon-flow repo, and the cross-product flows are described in <code>canon-flow/docs/orientation/system-flows.html</code>.</p>
       </section>
       </div>
       <aside class="essay-inspector" data-essay-inspector aria-label="Citations for selected section">
@@ -205,48 +170,6 @@
 
   <script>
     (function () {
-      function wireMap(root) {
-        var buttons = root.querySelectorAll(".map-node[data-map-id]");
-        var panels = root.querySelectorAll("[data-map-inspector]");
-        if (!buttons.length) return;
-        function select(id) {
-          buttons.forEach(function (btn) {
-            var on = btn.getAttribute("data-map-id") === id;
-            btn.setAttribute("aria-pressed", on ? "true" : "false");
-          });
-          panels.forEach(function (panel) {
-            panel.hidden = panel.getAttribute("data-map-inspector") !== id;
-          });
-        }
-        buttons.forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            select(btn.getAttribute("data-map-id"));
-          });
-        });
-        select(buttons[0].getAttribute("data-map-id"));
-      }
-
-      function wireSteps(root) {
-        var buttons = root.querySelectorAll(".step-button[data-step-id]");
-        var panels = root.querySelectorAll("[data-step-panel]");
-        if (!buttons.length) return;
-        function select(id) {
-          buttons.forEach(function (btn) {
-            var on = btn.getAttribute("data-step-id") === id;
-            btn.setAttribute("aria-pressed", on ? "true" : "false");
-          });
-          panels.forEach(function (panel) {
-            panel.hidden = panel.getAttribute("data-step-panel") !== id;
-          });
-        }
-        buttons.forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            select(btn.getAttribute("data-step-id"));
-          });
-        });
-        select(buttons[0].getAttribute("data-step-id"));
-      }
-
       function repoHref(path) {
         return "../../" + path;
       }
@@ -298,8 +221,6 @@
       }
 
       wireRepoCitations(document);
-      document.querySelectorAll('[data-interactive="map"]').forEach(wireMap);
-      document.querySelectorAll('[data-interactive="steps"]').forEach(wireSteps);
       document.querySelectorAll('[data-interactive="essay"]').forEach(wireEssay);
     })();
   </script>
