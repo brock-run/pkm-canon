@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-rosetta;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
+  <title>Working Agreement - PKM Canon</title>
+  <!-- guides:runtime begin v2.x -->
+<style>
+/* brocks-helpers/assets/html-guides/tokens.css */
+:root {
+  /* Surface */
+  --paper: #f7f8fa;
+  --surface: #ffffff;
+  --ink: #12161c;
+  --ink-soft: #47525f;
+  --rule: #dde2e8;
+  --schematic: #141a21;
+  --schematic-rule: #2b3540;
+
+  /* Typography */
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --measure: 68ch;
+
+  /* Implementation State */
+  --st-implemented: #2ea043;
+  --st-partial: #d29922;
+  --st-proposed: #a855f7;
+  --st-absent: #f85149;
+
+  /* Decision Lifecycle */
+  --lc-proposed: #9a6700;
+  --lc-accepted: #197b38;
+  --lc-superseded: #677180;
+
+  /* Products */
+  --prod-cf: #16697a;
+  --prod-pkm: #a5651f;
+  --prod-lk: #5f5088;
+
+  /* Roles */
+  --role-entry: #455a64;
+  --role-service: #1e88e5;
+  --role-adapter: #00897b;
+  --role-store: #5e35b1;
+  --role-model: #8e24aa;
+  --role-resolver: #f4511e;
+
+  /* Callouts */
+  --note: #a5651f;
+  --flag: #a03b3b;
+  --info: #16697a;
+  --design-bet: #5f5088;
+  --verdict: #a855f7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e1216;
+    --surface: #151b21;
+    --ink: #e6ebf0;
+    --ink-soft: #9aa7b4;
+    --rule: #262f39;
+    
+    --lc-proposed: #d29922;
+    --lc-accepted: #3fb950;
+    --lc-superseded: #8b949e;
+
+    --prod-cf: #4fb3c4;
+    --prod-pkm: #d99a4e;
+    --prod-lk: #9d8fc4;
+    
+    --role-entry: #cfd8dc;
+    --role-service: #90caf9;
+    --role-adapter: #80cbc4;
+    --role-store: #b39ddb;
+    --role-model: #ce93d8;
+    --role-resolver: #ffab91;
+    
+    --note: #d99a4e;
+    --flag: #e07a7a;
+    --info: #4fb3c4;
+    --design-bet: #9d8fc4;
+    --verdict: #d8b4fe;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0e1216;
+  --surface: #151b21;
+  --ink: #e6ebf0;
+  --ink-soft: #9aa7b4;
+  --rule: #262f39;
+  
+  --lc-proposed: #d29922;
+  --lc-accepted: #3fb950;
+  --lc-superseded: #8b949e;
+
+  --prod-cf: #4fb3c4;
+  --prod-pkm: #d99a4e;
+  --prod-lk: #9d8fc4;
+
+  --role-entry: #cfd8dc;
+  --role-service: #90caf9;
+  --role-adapter: #80cbc4;
+  --role-store: #b39ddb;
+  --role-model: #ce93d8;
+  --role-resolver: #ffab91;
+  
+  --note: #d99a4e;
+  --flag: #e07a7a;
+  --info: #4fb3c4;
+  --design-bet: #9d8fc4;
+  --verdict: #d8b4fe;
+}
+
+:root[data-theme="light"] {
+  --paper: #f7f8fa;
+  --surface: #ffffff;
+  --ink: #12161c;
+  --ink-soft: #47525f;
+  --rule: #dde2e8;
+  
+  --lc-proposed: #9a6700;
+  --lc-accepted: #197b38;
+  --lc-superseded: #677180;
+  
+  --prod-cf: #16697a;
+  --prod-pkm: #a5651f;
+  --prod-lk: #5f5088;
+
+  --role-entry: #455a64;
+  --role-service: #1e88e5;
+  --role-adapter: #00897b;
+  --role-store: #5e35b1;
+  --role-model: #8e24aa;
+  --role-resolver: #f4511e;
+  
+  --note: #a5651f;
+  --flag: #a03b3b;
+  --info: #16697a;
+  --design-bet: #5f5088;
+  --verdict: #a855f7;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.65;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* brocks-helpers/assets/html-guides/guides.css */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  padding: clamp(1.5rem, 1rem + 3vw, 4rem) clamp(1rem, 0.6rem + 1.2vw, 1.5rem) 6rem;
+  font-size: 17px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Base layouts */
+.guides-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  gap: 2rem;
+  position: relative;
+}
+
+.guides-main {
+  flex: 1;
+  min-width: 0;
+  max-width: var(--measure);
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* C1: Shell */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+  line-height: 1.1;
+  font-weight: 400;
+  margin: 0.3rem 0 0;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+.banner, .as-of-strip, .sources-note {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.as-of-strip {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+/* TOC Rail */
+.guides-toc {
+  width: 250px;
+  flex-shrink: 0;
+}
+.guides-toc-inner {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+.guides-toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.guides-toc a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.guides-toc a[aria-current="true"] {
+  color: var(--ink);
+  font-weight: 600;
+}
+@media (max-width: 1099px) {
+  .guides-toc {
+    display: none;
+  }
+}
+details.guides-toc-mobile {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 2rem;
+}
+@media (max-width: 1099px) {
+  details.guides-toc-mobile {
+    display: block;
+  }
+}
+
+/* C2: Citation */
+a[data-citation] {
+  color: var(--prod-lk);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--prod-lk);
+  cursor: pointer;
+}
+a[data-citation]:hover {
+  background: color-mix(in srgb, var(--prod-lk) 10%, transparent);
+}
+
+/* C3: Sources */
+details.sources {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+.sources-rail {
+  display: none;
+  width: 300px;
+  flex-shrink: 0;
+}
+.sources-rail-inner {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem;
+}
+@media (min-width: 1200px) {
+  .sources-rail {
+    display: block;
+  }
+  details.sources {
+    display: none;
+  }
+}
+
+/* C4: Code block */
+figure.code {
+  margin: 1.5rem 0;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+figure.code figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--rule) 30%, transparent);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+figure.code button.copy {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+figure.code pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+figure.code[data-lang="ascii"] pre {
+  white-space: pre;
+}
+figure.code[data-lang="shell"] pre {
+  color: var(--ink);
+}
+
+/* C5: Callout card */
+aside.callout {
+  margin: 1.5rem 0;
+  padding: 1rem 1rem 1rem 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  border-left-width: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+aside.callout[data-kind="note"] { border-left-color: var(--note); }
+aside.callout[data-kind="flag"] { border-left-color: var(--flag); }
+aside.callout[data-kind="info"] { border-left-color: var(--info); }
+aside.callout[data-kind="design-bet"] { border-left-color: var(--design-bet); }
+aside.callout[data-kind="verdict"] { border-left-color: var(--verdict); }
+
+aside.callout .callout-label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+aside.callout[data-kind="note"] .callout-label { color: var(--note); }
+aside.callout[data-kind="flag"] .callout-label { color: var(--flag); }
+aside.callout[data-kind="info"] .callout-label { color: var(--info); }
+aside.callout[data-kind="design-bet"] .callout-label { color: var(--design-bet); }
+aside.callout[data-kind="verdict"] .callout-label { color: var(--verdict); }
+
+/* C6: Badge / chip */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+.badge[data-axis="impl"][data-val="implemented"] {
+  background: color-mix(in srgb, var(--st-implemented) 15%, transparent);
+  color: var(--st-implemented);
+}
+.badge[data-axis="impl"][data-val="partial"] {
+  background: color-mix(in srgb, var(--st-partial) 15%, transparent);
+  color: var(--st-partial);
+}
+.badge[data-axis="impl"][data-val="proposed"] {
+  background: color-mix(in srgb, var(--st-proposed) 15%, transparent);
+  color: var(--st-proposed);
+}
+.badge[data-axis="impl"][data-val="absent"] {
+  background: color-mix(in srgb, var(--st-absent) 15%, transparent);
+  color: var(--st-absent);
+}
+.badge[data-axis="lifecycle"][data-val="proposed"] {
+  background: color-mix(in srgb, var(--lc-proposed) 15%, transparent);
+  color: var(--lc-proposed);
+}
+.badge[data-axis="lifecycle"][data-val="accepted"] {
+  background: color-mix(in srgb, var(--lc-accepted) 15%, transparent);
+  color: var(--lc-accepted);
+}
+.badge[data-axis="lifecycle"][data-val="superseded"] {
+  background: color-mix(in srgb, var(--lc-superseded) 15%, transparent);
+  color: var(--lc-superseded);
+}
+.badge[data-kind="meta"] {
+  background: var(--rule);
+  color: var(--ink);
+}
+
+/* C7: Table */
+.table-scroll {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+table.guides-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: var(--surface);
+}
+table.guides-table th, table.guides-table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+table.guides-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+  z-index: 1;
+}
+table.guides-table td.k {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+table.guides-table td.num {
+  font-variant-numeric: tabular-nums;
+}
+table.guides-table tbody tr:last-child td {
+  border-bottom: none;
+}
+table.guides-table tbody tr[data-row-id] {
+  cursor: pointer;
+}
+table.guides-table tbody tr[data-row-id]:hover {
+  background: color-mix(in srgb, var(--rule) 20%, transparent);
+}
+
+/* C18: Flow strip */
+.flow-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+.flow-strip .arrow {
+  color: var(--ink-soft);
+}
+
+/* C19: Cards, numbered sections, files changed */
+.guides-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem;
+}
+.guides-card.severity-major {
+  border-left: 4px solid var(--st-absent);
+}
+.guides-card.severity-minor {
+  border-left: 4px solid var(--st-partial);
+}
+.numbered-section {
+  counter-reset: guides-section;
+}
+.numbered-section > h2::before {
+  counter-increment: guides-section;
+  content: counter(guides-section, decimal-leading-zero) " ";
+  color: var(--ink-soft);
+  margin-right: 0.5rem;
+}
+
+ul.files-changed {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+ul.files-changed li {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+/* C20: Schematic panel */
+.schematic {
+  background: var(--schematic);
+  border: 1px solid var(--schematic-rule);
+  border-radius: 6px;
+  padding: 1.5rem;
+  overflow-x: auto;
+  margin-top: 1.5rem;
+}
+.schematic-caption {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Popover for C2 */
+#citation-popover {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 0.5rem;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 250px;
+}
+#citation-popover.visible {
+  display: flex;
+}
+#citation-popover .popover-header {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.5rem;
+}
+#citation-popover .popover-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+#citation-popover a, #citation-popover button {
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 4px;
+  text-decoration: none;
+  display: block;
+}
+#citation-popover a:hover, #citation-popover button:hover {
+  background: color-mix(in srgb, var(--rule) 50%, transparent);
+}
+
+/* C17: Grouped steps */
+.phase-group {
+  margin: 2rem 0;
+}
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.5rem;
+}
+.phase-header h2, .phase-header h3 {
+  margin: 0;
+}
+.phase-step-count {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 9999px;
+  padding: 0.1rem 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+.phase-header button.copy-all {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.phase-header button.copy-all:hover {
+  background: color-mix(in srgb, var(--rule) 20%, transparent);
+}
+.phase-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.step {
+  display: flex;
+  gap: 1rem;
+}
+.step-number {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.step-content {
+  flex: 1;
+  min-width: 0;
+}
+.step-content p {
+  margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+.step-content figure.code {
+  margin: 0.5rem 0;
+}
+.step-content figure.code.output {
+  opacity: 0.8;
+}
+
+/* C11b Sequence Diagram */
+.seq-msg-link {
+  cursor: pointer;
+}
+.seq-msg-link:hover text {
+  text-decoration: underline;
+  fill: var(--prod-lk);
+}
+.seq-msg-link:hover path, .seq-msg-link:hover line {
+  stroke: var(--prod-lk);
+}
+
+</style>
+<script>
+// brocks-helpers/assets/html-guides/guides.js
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSourcesObserver();
+  initCopyButtons();
+  initCitations();
+});
+
+// C3: Sources Observer (right rail)
+function initSourcesObserver() {
+  const sections = document.querySelectorAll('section[id]');
+  const railInner = document.querySelector('.sources-rail-inner');
+  if (!railInner || sections.length === 0) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    // Find the first intersecting section to show its sources
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        const inlineSources = entry.target.querySelector('details.sources');
+        if (inlineSources) {
+          railInner.innerHTML = `<h3>Sources for ${id}</h3>` + inlineSources.innerHTML;
+        } else {
+          railInner.innerHTML = `<p class="sources-note">No sources checked for this section.</p>`;
+        }
+        break;
+      }
+    }
+  }, {
+    rootMargin: '-20% 0px -60% 0px',
+    threshold: 0
+  });
+
+  sections.forEach(sec => observer.observe(sec));
+}
+
+// C4: Code block copy buttons
+function initCopyButtons() {
+  const buttons = document.querySelectorAll('figure.code button.copy');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const figure = btn.closest('figure.code');
+      const pre = figure.querySelector('pre');
+      const lang = figure.getAttribute('data-lang');
+      let textToCopy = pre.innerText;
+
+      if (lang === 'shell') {
+        // Strip out leading $ prompts
+        textToCopy = textToCopy.split('\n').map(line => {
+          if (line.trim().startsWith('$ ')) {
+            return line.trim().substring(2);
+          }
+          return line;
+        }).join('\n');
+      }
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied';
+        btn.setAttribute('aria-live', 'polite');
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.removeAttribute('aria-live');
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+    });
+  });
+}
+
+// C2: Citation Popover
+function initCitations() {
+  const popover = document.createElement('div');
+  popover.id = 'citation-popover';
+  popover.innerHTML = `
+    <div class="popover-header"></div>
+    <div class="popover-actions">
+      <a class="action-primary" href="#"></a>
+      <hr style="margin:0.25rem 0; border:none; border-top:1px solid var(--rule);">
+      <button class="action-start-viewer">Start viewer (copy command)</button>
+      <a class="action-cursor" href="#">Open in Cursor</a>
+      <a class="action-github" href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <button class="action-copy-path">Copy Path</button>
+    </div>
+  `;
+  document.body.appendChild(popover);
+
+  const repoMapMeta = document.querySelector('meta[name="guides:repo-dirs"]');
+  const repoDirs = {};
+  if (repoMapMeta) {
+    repoMapMeta.content.split(';').forEach(pair => {
+      const [k, v] = pair.split('=');
+      if (k && v) repoDirs[k] = v;
+    });
+  }
+
+  const isViewer = window.location.protocol.startsWith('http');
+
+  document.addEventListener('click', (e) => {
+    const citation = e.target.closest('a[data-citation]');
+    if (citation) {
+      e.preventDefault();
+      
+      const repo = citation.getAttribute('data-repo');
+      const path = citation.getAttribute('data-path');
+      const line = citation.getAttribute('data-line') || '';
+      
+      const header = popover.querySelector('.popover-header');
+      header.textContent = `${repo} / ${path}${line ? ':' + line : ''}`;
+
+      const primary = popover.querySelector('.action-primary');
+      const viewCursor = popover.querySelector('.action-cursor');
+      const viewGithub = popover.querySelector('.action-github');
+      const copyPath = popover.querySelector('.action-copy-path');
+      const startViewer = popover.querySelector('.action-start-viewer');
+
+      let cursorAbsPath = path;
+      const match = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
+      if (match) {
+        const parentDir = match[1];
+        const targetDir = repoDirs[repo] || repo;
+        cursorAbsPath = `${parentDir}/${targetDir}/${path}`;
+      }
+
+      if (isViewer) {
+        primary.textContent = 'View Code';
+        primary.href = `/view/${repo}/${path}?line=${line}#L${line}`;
+      } else {
+        primary.textContent = 'Open in Cursor';
+        primary.href = `cursor://file/${cursorAbsPath}:${line || 1}`;
+      }
+      
+      viewCursor.href = `cursor://file/${cursorAbsPath}:${line || 1}`;
+      viewCursor.style.display = (primary.textContent === 'Open in Cursor') ? 'none' : 'block';
+
+      viewGithub.href = `https://github.com/brock-run/${repo}/blob/main/${path}#L${line || 1}`;
+
+      copyPath.onclick = (ce) => {
+        ce.stopPropagation();
+        navigator.clipboard.writeText(path);
+      };
+      
+      startViewer.onclick = (ce) => {
+        ce.stopPropagation();
+        navigator.clipboard.writeText("make guides-serve");
+        const original = startViewer.textContent;
+        startViewer.textContent = "Copied command!";
+        setTimeout(() => startViewer.textContent = original, 2000);
+      };
+
+      const rect = citation.getBoundingClientRect();
+      popover.style.left = `${rect.left + window.scrollX}px`;
+      popover.style.top = `${rect.bottom + window.scrollY + 8}px`;
+      popover.classList.add('visible');
+    } else if (!e.target.closest('#citation-popover')) {
+      popover.classList.remove('visible');
+    }
+  });
+}
+
+</script>
+<!-- guides:runtime end -->
+</head>
+<body data-legend="none">
+  <div class="guides-page">
+    <!-- C1: Shell left rail TOC -->
+    <nav class="guides-toc">
+      <div class="guides-toc-inner">
+        <ul>
+          <li><a href="#boundaries">Boundaries</a></li>
+          <li><a href="#schemas">Schemas</a></li>
+          <li><a href="#flows">Flows</a></li>
+        </ul>
+      </div>
+    </nav>
+    
+    <main class="guides-main">
+      <header>
+        <p class="eyebrow">pkm-canon · Working agreement</p>
+        <h1>How we work in PKM Canon</h1>
+      </header>
+
+      <details class="guides-toc-mobile">
+        <summary>Table of Contents</summary>
+        <ul>
+          <li><a href="#boundaries">Boundaries</a></li>
+          <li><a href="#schemas">Schemas</a></li>
+          <li><a href="#flows">Flows</a></li>
+        </ul>
+      </details>
+      
+      <div class="prose">
+        <section id="boundaries">
+          <h2>Boundaries</h2>
+          <p>This repository strictly isolates ingestion from representation. The <a data-citation="pkm-canon" data-path="src/ingest/" href="#">ingest module</a> must not depend on output schemas.</p>
+          <aside class="callout" data-kind="flag">
+            <span class="callout-label">Flag</span>
+            <p>Do not change boundaries without an <a data-citation="pkm-canon" data-path="docs/adr/001-architecture-boundaries.md" href="#">ADR</a>.</p>
+          </aside>
+          <!-- C3: Inline sources -->
+          <details class="sources">
+            <summary>Sources</summary>
+            <ul>
+              <li><a data-citation="pkm-canon" data-path="src/ingest/__init__.py" href="#">src/ingest/__init__.py</a></li>
+              <li><a data-citation="pkm-canon" data-path="docs/adr/001-architecture-boundaries.md" href="#">docs/adr/001-architecture-boundaries.md</a></li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="schemas">
+          <h2>Schemas</h2>
+          <p>Run formatting before committing.</p>
+          <!-- C4: Code block -->
+          <figure class="code" data-lang="shell">
+            <figcaption>
+              <span>Format schemas</span>
+              <button class="copy" aria-label="Copy code">Copy</button>
+            </figcaption>
+            <pre><code>$ make format
+$ make check</code></pre>
+          </figure>
+          <details class="sources">
+            <summary>Sources</summary>
+            <ul>
+              <li><a data-citation="pkm-canon" data-path="Makefile" href="#">Makefile</a></li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="flows">
+          <h2>Flows</h2>
+          <p>Always verify changes against the test suite.</p>
+          <details class="sources">
+            <summary>Sources</summary>
+            <ul>
+              <li><a data-citation="pkm-canon" data-path="tests/" href="#">tests/</a></li>
+            </ul>
+          </details>
+        </section>
+      </div>
+    </main>
+    
+    <!-- C3: Sources Rail -->
+    <aside class="sources-rail">
+      <div class="sources-rail-inner">
+        <!-- JS populates this -->
+      </div>
+    </aside>
+  </div>
+</body>
+</html>
