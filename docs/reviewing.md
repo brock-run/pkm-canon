@@ -33,11 +33,15 @@ Use the existing `.venv`, committed lockfile and Make targets. Use synthetic
 fixtures; keep private source exports/packages and their excerpts out of PRs.
 
 - `make check`: generated-schema drift, Ruff and the pytest suite.
-- `node scripts/check-architecture.mjs`: diagrams, IDs and links when affected.
+- `node scripts/check-architecture.mjs`: diagrams, IDs and file links in the three
+  files under `docs/architecture/` only; it does not check other docs or anchors.
 - Adapter/CLI changes: execute the affected ingest → validate → evidence/review
   path, including a meaningful negative case and replay where relevant.
 - Job API/worker changes: exercise the real route and relevant recovery lifecycle.
-- Documentation-only changes: check content and local links; unrelated service
+- Documentation-only changes: check content and resolve relative file links from
+  each changed Markdown file, confirming each target exists. Inspect heading
+  anchors in the target document and verify external references separately.
+  Report this review separately from the architecture checker; unrelated service
   execution is not required by the proposed common standard.
 
 ## Maintaining this reference
