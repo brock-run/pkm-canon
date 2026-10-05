@@ -792,7 +792,6 @@ function initCitations() {
     <div class="popover-actions">
       <a class="action-primary" href="#"></a>
       <hr style="margin:0.25rem 0; border:none; border-top:1px solid var(--rule);">
-      <button class="action-start-viewer">Start viewer (copy command)</button>
       <a class="action-cursor" href="#">Open in Cursor</a>
       <a class="action-github" href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
       <button class="action-copy-path">Copy Path</button>
@@ -827,7 +826,6 @@ function initCitations() {
       const viewCursor = popover.querySelector('.action-cursor');
       const viewGithub = popover.querySelector('.action-github');
       const copyPath = popover.querySelector('.action-copy-path');
-      const startViewer = popover.querySelector('.action-start-viewer');
 
       let cursorAbsPath = path;
       const match = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
@@ -853,14 +851,6 @@ function initCitations() {
       copyPath.onclick = (ce) => {
         ce.stopPropagation();
         navigator.clipboard.writeText(path);
-      };
-      
-      startViewer.onclick = (ce) => {
-        ce.stopPropagation();
-        navigator.clipboard.writeText("make guides-serve");
-        const original = startViewer.textContent;
-        startViewer.textContent = "Copied command!";
-        setTimeout(() => startViewer.textContent = original, 2000);
       };
 
       const rect = citation.getBoundingClientRect();
@@ -907,17 +897,17 @@ function initCitations() {
       <div class="prose">
         <section id="boundaries">
           <h2>Boundaries</h2>
-          <p>This repository strictly isolates ingestion from representation. The <a data-citation="pkm-canon" data-path="src/ingest/" href="#">ingest module</a> must not depend on output schemas.</p>
+          <p>This repository strictly isolates ingestion from representation. The <a data-citation="pkm-canon" data-path="src/pkmcanon/parsers/" href="#">parsers module</a> must not depend on output schemas.</p>
           <aside class="callout" data-kind="flag">
             <span class="callout-label">Flag</span>
-            <p>Do not change boundaries without an <a data-citation="pkm-canon" data-path="docs/adr/001-architecture-boundaries.md" href="#">ADR</a>.</p>
+            <p>Do not change boundaries without an <a data-citation="pkm-canon" data-path="docs/adr/0001-canonical-package-primary-source-of-truth.md" href="#">ADR</a>.</p>
           </aside>
           <!-- C3: Inline sources -->
           <details class="sources">
             <summary>Sources</summary>
             <ul>
-              <li><a data-citation="pkm-canon" data-path="src/ingest/__init__.py" href="#">src/ingest/__init__.py</a></li>
-              <li><a data-citation="pkm-canon" data-path="docs/adr/001-architecture-boundaries.md" href="#">docs/adr/001-architecture-boundaries.md</a></li>
+              <li><a data-citation="pkm-canon" data-path="src/pkmcanon/parsers/markdown.py" href="#">src/pkmcanon/parsers/markdown.py</a></li>
+              <li><a data-citation="pkm-canon" data-path="docs/adr/0001-canonical-package-primary-source-of-truth.md" href="#">docs/adr/0001-canonical-package-primary-source-of-truth.md</a></li>
             </ul>
           </details>
         </section>
@@ -928,11 +918,10 @@ function initCitations() {
           <!-- C4: Code block -->
           <figure class="code" data-lang="shell">
             <figcaption>
-              <span>Format schemas</span>
+              <span>Check schemas</span>
               <button class="copy" aria-label="Copy code">Copy</button>
             </figcaption>
-            <pre><code>$ make format
-$ make check</code></pre>
+            <pre><code>$ make check</code></pre>
           </figure>
           <details class="sources">
             <summary>Sources</summary>

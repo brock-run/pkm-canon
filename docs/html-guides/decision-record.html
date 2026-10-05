@@ -836,7 +836,44 @@ ul.files-changed li {
 <script>
 // brocks-helpers/assets/html-guides/guides.js
 
+
+// C15 Master-Detail
+function initMasterDetail() {
+  document.querySelectorAll('.master-detail-layout').forEach(container => {
+    const listItems = container.querySelectorAll('.master-list [data-target]');
+    const readerPanes = container.querySelectorAll('.detail-pane [data-id]');
+    
+    function showDetail(id) {
+      listItems.forEach(item => {
+        if (item.getAttribute('data-target') === id) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+      readerPanes.forEach(pane => {
+        if (pane.getAttribute('data-id') === id) {
+          pane.classList.add('active');
+        } else {
+          pane.classList.remove('active');
+        }
+      });
+    }
+    
+    listItems.forEach(item => {
+      item.addEventListener('click', () => {
+        showDetail(item.getAttribute('data-target'));
+      });
+    });
+    
+    if (listItems.length > 0) {
+      showDetail(listItems[0].getAttribute('data-target'));
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initMasterDetail();
   initSourcesObserver();
   initCopyButtons();
   initCitations();
@@ -915,7 +952,6 @@ function initCitations() {
     <div class="popover-actions">
       <a class="action-primary" href="#"></a>
       <hr style="margin:0.25rem 0; border:none; border-top:1px solid var(--rule);">
-      <button class="action-start-viewer">Start viewer (copy command)</button>
       <a class="action-cursor" href="#">Open in Cursor</a>
       <a class="action-github" href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
       <button class="action-copy-path">Copy Path</button>
@@ -950,7 +986,6 @@ function initCitations() {
       const viewCursor = popover.querySelector('.action-cursor');
       const viewGithub = popover.querySelector('.action-github');
       const copyPath = popover.querySelector('.action-copy-path');
-      const startViewer = popover.querySelector('.action-start-viewer');
 
       let cursorAbsPath = path;
       const match = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
@@ -976,14 +1011,6 @@ function initCitations() {
       copyPath.onclick = (ce) => {
         ce.stopPropagation();
         navigator.clipboard.writeText(path);
-      };
-      
-      startViewer.onclick = (ce) => {
-        ce.stopPropagation();
-        navigator.clipboard.writeText("make guides-serve");
-        const original = startViewer.textContent;
-        startViewer.textContent = "Copied command!";
-        setTimeout(() => startViewer.textContent = original, 2000);
       };
 
       const rect = citation.getBoundingClientRect();
@@ -1023,9 +1050,28 @@ function initCitations() {
       <div class="master-detail-layout">
         <!-- C15 Left: Master list -->
         <div class="master-list">
-          <div class="group">
-            <h3 class="eyebrow">Proposed (1)</h3>
-            <button data-target="adr-001">ADR-001 Boundaries</button>
+<div class="group">
+            <h3 class="eyebrow">Proposed (20)</h3>
+            <button data-target="adr-0001">ADR-0001 Canonical package is the primary source of truth</button>
+            <button data-target="adr-0002">ADR-0002 V1 canonical record scope is deliberately narrow</button>
+            <button data-target="adr-0003">ADR-0003 Pydantic core models publish committed JSON Schema contracts</button>
+            <button data-target="adr-0004">ADR-0004 Canonical packages use JSONL record files</button>
+            <button data-target="adr-0005">ADR-0005 Core records share conventions but retain modular schemas</button>
+            <button data-target="adr-0006">ADR-0006 Facets use namespaced keys and schema URLs</button>
+            <button data-target="adr-0007">ADR-0007 Preservation storage descriptors are reusable objects</button>
+            <button data-target="adr-0008">ADR-0008 Preservation bundles group multiple payloads per subject</button>
+            <button data-target="adr-0009">ADR-0009 Core records are strict and extensions are controlled</button>
+            <button data-target="adr-0010">ADR-0010 Pandoc is a downstream projection layer</button>
+            <button data-target="adr-0011">ADR-0011 Source-native payloads remain outside core records</button>
+            <button data-target="adr-0012">ADR-0012 Normalization is deterministic and never silently drops data</button>
+            <button data-target="adr-0013">ADR-0013 PostgreSQL is an operational projection</button>
+            <button data-target="adr-0014">ADR-0014 Database and package migrations are separate</button>
+            <button data-target="adr-0015">ADR-0015 V1 uses source-scoped stable identity</button>
+            <button data-target="adr-0016">ADR-0016 Methodology output is structured and evidence-grounded</button>
+            <button data-target="adr-0017">ADR-0017 Human approval is required before activation</button>
+            <button data-target="adr-0018">ADR-0018 External providers are configurable</button>
+            <button data-target="adr-0019">ADR-0019 Adapter contracts are independently versioned</button>
+            <button data-target="adr-0020">ADR-0020 Name the canon and keep portable contracts product-neutral</button>
           </div>
           <div class="group">
             <h3 class="eyebrow">Accepted (0)</h3>
@@ -1039,14 +1085,375 @@ function initCitations() {
 
         <!-- C15 Right: Detail pane -->
         <div class="detail-pane">
-          <div data-id="adr-001">
-            <h2>ADR-001: Architecture Boundaries</h2>
+          <div data-id="adr-0001">
+            <h2>ADR-0001: Canonical package is the primary source of truth</h2>
             <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
             <div class="prose" style="margin-top:1rem;">
               <h3>Context</h3>
-              <p>We need to isolate ingestion from representation.</p>
+              <p>Normalization must remain portable, replayable, and auditable without requiring the operational database or an external service.</p>
               <h3>Decision</h3>
-              <p>Keep ingest module independent.</p>
+              <p>The validated filesystem canonical package—`manifest.json`, JSONL record files, diagnostics, and preserved blobs—is the authoritative result of ingestion. PostgreSQL, indexes, embeddings, AI analyses, and exports are derived products.<br><br>An ingest publishes a package only after record, reference, inventory, count, path, and hash validation succeeds.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0002">
+            <h2>ADR-0002: V1 canonical record scope is deliberately narrow</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>The long-term architecture includes concepts that are not yet specified or scheduled and would make V1 acceptance ambiguous.</p>
+              <h3>Decision</h3>
+              <p>V1 requires `manifest`, `document`, `node`, `span`, `relation`, `attribute`, `preservation_record`, and `preservation_bundle`. Fidelity diagnostics are package metadata. `collection`, `asset`, full provenance and capability layers, and a cross-source identity ledger are deferred.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0003">
+            <h2>ADR-0003: Pydantic core models publish committed JSON Schema contracts</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Runtime validation needs Python-native models, while packages, CI, and other consumers need portable schemas. Manually maintaining both core definitions invites drift.</p>
+              <h3>Decision</h3>
+              <p>Pydantic models are the implementation source for V1 core records. JSON Schema Draft 2020-12 contracts are generated with `model_json_schema(by_alias=True)`, committed under `docs/specs/schemas/core/`, and reviewed. CI fails when regeneration changes committed output.<br><br>The manifest also has a committed schema. Hand-authored common and preservation schemas may retain reusable `$ref` structure, but parity fixtures must demonstrate agreement with runtime models.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0004">
+            <h2>ADR-0004: Canonical packages use JSONL record files</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Canonical packages must support large graphs, streaming, reviewable diffs, and partial processing without depending on a database engine.</p>
+              <h3>Decision</h3>
+              <p>Each package has one JSON manifest and one homogeneous JSONL file per record family. Detailed diagnostics also use JSONL. Source-native payloads use package-relative blob references when embedding is unsuitable.<br><br>The manifest inventories every present or intentionally empty record family with counts and hashes.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0005">
+            <h2>ADR-0005: Core records share conventions but retain modular schemas</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Record families need consistent identity and extension conventions without collapsing distinct semantics into a weak universal object.</p>
+              <h3>Decision</h3>
+              <p>Core records share conceptual conventions—stable family-specific IDs, optional typed facets, and package-level version context—while each family retains a strict record-specific model and schema.<br><br>The common envelope is conceptual; V1 does not require an inheritance wrapper or a repeated schema-version field on every core record.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0006">
+            <h2>ADR-0006: Facets use namespaced keys and schema URLs</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Understood extensions need an evolution path that does not add every source- or adapter-specific field to the core model.</p>
+              <h3>Decision</h3>
+              <p>Facet maps use stable namespaced keys. Each value is a `FacetEnvelope` that serializes required `_schemaURL`, optional-but-recommended `_producer`, and schema-defined payload fields.<br><br>Python uses safe internal names such as `schema_url` and `producer` with Pydantic aliases. Literal underscore-prefixed Python attributes are not the interchange contract.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0007">
+            <h2>ADR-0007: Preservation storage descriptors are reusable objects</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Single-payload records and multi-payload bundles need the same vocabulary for embedded content, package blobs, hashes, media metadata, and payload roles.</p>
+              <h3>Decision</h3>
+              <p>`SourceNativeReference` is the reusable descriptor for preservation storage. It supports package-relative paths, embedded UTF-8, embedded base64, and policy-controlled external URIs, plus content metadata and hashes.<br><br>Exactly the fields required by the selected `storage_kind` must be present; incompatible locator fields are invalid. Package-relative paths may not escape the package root.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0008">
+            <h2>ADR-0008: Preservation bundles group multiple payloads per subject</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>One source object may require several related representations, such as raw JSON, rendered HTML, and an attachment.</p>
+              <h3>Decision</h3>
+              <p>Use `PreservationRecord` for one payload and `PreservationBundle` when multiple `SourceNativeReference` items for one subject must travel together. A bundle declares its grouping strategy and may designate one valid primary item index.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0009">
+            <h2>ADR-0009: Core records are strict and extensions are controlled</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Arbitrary fields in core records make compatibility, validation, and migrations unpredictable. Some deliberate extensibility is still necessary.</p>
+              <h3>Decision</h3>
+              <p>Core Pydantic models and JSON Schemas reject unknown top-level fields. Every supported core family may expose `facets: dict[str, FacetEnvelope]`. The facet envelope permits schema-addressed payload fields; preservation artifacts carry opaque source-native data.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0010">
+            <h2>ADR-0010: Pandoc is a downstream projection layer</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Pandoc is effective for document rendering but cannot represent the full graph, identity, facet, and preservation semantics of the canonical package.</p>
+              <h3>Decision</h3>
+              <p>Pandoc is used only to render document-oriented canonical subsets. V1's Pandoc output is an audit-oriented Markdown projection. It is neither the canonical model nor a full Obsidian or Logseq adapter contract.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0011">
+            <h2>ADR-0011: Source-native payloads remain outside core records</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Raw source objects are necessary for loss prevention and replay but would destabilize core schemas if copied into normalized records.</p>
+              <h3>Decision</h3>
+              <p>Opaque, unsupported, partially normalized, and replay-oriented source payloads are stored in preservation records or bundles. Core records contain only normalized semantics; facets contain understood schema-addressed extensions.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0012">
+            <h2>ADR-0012: Normalization is deterministic and never silently drops data</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Migration output must be replayable and its fidelity must be measurable. A promise of “perfect translation” is neither accurate nor testable for unsupported source features.</p>
+              <h3>Decision</h3>
+              <p>Identical source bytes, parser version, source profile version, and configuration produce identical canonical IDs, records, ordering, preservation hashes, and diagnostic codes, excluding documented run metadata.<br><br>Every parsed source construct is fully normalized, partially normalized with preservation and diagnostics, preserved-only, unsupported with preservation, or rejected as invalid. Silent dropping is prohibited.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0013">
+            <h2>ADR-0013: PostgreSQL is an operational projection</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>The application needs query, vector, workflow, and review storage, but making that database canonical would couple portability and replay to infrastructure state.</p>
+              <h3>Decision</h3>
+              <p>PostgreSQL stores a rebuildable projection of validated packages plus operational state: jobs, indexes, embeddings, checkpoints, methodology manifests, and review events. A package must validate before loading.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0014">
+            <h2>ADR-0014: Database and package migrations are separate</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Relational deployment state and portable package compatibility evolve for different reasons and at different rates.</p>
+              <h3>Decision</h3>
+              <p>PostgreSQL schema changes use Alembic and, where relevant, Expand-Migrate-Contract. Canonical package changes use explicit ordered application migrations keyed by `package_schema_version`.<br><br>Breaking package changes require a version bump, migration, fixtures, regenerated schemas, and changelog entry.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0015">
+            <h2>ADR-0015: V1 uses source-scoped stable identity</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>V1 needs replay-stable IDs but does not yet have evidence or requirements for safely merging equivalent entities across independent knowledge graphs.</p>
+              <h3>Decision</h3>
+              <p>V1 preserves source UIDs and derives canonical IDs within a documented source-system and source-graph namespace. Derived records use stable source identity plus deterministic local discriminators. A many-to-one cross-source identity ledger is deferred.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0016">
+            <h2>ADR-0016: Methodology output is structured and evidence-grounded</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Free-form AI prose cannot be reliably validated, reviewed, compared, or activated as configuration.</p>
+              <h3>Decision</h3>
+              <p>Convention detection emits a versioned, schema-validated methodology manifest. Each rule has a stable ID, typed category, statement, confidence, lifecycle status, and one or more `source_trace_ids` resolving to canonical nodes or spans.<br><br>For `methodology-v2`, `confidence` is a **support heuristic**, not a calibrated<br>probability. It combines the share of substantive values (45%), distinct pages<br>with substantive values capped at five (40%), and substantive observations<br>capped at ten (10%). Blank values and obvious template placeholders contribute<br>no positive support. Repeated blocks on one page do not count as independent<br>pages. The proposal also records observation, distinct-page, substantive,<br>blank, and placeholder counts; case variants of one attribute key; and the<br>five most common keys co-occurring on those pages. Its Roam graph scope is<br>explicit. Candidates with fewer than two substantive values, or a majority of<br>blank/placeholder values, are deferred in the local review queue. Deferral<br>never changes source preservation or records an approval/rejection; a reviewer<br>must still make every decision. The v2 rule identity prevents old decisions<br>from silently admitting a changed proposal.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0017">
+            <h2>ADR-0017: Human approval is required before activation</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Inferred conventions may be plausible but incorrect or inappropriate. V1 must not silently turn model output into active configuration.</p>
+              <h3>Decision</h3>
+              <p>Rules begin as `proposed` and remain inactive until an authorized operator records a rule-level approval. Approval and rejection are immutable audit events with reviewer identity, timestamp, run ID, decision, and optional rationale.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0018">
+            <h2>ADR-0018: External providers are configurable</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>LLM, embedding, reranking, telemetry, alerting, and cost capabilities vary by deployment and provider. Provider-specific requirements would unnecessarily constrain the product.</p>
+              <h3>Decision</h3>
+              <p>External capabilities use configuration-backed adapter interfaces. Provider names, model names, vector dimensions, rate limits, budgets, and notification destinations are deployment configuration rather than product architecture requirements.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0019">
+            <h2>ADR-0019: Adapter contracts are independently versioned</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>Source mapping logic and target projection capabilities change independently of the canonical package schema.</p>
+              <h3>Decision</h3>
+              <p>Each source profile and target adapter has an independent semantic contract version. The manifest records `source_profiles[].profile_version` and the `adapter_contracts` map separately from `package_schema_version`.<br><br>Adapters document what they fully represent, approximate with diagnostics, preserve without normalization, or do not support. A machine-readable capability layer is deferred until multiple production adapters justify it.</p>
+            </div>
+            <template data-for="proposed">
+              <p>The decision is under discussion.</p>
+            </template>
+            <template data-for="accepted">
+              <p>The decision is approved.</p>
+            </template>
+            <template data-for="superseded">
+              <p>The decision is no longer valid.</p>
+            </template>
+          </div>
+          <div data-id="adr-0020">
+            <h2>ADR-0020: Name the canon and keep portable contracts product-neutral</h2>
+            <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
+            <div class="prose" style="margin-top:1rem;">
+              <h3>Context</h3>
+              <p>PKM Canon's “canonical package” is authoritative for faithful source capture. A<br>governed domain claim or a creator-approved fictional state makes a different<br>authority claim. Calling all three objects “canonical” without naming the<br>canon invites accidental promotion of imported text into accepted knowledge.<br><br>PKM Canon's original `CanonicalStore` returned `CanonicalPackage` from two paths,<br>which made the storage port unsuitable for the other products.</p>
+              <h3>Decision</h3>
+              <p>- A **canon** is a governed, versioned selection of representations or<br>  assertions accepted as authoritative for a named purpose, scope, context,<br>  and time under explicit admission and revision rules. It is a bounded<br>  authority claim, never a claim of universal truth.<br>- **Canonical** means selected by or conforming to a *named* canon. APIs and<br>  prose should name the canon or its kind when the meaning is ambiguous.<br>- PKM Canon's **source canon** governs whether a package faithfully captures a<br>  source version. It does not endorse statements in that source. A parsed<br>  assertion remains a candidate until a separate domain or creative review.<br>- The portable storage port is `CanonStore[Ref, Commit, Artifact]`. Each product<br>  owns those three types and its validation/admission rules. PKM Canon binds the<br>  port to `Path`, `PackageCommit`, and `CanonicalPackage` in `storage.py`.<br>- Snapshot, publication pin, dependency, lineage, impact, and retrieval<br>  contracts are specified in [the portable contract design](../specs/canon-contracts-v0.1.md).<br>  They are separate capabilities, rather than mandatory methods on the store.<br>- Provenance, lineage, and ripple have separate meanings and PKM Canon-specific<br>  checks in [their dedicated design](../specs/provenance-lineage-ripple.md).<br>- A generated output, projection, index, or AI proposal does not enter any<br>  canon by being stored or cited. Its admission requires the canon's policy.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>

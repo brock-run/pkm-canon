@@ -1028,9 +1028,6 @@ table.guides-matrix tbody.matrix-group::before {
     flex-direction: column;
     gap: 1rem;
   }
-  .sbs-pane { display: none; }
-  .sbs-pane.active { display: block; }
-  .sbs-tabs { display: flex; }
 }
 
 </style>
@@ -1116,7 +1113,6 @@ function initCitations() {
     <div class="popover-actions">
       <a class="action-primary" href="#"></a>
       <hr style="margin:0.25rem 0; border:none; border-top:1px solid var(--rule);">
-      <button class="action-start-viewer">Start viewer (copy command)</button>
       <a class="action-cursor" href="#">Open in Cursor</a>
       <a class="action-github" href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
       <button class="action-copy-path">Copy Path</button>
@@ -1151,7 +1147,6 @@ function initCitations() {
       const viewCursor = popover.querySelector('.action-cursor');
       const viewGithub = popover.querySelector('.action-github');
       const copyPath = popover.querySelector('.action-copy-path');
-      const startViewer = popover.querySelector('.action-start-viewer');
 
       let cursorAbsPath = path;
       const match = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
@@ -1177,14 +1172,6 @@ function initCitations() {
       copyPath.onclick = (ce) => {
         ce.stopPropagation();
         navigator.clipboard.writeText(path);
-      };
-      
-      startViewer.onclick = (ce) => {
-        ce.stopPropagation();
-        navigator.clipboard.writeText("make guides-serve");
-        const original = startViewer.textContent;
-        startViewer.textContent = "Copied command!";
-        setTimeout(() => startViewer.textContent = original, 2000);
       };
 
       const rect = citation.getBoundingClientRect();
@@ -1516,24 +1503,16 @@ function initMasterDetail() {
 }
 
 // Update initialization to run these functions
-const origInit = document.addEventListener;
-document.addEventListener = function(type, fn) {
-  if (type === 'DOMContentLoaded') {
-    origInit.call(this, type, () => {
-      fn();
-      if (typeof initPhaseCopyButtons === 'function') initPhaseCopyButtons();
-      if (typeof initSequenceDiagrams === 'function') initSequenceDiagrams();
-      if (typeof initStateDiagrams === 'function') initStateDiagrams();
-      if (typeof initGraphDiagrams === 'function') initGraphDiagrams();
-      if (typeof initCapabilityMatrices === 'function') initCapabilityMatrices();
-      if (typeof initEntityDiagrams === 'function') initEntityDiagrams();
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof initPhaseCopyButtons === 'function') initPhaseCopyButtons();
+  if (typeof initSequenceDiagrams === 'function') initSequenceDiagrams();
+  if (typeof initStateDiagrams === 'function') initStateDiagrams();
+  if (typeof initGraphDiagrams === 'function') initGraphDiagrams();
+  if (typeof initCapabilityMatrices === 'function') initCapabilityMatrices();
+  if (typeof initEntityDiagrams === 'function') initEntityDiagrams();
 
-      if (typeof initMasterDetail === 'function') initMasterDetail();
-    });
-  } else {
-    origInit.call(this, type, fn);
-  }
-};
+  if (typeof initMasterDetail === 'function') initMasterDetail();
+});
 // C8 Capability Matrix
 function initCapabilityMatrices() {
   document.querySelectorAll('.guides-matrix').forEach(matrix => {
