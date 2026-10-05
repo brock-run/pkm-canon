@@ -723,7 +723,7 @@ ul.files-changed li {
 }
 .graph-lane {
   border: 1px dashed var(--rule);
-  padding: 1rem;
+  padding: 1rem 3rem 1rem 1rem;
   min-width: 200px;
 }
 .lane-header {
@@ -750,6 +750,10 @@ ul.files-changed li {
 }
 .state-node:hover, .graph-node:hover {
   border-color: var(--ink);
+}
+.graph-node {
+  position: relative;
+  z-index: 1;
 }
 .status-implemented { border-color: var(--st-implemented); }
 .status-partial { border-color: var(--st-partial); }
@@ -1490,7 +1494,7 @@ function initGraphDiagrams() {
         
         const drawEdges = () => {
           Array.from(svg.querySelectorAll('path')).forEach(p => p.remove());
-          const containerRect = container.getBoundingClientRect();
+          const svgRect = svg.getBoundingClientRect();
           data.edges.forEach(edge => {
             const fromNode = container.querySelector(`[data-id="${edge.from}"]`);
             const toNode = container.querySelector(`[data-id="${edge.to}"]`);
@@ -1499,14 +1503,18 @@ function initGraphDiagrams() {
             const fromRect = fromNode.getBoundingClientRect();
             const toRect = toNode.getBoundingClientRect();
             
-            const x1 = fromRect.right - containerRect.left;
-            const y1 = fromRect.top + fromRect.height / 2 - containerRect.top;
-            const x2 = toRect.left - containerRect.left;
-            const y2 = toRect.top + toRect.height / 2 - containerRect.top;
+            const adjacent = fromNode.nextElementSibling === toNode;
+            const x1 = (adjacent ? fromRect.left + fromRect.width / 2 : fromRect.right) - svgRect.left;
+            const y1 = (adjacent ? fromRect.bottom : fromRect.top + fromRect.height / 2) - svgRect.top;
+            const x2 = (adjacent ? toRect.left + toRect.width / 2 : toRect.right) - svgRect.left;
+            const y2 = (adjacent ? toRect.top : toRect.top + toRect.height / 2) - svgRect.top;
+            const gutterX = Math.max(fromRect.right, toRect.right) - svgRect.left + 24;
             
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             const isDiff = edge.kind && edge.kind.includes('diff-edge-new');
-            path.setAttribute("d", `M ${x1} ${y1} C ${x1 + 20} ${y1}, ${x2 - 20} ${y2}, ${x2} ${y2}`);
+            path.setAttribute("d", adjacent
+              ? `M ${x1} ${y1} L ${x2} ${y2}`
+              : `M ${x1} ${y1} L ${gutterX} ${y1} L ${gutterX} ${y2} L ${x2} ${y2}`);
             path.setAttribute("stroke", isDiff ? "var(--st-implemented)" : "var(--ink-soft)");
             path.setAttribute("stroke-width", "2");
             path.setAttribute("fill", "none");

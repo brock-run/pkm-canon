@@ -1102,7 +1102,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Normalization must remain portable, replayable, and auditable without requiring the operational database or an external service.</p>
               <h3>Decision</h3>
-              <p>The validated filesystem canonical package—`manifest.json`, JSONL record files, diagnostics, and preserved blobs—is the authoritative result of ingestion. PostgreSQL, indexes, embeddings, AI analyses, and exports are derived products.<br><br>An ingest publishes a package only after record, reference, inventory, count, path, and hash validation succeeds.</p>
+              <p>The validated filesystem canonical package—<code>manifest.json</code>, JSONL record files, diagnostics, and preserved blobs—is the authoritative result of ingestion. PostgreSQL, indexes, embeddings, AI analyses, and exports are derived products.</p>
+              <p>An ingest publishes a package only after record, reference, inventory, count, path, and hash validation succeeds.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1121,7 +1122,7 @@ function initCitations() {
               <h3>Context</h3>
               <p>The long-term architecture includes concepts that are not yet specified or scheduled and would make V1 acceptance ambiguous.</p>
               <h3>Decision</h3>
-              <p>V1 requires `manifest`, `document`, `node`, `span`, `relation`, `attribute`, `preservation_record`, and `preservation_bundle`. Fidelity diagnostics are package metadata. `collection`, `asset`, full provenance and capability layers, and a cross-source identity ledger are deferred.</p>
+              <p>V1 requires <code>manifest</code>, <code>document</code>, <code>node</code>, <code>span</code>, <code>relation</code>, <code>attribute</code>, <code>preservation_record</code>, and <code>preservation_bundle</code>. Fidelity diagnostics are package metadata. <code>collection</code>, <code>asset</code>, full provenance and capability layers, and a cross-source identity ledger are deferred.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1140,7 +1141,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Runtime validation needs Python-native models, while packages, CI, and other consumers need portable schemas. Manually maintaining both core definitions invites drift.</p>
               <h3>Decision</h3>
-              <p>Pydantic models are the implementation source for V1 core records. JSON Schema Draft 2020-12 contracts are generated with `model_json_schema(by_alias=True)`, committed under `docs/specs/schemas/core/`, and reviewed. CI fails when regeneration changes committed output.<br><br>The manifest also has a committed schema. Hand-authored common and preservation schemas may retain reusable `$ref` structure, but parity fixtures must demonstrate agreement with runtime models.</p>
+              <p>Pydantic models are the implementation source for V1 core records. JSON Schema Draft 2020-12 contracts are generated with <code>model_json_schema(by_alias=True)</code>, committed under <code>docs/specs/schemas/core/</code>, and reviewed. CI fails when regeneration changes committed output.</p>
+              <p>The manifest also has a committed schema. Hand-authored common and preservation schemas may retain reusable <code>$ref</code> structure, but parity fixtures must demonstrate agreement with runtime models.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1159,7 +1161,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Canonical packages must support large graphs, streaming, reviewable diffs, and partial processing without depending on a database engine.</p>
               <h3>Decision</h3>
-              <p>Each package has one JSON manifest and one homogeneous JSONL file per record family. Detailed diagnostics also use JSONL. Source-native payloads use package-relative blob references when embedding is unsuitable.<br><br>The manifest inventories every present or intentionally empty record family with counts and hashes.</p>
+              <p>Each package has one JSON manifest and one homogeneous JSONL file per record family. Detailed diagnostics also use JSONL. Source-native payloads use package-relative blob references when embedding is unsuitable.</p>
+              <p>The manifest inventories every present or intentionally empty record family with counts and hashes.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1178,7 +1181,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Record families need consistent identity and extension conventions without collapsing distinct semantics into a weak universal object.</p>
               <h3>Decision</h3>
-              <p>Core records share conceptual conventions—stable family-specific IDs, optional typed facets, and package-level version context—while each family retains a strict record-specific model and schema.<br><br>The common envelope is conceptual; V1 does not require an inheritance wrapper or a repeated schema-version field on every core record.</p>
+              <p>Core records share conceptual conventions—stable family-specific IDs, optional typed facets, and package-level version context—while each family retains a strict record-specific model and schema.</p>
+              <p>The common envelope is conceptual; V1 does not require an inheritance wrapper or a repeated schema-version field on every core record.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1197,7 +1201,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Understood extensions need an evolution path that does not add every source- or adapter-specific field to the core model.</p>
               <h3>Decision</h3>
-              <p>Facet maps use stable namespaced keys. Each value is a `FacetEnvelope` that serializes required `_schemaURL`, optional-but-recommended `_producer`, and schema-defined payload fields.<br><br>Python uses safe internal names such as `schema_url` and `producer` with Pydantic aliases. Literal underscore-prefixed Python attributes are not the interchange contract.</p>
+              <p>Facet maps use stable namespaced keys. Each value is a <code>FacetEnvelope</code> that serializes required <code>_schemaURL</code>, optional-but-recommended <code>_producer</code>, and schema-defined payload fields.</p>
+              <p>Python uses safe internal names such as <code>schema_url</code> and <code>producer</code> with Pydantic aliases. Literal underscore-prefixed Python attributes are not the interchange contract.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1216,7 +1221,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Single-payload records and multi-payload bundles need the same vocabulary for embedded content, package blobs, hashes, media metadata, and payload roles.</p>
               <h3>Decision</h3>
-              <p>`SourceNativeReference` is the reusable descriptor for preservation storage. It supports package-relative paths, embedded UTF-8, embedded base64, and policy-controlled external URIs, plus content metadata and hashes.<br><br>Exactly the fields required by the selected `storage_kind` must be present; incompatible locator fields are invalid. Package-relative paths may not escape the package root.</p>
+              <p><code>SourceNativeReference</code> is the reusable descriptor for preservation storage. It supports package-relative paths, embedded UTF-8, embedded base64, and policy-controlled external URIs, plus content metadata and hashes.</p>
+              <p>Exactly the fields required by the selected <code>storage_kind</code> must be present; incompatible locator fields are invalid. Package-relative paths may not escape the package root.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1235,7 +1241,7 @@ function initCitations() {
               <h3>Context</h3>
               <p>One source object may require several related representations, such as raw JSON, rendered HTML, and an attachment.</p>
               <h3>Decision</h3>
-              <p>Use `PreservationRecord` for one payload and `PreservationBundle` when multiple `SourceNativeReference` items for one subject must travel together. A bundle declares its grouping strategy and may designate one valid primary item index.</p>
+              <p>Use <code>PreservationRecord</code> for one payload and <code>PreservationBundle</code> when multiple <code>SourceNativeReference</code> items for one subject must travel together. A bundle declares its grouping strategy and may designate one valid primary item index.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1254,7 +1260,7 @@ function initCitations() {
               <h3>Context</h3>
               <p>Arbitrary fields in core records make compatibility, validation, and migrations unpredictable. Some deliberate extensibility is still necessary.</p>
               <h3>Decision</h3>
-              <p>Core Pydantic models and JSON Schemas reject unknown top-level fields. Every supported core family may expose `facets: dict[str, FacetEnvelope]`. The facet envelope permits schema-addressed payload fields; preservation artifacts carry opaque source-native data.</p>
+              <p>Core Pydantic models and JSON Schemas reject unknown top-level fields. Every supported core family may expose <code>facets: dict[str, FacetEnvelope]</code>. The facet envelope permits schema-addressed payload fields; preservation artifacts carry opaque source-native data.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1311,7 +1317,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Migration output must be replayable and its fidelity must be measurable. A promise of “perfect translation” is neither accurate nor testable for unsupported source features.</p>
               <h3>Decision</h3>
-              <p>Identical source bytes, parser version, source profile version, and configuration produce identical canonical IDs, records, ordering, preservation hashes, and diagnostic codes, excluding documented run metadata.<br><br>Every parsed source construct is fully normalized, partially normalized with preservation and diagnostics, preserved-only, unsupported with preservation, or rejected as invalid. Silent dropping is prohibited.</p>
+              <p>Identical source bytes, parser version, source profile version, and configuration produce identical canonical IDs, records, ordering, preservation hashes, and diagnostic codes, excluding documented run metadata.</p>
+              <p>Every parsed source construct is fully normalized, partially normalized with preservation and diagnostics, preserved-only, unsupported with preservation, or rejected as invalid. Silent dropping is prohibited.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1349,7 +1356,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Relational deployment state and portable package compatibility evolve for different reasons and at different rates.</p>
               <h3>Decision</h3>
-              <p>PostgreSQL schema changes use Alembic and, where relevant, Expand-Migrate-Contract. Canonical package changes use explicit ordered application migrations keyed by `package_schema_version`.<br><br>Breaking package changes require a version bump, migration, fixtures, regenerated schemas, and changelog entry.</p>
+              <p>PostgreSQL schema changes use Alembic and, where relevant, Expand-Migrate-Contract. Canonical package changes use explicit ordered application migrations keyed by <code>package_schema_version</code>.</p>
+              <p>Breaking package changes require a version bump, migration, fixtures, regenerated schemas, and changelog entry.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1387,7 +1395,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Free-form AI prose cannot be reliably validated, reviewed, compared, or activated as configuration.</p>
               <h3>Decision</h3>
-              <p>Convention detection emits a versioned, schema-validated methodology manifest. Each rule has a stable ID, typed category, statement, confidence, lifecycle status, and one or more `source_trace_ids` resolving to canonical nodes or spans.<br><br>For `methodology-v2`, `confidence` is a **support heuristic**, not a calibrated<br>probability. It combines the share of substantive values (45%), distinct pages<br>with substantive values capped at five (40%), and substantive observations<br>capped at ten (10%). Blank values and obvious template placeholders contribute<br>no positive support. Repeated blocks on one page do not count as independent<br>pages. The proposal also records observation, distinct-page, substantive,<br>blank, and placeholder counts; case variants of one attribute key; and the<br>five most common keys co-occurring on those pages. Its Roam graph scope is<br>explicit. Candidates with fewer than two substantive values, or a majority of<br>blank/placeholder values, are deferred in the local review queue. Deferral<br>never changes source preservation or records an approval/rejection; a reviewer<br>must still make every decision. The v2 rule identity prevents old decisions<br>from silently admitting a changed proposal.</p>
+              <p>Convention detection emits a versioned, schema-validated methodology manifest. Each rule has a stable ID, typed category, statement, confidence, lifecycle status, and one or more <code>source_trace_ids</code> resolving to canonical nodes or spans.</p>
+              <p>For <code>methodology-v2</code>, <code>confidence</code> is a <strong>support heuristic</strong>, not a calibrated probability. It combines the share of substantive values (45%), distinct pages with substantive values capped at five (40%), and substantive observations capped at ten (10%). Blank values and obvious template placeholders contribute no positive support. Repeated blocks on one page do not count as independent pages. The proposal also records observation, distinct-page, substantive, blank, and placeholder counts; case variants of one attribute key; and the five most common keys co-occurring on those pages. Its Roam graph scope is explicit. Candidates with fewer than two substantive values, or a majority of blank/placeholder values, are deferred in the local review queue. Deferral never changes source preservation or records an approval/rejection; a reviewer must still make every decision. The v2 rule identity prevents old decisions from silently admitting a changed proposal.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1406,7 +1415,7 @@ function initCitations() {
               <h3>Context</h3>
               <p>Inferred conventions may be plausible but incorrect or inappropriate. V1 must not silently turn model output into active configuration.</p>
               <h3>Decision</h3>
-              <p>Rules begin as `proposed` and remain inactive until an authorized operator records a rule-level approval. Approval and rejection are immutable audit events with reviewer identity, timestamp, run ID, decision, and optional rationale.</p>
+              <p>Rules begin as <code>proposed</code> and remain inactive until an authorized operator records a rule-level approval. Approval and rejection are immutable audit events with reviewer identity, timestamp, run ID, decision, and optional rationale.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1444,7 +1453,8 @@ function initCitations() {
               <h3>Context</h3>
               <p>Source mapping logic and target projection capabilities change independently of the canonical package schema.</p>
               <h3>Decision</h3>
-              <p>Each source profile and target adapter has an independent semantic contract version. The manifest records `source_profiles[].profile_version` and the `adapter_contracts` map separately from `package_schema_version`.<br><br>Adapters document what they fully represent, approximate with diagnostics, preserve without normalization, or do not support. A machine-readable capability layer is deferred until multiple production adapters justify it.</p>
+              <p>Each source profile and target adapter has an independent semantic contract version. The manifest records <code>source_profiles[].profile_version</code> and the <code>adapter_contracts</code> map separately from <code>package_schema_version</code>.</p>
+              <p>Adapters document what they fully represent, approximate with diagnostics, preserve without normalization, or do not support. A machine-readable capability layer is deferred until multiple production adapters justify it.</p>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
@@ -1461,9 +1471,18 @@ function initCitations() {
             <span class="badge" data-axis="lifecycle" data-val="proposed">Proposed</span>
             <div class="prose" style="margin-top:1rem;">
               <h3>Context</h3>
-              <p>PKM Canon's “canonical package” is authoritative for faithful source capture. A<br>governed domain claim or a creator-approved fictional state makes a different<br>authority claim. Calling all three objects “canonical” without naming the<br>canon invites accidental promotion of imported text into accepted knowledge.<br><br>PKM Canon's original `CanonicalStore` returned `CanonicalPackage` from two paths,<br>which made the storage port unsuitable for the other products.</p>
+              <p>PKM Canon's “canonical package” is authoritative for faithful source capture. A governed domain claim or a creator-approved fictional state makes a different authority claim. Calling all three objects “canonical” without naming the canon invites accidental promotion of imported text into accepted knowledge.</p>
+              <p>PKM Canon's original <code>CanonicalStore</code> returned <code>CanonicalPackage</code> from two paths, which made the storage port unsuitable for the other products.</p>
               <h3>Decision</h3>
-              <p>- A **canon** is a governed, versioned selection of representations or<br>  assertions accepted as authoritative for a named purpose, scope, context,<br>  and time under explicit admission and revision rules. It is a bounded<br>  authority claim, never a claim of universal truth.<br>- **Canonical** means selected by or conforming to a *named* canon. APIs and<br>  prose should name the canon or its kind when the meaning is ambiguous.<br>- PKM Canon's **source canon** governs whether a package faithfully captures a<br>  source version. It does not endorse statements in that source. A parsed<br>  assertion remains a candidate until a separate domain or creative review.<br>- The portable storage port is `CanonStore[Ref, Commit, Artifact]`. Each product<br>  owns those three types and its validation/admission rules. PKM Canon binds the<br>  port to `Path`, `PackageCommit`, and `CanonicalPackage` in `storage.py`.<br>- Snapshot, publication pin, dependency, lineage, impact, and retrieval<br>  contracts are specified in [the portable contract design](../specs/canon-contracts-v0.1.md).<br>  They are separate capabilities, rather than mandatory methods on the store.<br>- Provenance, lineage, and ripple have separate meanings and PKM Canon-specific<br>  checks in [their dedicated design](../specs/provenance-lineage-ripple.md).<br>- A generated output, projection, index, or AI proposal does not enter any<br>  canon by being stored or cited. Its admission requires the canon's policy.</p>
+              <ul>
+                <li>A <strong>canon</strong> is a governed, versioned selection of representations or assertions accepted as authoritative for a named purpose, scope, context, and time under explicit admission and revision rules. It is a bounded authority claim, never a claim of universal truth.</li>
+                <li><strong>Canonical</strong> means selected by or conforming to a <em>named</em> canon. APIs and prose should name the canon or its kind when the meaning is ambiguous.</li>
+                <li>PKM Canon's <strong>source canon</strong> governs whether a package faithfully captures a source version. It does not endorse statements in that source. A parsed assertion remains a candidate until a separate domain or creative review.</li>
+                <li>The portable storage port is <code>CanonStore[Ref, Commit, Artifact]</code>. Each product owns those three types and its validation/admission rules. PKM Canon binds the port to <code>Path</code>, <code>PackageCommit</code>, and <code>CanonicalPackage</code> in <code>storage.py</code>.</li>
+                <li>Snapshot, publication pin, dependency, lineage, impact, and retrieval contracts are specified in <a href="../specs/canon-contracts-v0.1.md">the portable contract design</a>. They are separate capabilities, rather than mandatory methods on the store.</li>
+                <li>Provenance, lineage, and ripple have separate meanings and PKM Canon-specific checks in <a href="../specs/provenance-lineage-ripple.md">their dedicated design</a>.</li>
+                <li>A generated output, projection, index, or AI proposal does not enter any canon by being stored or cited. Its admission requires the canon's policy.</li>
+              </ul>
             </div>
             <template data-for="proposed">
               <p>The decision is under discussion.</p>
