@@ -3,10 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-canon;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
+  <meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-rosetta;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
   <title>Decision Record - PKM Canon</title>
   <!-- guides:runtime begin v2.x -->
-<meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-rosetta;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
 <style>
 /* brocks-helpers/assets/html-guides/tokens.css */
 :root {
@@ -832,6 +831,15 @@ ul.files-changed li {
 .detail-pane > div.active {
   display: block;
 }
+@media (max-width: 767px) {
+  .master-detail-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .master-list, .detail-pane {
+    width: 100%;
+  }
+}
 /* C8: Capability Matrix */
 .capability-matrix-controls {
   display: flex;
@@ -1029,8 +1037,11 @@ table.guides-matrix tbody.matrix-group::before {
     flex-direction: column;
     gap: 1rem;
   }
-  .sbs-pane { display: none; }
-  .sbs-pane.active { display: block; }
+  /* Tab lists are previous siblings of .side-by-side, not children.
+     Hide the inactive pane only when those tabs exist. Pages without
+     tabs keep both panes visible in the stacked layout. */
+  .sbs-tabs ~ .side-by-side .sbs-pane { display: none; }
+  .sbs-tabs ~ .side-by-side .sbs-pane.active { display: block; }
   .sbs-tabs { display: flex; }
 }
 
@@ -1132,6 +1143,7 @@ function initCitations() {
     </div>
   `;
   document.body.appendChild(popover);
+  let activeCitation = null;
 
   const repoMapMeta = document.querySelector('meta[name="guides:repo-dirs"]');
   const repoDirs = {};
@@ -1203,7 +1215,9 @@ function initCitations() {
           // single-quote it so the shell treats the whole path (including any
           // spaces) as one literal argument.
           try { wsRoot = decodeURIComponent(wsRoot); } catch (e) { /* leave as-is */ }
-          serveCmd = `cd '${wsRoot}/${bhDir}' && python -m scripts.html_guides.cli serve`;
+          // Shell-escape apostrophes so a path like /home/Lee's Work stays one argument.
+          const viewerDir = `${wsRoot}/${bhDir}`.replace(/'/g, "'\\''");
+          serveCmd = `cd '${viewerDir}' && python -m scripts.html_guides.cli serve`;
         }
         navigator.clipboard.writeText(serveCmd);
         const original = startViewer.textContent;
@@ -1214,9 +1228,21 @@ function initCitations() {
       const rect = citation.getBoundingClientRect();
       popover.style.left = `${rect.left + window.scrollX}px`;
       popover.style.top = `${rect.bottom + window.scrollY + 8}px`;
+      activeCitation = citation;
       popover.classList.add('visible');
+      primary.focus();
     } else if (!e.target.closest('#citation-popover')) {
       popover.classList.remove('visible');
+      activeCitation = null;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && popover.classList.contains('visible')) {
+      e.preventDefault();
+      popover.classList.remove('visible');
+      activeCitation?.focus();
+      activeCitation = null;
     }
   });
 }
@@ -1506,7 +1532,36 @@ function initGraphDiagrams() {
         if (targetLane) targetLane.appendChild(el);
       });
 
-      // Draw edges as an SVG overlay after nodes are in the DOM
+      if (data.edges && data.edges.length > 0) {
+        graphWrapper.style.position = 'relative';
+      }
+
+      container.appendChild(graphWrapper);
+
+      // Text equivalent for screen readers: node labels and whether an edge is new.
+      const nodeDescs = (data.nodes || []).map(n => n.label ? `${n.id} (${n.label})` : n.id).join(', ');
+      const edgeDescs = (data.edges || []).map(e => {
+        const label = e.label ? ` (${e.label})` : '';
+        const status = e.kind && String(e.kind).includes('diff-edge-new') ? ' (newly added)' : '';
+        return `${e.from} to ${e.to}${label}${status}`;
+      }).join('; ');
+      const fallback = document.createElement('div');
+      fallback.style.position = 'absolute';
+      fallback.style.width = '1px';
+      fallback.style.height = '1px';
+      fallback.style.padding = '0';
+      fallback.style.margin = '-1px';
+      fallback.style.overflow = 'hidden';
+      fallback.style.clip = 'rect(0, 0, 0, 0)';
+      fallback.style.whiteSpace = 'nowrap';
+      fallback.style.border = '0';
+      fallback.textContent = `Graph diagram. Nodes: ${nodeDescs}. Edges: ${edgeDescs || 'none'}.`;
+      container.appendChild(fallback);
+
+      // Insert before measuring. A node that is not in the document reports
+      // an empty box, which left edges zero-length until resize.
+      script.parentNode.insertBefore(container, script.nextSibling);
+
       if (data.edges && data.edges.length > 0) {
         const SVG_NS = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(SVG_NS, 'svg');
@@ -1519,7 +1574,6 @@ function initGraphDiagrams() {
         svg.style.pointerEvents = 'none';
         svg.style.overflow = 'visible';
 
-        // Arrowhead marker
         const defs = document.createElementNS(SVG_NS, 'defs');
         const marker = document.createElementNS(SVG_NS, 'marker');
         marker.setAttribute('id', 'arrowhead-graph');
@@ -1534,96 +1588,64 @@ function initGraphDiagrams() {
         marker.appendChild(polygon);
         defs.appendChild(marker);
         svg.appendChild(defs);
-
-        const wrapperRect = graphWrapper.getBoundingClientRect();
-
-        data.edges.forEach(edge => {
-          const fromEl = graphWrapper.querySelector(`[data-id="${edge.from}"]`);
-          const toEl = graphWrapper.querySelector(`[data-id="${edge.to}"]`);
-          if (!fromEl || !toEl) return;
-
-          const r1 = fromEl.getBoundingClientRect();
-          const r2 = toEl.getBoundingClientRect();
-
-          const x1 = r1.left - wrapperRect.left + r1.width / 2;
-          const y1 = r1.bottom - wrapperRect.top;
-          const x2 = r2.left - wrapperRect.left + r2.width / 2;
-          const y2 = r2.top - wrapperRect.top;
-
-          const path = document.createElementNS(SVG_NS, 'path');
-          const midY = (y1 + y2) / 2;
-          path.setAttribute('d', `M ${x1},${y1} C ${x1},${midY} ${x2},${midY} ${x2},${y2}`);
-          path.setAttribute('fill', 'none');
-          path.setAttribute('stroke', edge.kind && edge.kind.includes('dotted') ? 'var(--ink-soft, #aaa)' : 'var(--ink-soft, #888)');
-          path.setAttribute('stroke-width', '1.5');
-          path.setAttribute('stroke-dasharray', edge.kind && edge.kind.includes('dotted') ? '4 3' : '');
-          path.setAttribute('marker-end', 'url(#arrowhead-graph)');
-          if (edge.kind && edge.kind.includes('diff-edge-new')) {
-            path.setAttribute('stroke', 'var(--st-implemented, #2d8)');
-            path.setAttribute('stroke-width', '2');
-          }
-          svg.appendChild(path);
-
-          if (edge.label) {
-            const text = document.createElementNS(SVG_NS, 'text');
-            text.setAttribute('x', (x1 + x2) / 2);
-            text.setAttribute('y', midY - 5);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('fill', 'var(--ink, #333)');
-            text.setAttribute('font-size', '11px');
-            text.textContent = edge.label;
-            svg.appendChild(text);
-          }
-        });
-
-        graphWrapper.style.position = 'relative';
         graphWrapper.appendChild(svg);
 
-        // Redraw edges on resize
-        let resizeTimer;
         const drawEdges = () => {
-          const wr = graphWrapper.getBoundingClientRect();
-          svg.querySelectorAll('path').forEach((p, i) => {
-            const edge = data.edges[i];
-            if (!edge) return;
-            const fEl = graphWrapper.querySelector(`[data-id="${edge.from}"]`);
-            const tEl = graphWrapper.querySelector(`[data-id="${edge.to}"]`);
-            if (!fEl || !tEl) return;
-            const r1 = fEl.getBoundingClientRect();
-            const r2 = tEl.getBoundingClientRect();
-            const x1 = r1.left - wr.left + r1.width / 2;
-            const y1 = r1.bottom - wr.top;
-            const x2 = r2.left - wr.left + r2.width / 2;
-            const y2 = r2.top - wr.top;
-            const my = (y1 + y2) / 2;
-            p.setAttribute('d', `M ${x1},${y1} C ${x1},${my} ${x2},${my} ${x2},${y2}`);
+          const wrapperRect = graphWrapper.getBoundingClientRect();
+          data.edges.forEach((edge, i) => {
+            const fromEl = graphWrapper.querySelector(`[data-id="${edge.from}"]`);
+            const toEl = graphWrapper.querySelector(`[data-id="${edge.to}"]`);
+            if (!fromEl || !toEl) return;
+
+            const r1 = fromEl.getBoundingClientRect();
+            const r2 = toEl.getBoundingClientRect();
+            const x1 = r1.left - wrapperRect.left + r1.width / 2;
+            const y1 = r1.bottom - wrapperRect.top;
+            const x2 = r2.left - wrapperRect.left + r2.width / 2;
+            const y2 = r2.top - wrapperRect.top;
+            const midY = (y1 + y2) / 2;
+
+            let path = svg.querySelector(`path[data-edge-index="${i}"]`);
+            if (!path) {
+              path = document.createElementNS(SVG_NS, 'path');
+              path.setAttribute('data-edge-index', String(i));
+              path.setAttribute('fill', 'none');
+              path.setAttribute('stroke', edge.kind && edge.kind.includes('dotted') ? 'var(--ink-soft, #aaa)' : 'var(--ink-soft, #888)');
+              path.setAttribute('stroke-width', '1.5');
+              path.setAttribute('stroke-dasharray', edge.kind && edge.kind.includes('dotted') ? '4 3' : '');
+              path.setAttribute('marker-end', 'url(#arrowhead-graph)');
+              if (edge.kind && edge.kind.includes('diff-edge-new')) {
+                path.setAttribute('stroke', 'var(--st-implemented, #2d8)');
+                path.setAttribute('stroke-width', '2');
+              }
+              svg.appendChild(path);
+            }
+            path.setAttribute('d', `M ${x1},${y1} C ${x1},${midY} ${x2},${midY} ${x2},${y2}`);
+
+            if (edge.label) {
+              let text = svg.querySelector(`text[data-edge-index="${i}"]`);
+              if (!text) {
+                text = document.createElementNS(SVG_NS, 'text');
+                text.setAttribute('data-edge-index', String(i));
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', 'var(--ink, #333)');
+                text.setAttribute('font-size', '11px');
+                text.textContent = edge.label;
+                svg.appendChild(text);
+              }
+              text.setAttribute('x', (x1 + x2) / 2);
+              text.setAttribute('y', midY - 5);
+            }
           });
         };
+        drawEdges();
+
+        let resizeTimer;
         window.addEventListener('resize', () => {
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(drawEdges, 100);
         });
       }
-
-      container.appendChild(graphWrapper);
-
-      // Text equivalent for screen readers: concise description of nodes and edges
-      const nodeIds = (data.nodes || []).map(n => n.id).join(', ');
-      const edgeDescs = (data.edges || []).map(e => `${e.from} to ${e.to}${e.label ? ' (' + e.label + ')' : ''}`).join('; ');
-      const fallback = document.createElement('div');
-      fallback.style.position = 'absolute';
-      fallback.style.width = '1px';
-      fallback.style.height = '1px';
-      fallback.style.padding = '0';
-      fallback.style.margin = '-1px';
-      fallback.style.overflow = 'hidden';
-      fallback.style.clip = 'rect(0, 0, 0, 0)';
-      fallback.style.whiteSpace = 'nowrap';
-      fallback.style.border = '0';
-      fallback.textContent = `Graph diagram. Nodes: ${nodeIds}. Edges: ${edgeDescs || 'none'}.`;
-      container.appendChild(fallback);
-
-      script.parentNode.insertBefore(container, script.nextSibling);
     } catch (e) {
       console.error(e);
     }
