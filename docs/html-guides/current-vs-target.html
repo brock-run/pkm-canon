@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Current vs Target - pkm-rosetta</title>
-<meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-rosetta;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
+  <meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-canon;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
 <!-- guides:runtime begin v2.x -->
 <style>
 /* brocks-helpers/assets/html-guides/tokens.css */
@@ -1460,6 +1460,67 @@ function initGraphDiagrams() {
       });
       
       container.appendChild(graphWrapper);
+
+      // Draw edges
+      if (data.edges && data.edges.length > 0) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '0';
+        
+        const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+        marker.setAttribute("id", "arrowhead-graph");
+        marker.setAttribute("markerWidth", "10");
+        marker.setAttribute("markerHeight", "7");
+        marker.setAttribute("refX", "9");
+        marker.setAttribute("refY", "3.5");
+        marker.setAttribute("orient", "auto");
+        const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+        polygon.setAttribute("fill", "var(--ink-soft)");
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+        
+        container.style.position = 'relative';
+        container.appendChild(svg);
+        
+        // Draw after layout
+        setTimeout(() => {
+          const containerRect = container.getBoundingClientRect();
+          data.edges.forEach(edge => {
+            const fromNode = container.querySelector(`[data-id="${edge.from}"]`);
+            const toNode = container.querySelector(`[data-id="${edge.to}"]`);
+            if (!fromNode || !toNode) return;
+            
+            const fromRect = fromNode.getBoundingClientRect();
+            const toRect = toNode.getBoundingClientRect();
+            
+            const x1 = fromRect.right - containerRect.left;
+            const y1 = fromRect.top + fromRect.height / 2 - containerRect.top;
+            const x2 = toRect.left - containerRect.left;
+            const y2 = toRect.top + toRect.height / 2 - containerRect.top;
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            const isDiff = edge.kind && edge.kind.includes('diff-edge-new');
+            path.setAttribute("d", `M ${x1} ${y1} C ${x1 + 20} ${y1}, ${x2 - 20} ${y2}, ${x2} ${y2}`);
+            path.setAttribute("stroke", isDiff ? "var(--green)" : "var(--ink-soft)");
+            path.setAttribute("stroke-width", "2");
+            path.setAttribute("fill", "none");
+            if (isDiff) {
+              path.setAttribute("stroke-dasharray", "4,4");
+            }
+            path.setAttribute("marker-end", "url(#arrowhead-graph)");
+            svg.appendChild(path);
+          });
+        }, 100);
+      }
+
       script.parentNode.insertBefore(container, script.nextSibling);
     } catch (e) {
       console.error(e);
