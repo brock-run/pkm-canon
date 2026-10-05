@@ -1145,6 +1145,12 @@ function initCitations() {
   document.body.appendChild(popover);
   let activeCitation = null;
 
+  // Anchors without href are not focusable. Mark them when the page loads so
+  // a later Escape can return focus to the citation that opened the popover.
+  document.querySelectorAll('a[data-citation]:not([href])').forEach(citation => {
+    citation.setAttribute('tabindex', '0');
+  });
+
   const repoMapMeta = document.querySelector('meta[name="guides:repo-dirs"]');
   const repoDirs = {};
   if (repoMapMeta) {
@@ -1235,6 +1241,11 @@ function initCitations() {
       popover.style.top = `${rect.bottom + window.scrollY + 8}px`;
       activeCitation = citation;
       popover.classList.add('visible');
+      // Citations added after init, or any anchor that still cannot take
+      // focus, need a tab stop before focus moves into the popover.
+      if (!citation.hasAttribute('href')) {
+        citation.setAttribute('tabindex', '0');
+      }
       primary.focus();
     } else if (!e.target.closest('#citation-popover')) {
       popover.classList.remove('visible');
