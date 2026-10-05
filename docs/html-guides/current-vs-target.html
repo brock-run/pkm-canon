@@ -1447,13 +1447,11 @@ function initGraphDiagrams() {
       });
       
       (data.nodes || []).forEach(node => {
-        const btn = document.createElement('button');
+        const btn = document.createElement('div');
         btn.className = `graph-node status-${node.status || 'default'}`;
         btn.innerHTML = `<span class="node-id">${node.id}</span> <span class="node-label">${node.label}</span>`;
         btn.setAttribute('data-id', node.id);
-        btn.addEventListener('click', () => {
-          showInspector(node.id, node, container);
-        });
+        btn.style.cursor = 'default';
         
         const targetLane = lanesMap[node.lane] || lanesMap[Object.keys(lanesMap)[0]];
         if (targetLane) targetLane.appendChild(btn);
@@ -1490,8 +1488,8 @@ function initGraphDiagrams() {
         container.style.position = 'relative';
         container.appendChild(svg);
         
-        // Draw after layout
-        setTimeout(() => {
+        const drawEdges = () => {
+          Array.from(svg.querySelectorAll('path')).forEach(p => p.remove());
           const containerRect = container.getBoundingClientRect();
           data.edges.forEach(edge => {
             const fromNode = container.querySelector(`[data-id="${edge.from}"]`);
@@ -1509,7 +1507,7 @@ function initGraphDiagrams() {
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             const isDiff = edge.kind && edge.kind.includes('diff-edge-new');
             path.setAttribute("d", `M ${x1} ${y1} C ${x1 + 20} ${y1}, ${x2 - 20} ${y2}, ${x2} ${y2}`);
-            path.setAttribute("stroke", isDiff ? "var(--green)" : "var(--ink-soft)");
+            path.setAttribute("stroke", isDiff ? "var(--st-implemented)" : "var(--ink-soft)");
             path.setAttribute("stroke-width", "2");
             path.setAttribute("fill", "none");
             if (isDiff) {
@@ -1518,7 +1516,11 @@ function initGraphDiagrams() {
             path.setAttribute("marker-end", "url(#arrowhead-graph)");
             svg.appendChild(path);
           });
-        }, 100);
+        };
+
+        // Draw after layout
+        setTimeout(drawEdges, 100);
+        window.addEventListener('resize', drawEdges);
       }
 
       script.parentNode.insertBefore(container, script.nextSibling);
