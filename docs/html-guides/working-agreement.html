@@ -798,6 +798,7 @@ function initCitations() {
     </div>
   `;
   document.body.appendChild(popover);
+  let activeCitation = null;
 
   const repoMapMeta = document.querySelector('meta[name="guides:repo-dirs"]');
   const repoDirs = {};
@@ -856,9 +857,21 @@ function initCitations() {
       const rect = citation.getBoundingClientRect();
       popover.style.left = `${rect.left + window.scrollX}px`;
       popover.style.top = `${rect.bottom + window.scrollY + 8}px`;
+      activeCitation = citation;
       popover.classList.add('visible');
+      primary.focus();
     } else if (!e.target.closest('#citation-popover')) {
       popover.classList.remove('visible');
+      activeCitation = null;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && popover.classList.contains('visible')) {
+      e.preventDefault();
+      popover.classList.remove('visible');
+      activeCitation?.focus();
+      activeCitation = null;
     }
   });
 }
