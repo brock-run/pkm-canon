@@ -6,6 +6,7 @@
   <meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-canon;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
   <title>Decision Record - PKM Canon</title>
   <!-- guides:runtime begin v2.x -->
+<meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-rosetta;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
 <style>
 /* brocks-helpers/assets/html-guides/tokens.css */
 :root {
@@ -831,62 +832,224 @@ ul.files-changed li {
 .detail-pane > div.active {
   display: block;
 }
+/* C8: Capability Matrix */
+.capability-matrix-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.matrix-filter {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: var(--sans);
+  cursor: pointer;
+  color: var(--ink);
+}
+.matrix-filter.active {
+  background: var(--ink);
+  color: var(--surface);
+}
+table.guides-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: var(--surface);
+}
+table.guides-matrix th, table.guides-matrix td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+}
+table.guides-matrix th {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+table.guides-matrix tbody.matrix-group::before {
+  content: attr(data-group);
+  display: table-caption;
+  font-family: var(--serif);
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.mark-yes { color: var(--st-implemented); font-weight: bold; }
+.mark-partial { color: var(--st-partial); font-weight: bold; }
+.mark-no { color: var(--st-absent); font-weight: bold; }
+.mark-designed { color: var(--st-proposed); font-weight: bold; }
+.mark-elsewhere { color: var(--prod-pkm); font-weight: bold; }
+.mark-na { color: var(--ink-soft); }
+.matrix-row { cursor: pointer; }
+.matrix-row:hover { background: color-mix(in srgb, var(--rule) 20%, transparent); }
 
-@media (max-width: 767px) {
-  .master-detail-layout {
+/* C9: Entity Diagram */
+.entity-diagram-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.entity-diagram-svg {
+  width: 100%;
+  height: auto;
+  font-family: var(--mono);
+}
+.entity-box rect {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.entity-box.style-dashed rect { stroke-dasharray: 4 4; }
+.entity-box.style-gone rect { stroke: var(--st-absent); opacity: 0.5; }
+.entity-header {
+  font-weight: bold;
+  font-size: 14px;
+  fill: var(--ink);
+}
+.entity-field {
+  font-size: 12px;
+  fill: var(--ink-soft);
+}
+.entity-field.mark-ok { fill: var(--st-implemented); }
+.entity-field.mark-stale { fill: var(--st-partial); }
+.entity-edge path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.entity-edge.style-new path { stroke: var(--st-implemented); stroke-dasharray: 4 4; }
+.entity-edge.style-bad path { stroke: var(--st-absent); }
+
+/* C10: Layer Stack */
+.layer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.layer-band {
+  border-left: 4px solid var(--st-implemented);
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+.layer-band.style-designed {
+  border-left: 4px dashed var(--st-proposed);
+  background: color-mix(in srgb, var(--st-proposed) 5%, var(--surface));
+}
+.layer-title {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+}
+.walkthrough-row {
+  display: flex;
+  gap: 1rem;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--rule);
+}
+.walkthrough-row:first-of-type {
+  border-top: none;
+}
+.walkthrough-field { color: var(--ink-soft); width: 120px; flex-shrink: 0; }
+.walkthrough-val { color: var(--ink); flex: 1; }
+.walkthrough-row.tint-changed { background: color-mix(in srgb, var(--st-implemented) 10%, transparent); }
+.walkthrough-row.tint-stale { background: color-mix(in srgb, var(--st-partial) 10%, transparent); }
+
+/* C16: Side-by-side */
+.side-by-side {
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+}
+.sbs-pane {
+  flex: 1;
+  min-width: 300px;
+}
+.sbs-header {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+.sbs-summary {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin-bottom: 1rem;
+  background: var(--surface);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--rule);
+}
+.diff-new { border-color: var(--st-implemented) !important; border-width: 2px !important; }
+.diff-changed { border-color: var(--st-partial) !important; border-width: 2px !important; }
+.diff-removed { border-color: var(--st-absent) !important; border-width: 2px !important; opacity: 0.6; }
+.diff-edge-new path { stroke: var(--st-implemented) !important; stroke-dasharray: 4 4; }
+.sbs-tabs {
+  display: none;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.sbs-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+.sbs-tab.active {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+  font-weight: bold;
+}
+@media (max-width: 900px) {
+  .side-by-side {
     flex-direction: column;
-    align-items: stretch;
+    gap: 1rem;
   }
-  .master-list, .detail-pane {
-    width: 100%;
-  }
+  .sbs-pane { display: none; }
+  .sbs-pane.active { display: block; }
+  .sbs-tabs { display: flex; }
 }
 
 </style>
 <script>
 // brocks-helpers/assets/html-guides/guides.js
 
-
-// C15 Master-Detail
-function initMasterDetail() {
-  document.querySelectorAll('.master-detail-layout').forEach(container => {
-    const listItems = container.querySelectorAll('.master-list [data-target]');
-    const readerPanes = container.querySelectorAll('.detail-pane [data-id]');
-    
-    function showDetail(id) {
-      listItems.forEach(item => {
-        if (item.getAttribute('data-target') === id) {
-          item.classList.add('active');
-        } else {
-          item.classList.remove('active');
-        }
-      });
-      readerPanes.forEach(pane => {
-        if (pane.getAttribute('data-id') === id) {
-          pane.classList.add('active');
-        } else {
-          pane.classList.remove('active');
-        }
-      });
-    }
-    
-    listItems.forEach(item => {
-      item.addEventListener('click', () => {
-        showDetail(item.getAttribute('data-target'));
-      });
-    });
-    
-    if (listItems.length > 0) {
-      showDetail(listItems[0].getAttribute('data-target'));
-    }
-  });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  initMasterDetail();
   initSourcesObserver();
   initCopyButtons();
   initCitations();
+  if (typeof initPhaseCopyButtons === 'function') initPhaseCopyButtons();
+  if (typeof initSequenceDiagrams === 'function') initSequenceDiagrams();
+  if (typeof initStateDiagrams === 'function') initStateDiagrams();
+  if (typeof initGraphDiagrams === 'function') initGraphDiagrams();
+  if (typeof initCapabilityMatrices === 'function') initCapabilityMatrices();
+  if (typeof initEntityDiagrams === 'function') initEntityDiagrams();
+  if (typeof initMasterDetail === 'function') initMasterDetail();
+  if (typeof initSideBySide === 'function') initSideBySide();
 });
 
 // C3: Sources Observer (right rail)
@@ -962,6 +1125,7 @@ function initCitations() {
     <div class="popover-actions">
       <a class="action-primary" href="#"></a>
       <hr style="margin:0.25rem 0; border:none; border-top:1px solid var(--rule);">
+      <button class="action-start-viewer">Start viewer (copy command)</button>
       <a class="action-cursor" href="#">Open in Cursor</a>
       <a class="action-github" href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
       <button class="action-copy-path">Copy Path</button>
@@ -996,6 +1160,7 @@ function initCitations() {
       const viewCursor = popover.querySelector('.action-cursor');
       const viewGithub = popover.querySelector('.action-github');
       const copyPath = popover.querySelector('.action-copy-path');
+      const startViewer = popover.querySelector('.action-start-viewer');
 
       let cursorAbsPath = path;
       const match = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
@@ -1022,6 +1187,29 @@ function initCitations() {
         ce.stopPropagation();
         navigator.clipboard.writeText(path);
       };
+      
+      startViewer.onclick = (ce) => {
+        ce.stopPropagation();
+        // The viewer server lives in brocks-helpers (scripts.html_guides).
+        // Build a runnable command that cds into that checkout first, so the
+        // copied command works from any repo a guide is opened from.
+        let serveCmd = "python -m scripts.html_guides.cli serve";
+        const pathMatch = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
+        if (pathMatch) {
+          let wsRoot = pathMatch[1];
+          const bhDir = repoDirs["brocks-helpers"] || "brocks-helpers";
+          // file:// pathnames are percent-encoded and may contain spaces.
+          // Decode so the copied cd target is a real filesystem path, then
+          // single-quote it so the shell treats the whole path (including any
+          // spaces) as one literal argument.
+          try { wsRoot = decodeURIComponent(wsRoot); } catch (e) { /* leave as-is */ }
+          serveCmd = `cd '${wsRoot}/${bhDir}' && python -m scripts.html_guides.cli serve`;
+        }
+        navigator.clipboard.writeText(serveCmd);
+        const original = startViewer.textContent;
+        startViewer.textContent = "Copied command!";
+        setTimeout(() => startViewer.textContent = original, 2000);
+      };
 
       const rect = citation.getBoundingClientRect();
       popover.style.left = `${rect.left + window.scrollX}px`;
@@ -1030,6 +1218,686 @@ function initCitations() {
     } else if (!e.target.closest('#citation-popover')) {
       popover.classList.remove('visible');
     }
+  });
+}
+
+// C17: Grouped steps (Copy all commands)
+function initPhaseCopyButtons() {
+  document.querySelectorAll('.phase-header button.copy-all').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const group = btn.closest('.phase-group');
+      const shells = group.querySelectorAll('figure.code[data-lang="shell"] pre');
+      let fullScript = Array.from(shells).map(pre => {
+        return pre.innerText.split('\n').map(line => {
+          if (line.trim().startsWith('$ ')) return line.trim().substring(2);
+          return line;
+        }).join('\n');
+      }).join('\n');
+      
+      try {
+        await navigator.clipboard.writeText(fullScript);
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied all!';
+        btn.setAttribute('aria-live', 'polite');
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.removeAttribute('aria-live');
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy', err);
+      }
+    });
+  });
+}
+
+// C11b: Sequence Diagram
+function initSequenceDiagrams() {
+  document.querySelectorAll('script[type="application/json"][data-guide="sequence"]').forEach(script => {
+    try {
+      const data = JSON.parse(script.textContent);
+      const container = document.createElement('div');
+      container.className = 'sequence-diagram-container schematic';
+      
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(SVG_NS, "svg");
+      
+      // Configuration
+      const config = { actorWidth: 100, actorHeight: 40, colGap: 150, rowHeight: 60, startY: 20 };
+      
+      const width = config.colGap * Math.max(1, data.actors.length - 1) + config.actorWidth + 40;
+      const height = config.startY + config.actorHeight + 20 + data.messages.length * config.rowHeight + 40;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.style.width = "100%";
+      svg.style.height = "auto";
+      svg.style.minWidth = `${width}px`;
+
+      const defs = document.createElementNS(SVG_NS, "defs");
+      const marker = document.createElementNS(SVG_NS, "marker");
+      marker.setAttribute("id", "arrowhead");
+      marker.setAttribute("markerWidth", "10");
+      marker.setAttribute("markerHeight", "7");
+      marker.setAttribute("refX", "9");
+      marker.setAttribute("refY", "3.5");
+      marker.setAttribute("orient", "auto");
+      const polygon = document.createElementNS(SVG_NS, "polygon");
+      polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+      polygon.setAttribute("fill", "var(--ink)");
+      marker.appendChild(polygon);
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+
+      const actorX = {};
+      data.actors.forEach((actor, i) => {
+        const x = 20 + i * config.colGap;
+        actorX[actor.id] = x + config.actorWidth / 2;
+        
+        const g = document.createElementNS(SVG_NS, "g");
+        
+        // Lifeline
+        const line = document.createElementNS(SVG_NS, "line");
+        line.setAttribute("x1", actorX[actor.id]);
+        line.setAttribute("y1", config.startY + config.actorHeight);
+        line.setAttribute("x2", actorX[actor.id]);
+        line.setAttribute("y2", height - 20);
+        line.setAttribute("stroke", "var(--rule)");
+        line.setAttribute("stroke-dasharray", "4 4");
+        g.appendChild(line);
+        
+        // Actor box
+        const rect = document.createElementNS(SVG_NS, "rect");
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", config.startY);
+        rect.setAttribute("width", config.actorWidth);
+        rect.setAttribute("height", config.actorHeight);
+        rect.setAttribute("fill", "var(--surface)");
+        rect.setAttribute("stroke", "var(--ink)");
+        rect.setAttribute("rx", "4");
+        g.appendChild(rect);
+        
+        // Label
+        const text = document.createElementNS(SVG_NS, "text");
+        text.setAttribute("x", actorX[actor.id]);
+        text.setAttribute("y", config.startY + config.actorHeight / 2 + 5);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("fill", "var(--ink)");
+        text.setAttribute("font-family", "var(--mono)");
+        text.setAttribute("font-size", "12px");
+        text.textContent = actor.label;
+        g.appendChild(text);
+        
+        svg.appendChild(g);
+      });
+
+      let currentY = config.startY + config.actorHeight + 40;
+      
+      data.messages.forEach(msg => {
+        const x1 = actorX[msg.from];
+        const x2 = actorX[msg.to];
+        if (x1 === undefined || x2 === undefined) return;
+        
+        const isSelf = x1 === x2;
+        const dir = x1 < x2 ? 1 : -1;
+        
+        const g = document.createElementNS(SVG_NS, "g");
+        
+        let linkWrapper = g;
+        if (msg.citation) {
+          linkWrapper = document.createElementNS(SVG_NS, "a");
+          linkWrapper.setAttribute("class", "seq-msg-link");
+          linkWrapper.setAttribute("data-citation", msg.citation.repo || "");
+          linkWrapper.setAttribute("data-repo", msg.citation.repo || "");
+          linkWrapper.setAttribute("data-path", msg.citation.path || "");
+          if (msg.citation.line) linkWrapper.setAttribute("data-line", msg.citation.line);
+          linkWrapper.setAttribute("href", "#");
+          g.appendChild(linkWrapper);
+        }
+
+        if (isSelf) {
+          const path = document.createElementNS(SVG_NS, "path");
+          path.setAttribute("d", `M ${x1},${currentY} L ${x1+30},${currentY} L ${x1+30},${currentY+20} L ${x1},${currentY+20}`);
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke", "var(--ink)");
+          path.setAttribute("marker-end", "url(#arrowhead)");
+          linkWrapper.appendChild(path);
+          
+          const text = document.createElementNS(SVG_NS, "text");
+          text.setAttribute("x", x1 + 35);
+          text.setAttribute("y", currentY + 14);
+          text.setAttribute("fill", "var(--ink)");
+          text.setAttribute("font-family", "var(--sans)");
+          text.setAttribute("font-size", "12px");
+          text.textContent = msg.label;
+          linkWrapper.appendChild(text);
+          
+          currentY += config.rowHeight;
+        } else {
+          const line = document.createElementNS(SVG_NS, "line");
+          line.setAttribute("x1", x1);
+          line.setAttribute("y1", currentY);
+          line.setAttribute("x2", x2 - dir * 12);
+          line.setAttribute("y2", currentY);
+          line.setAttribute("stroke", "var(--ink)");
+          if (msg.return) line.setAttribute("stroke-dasharray", "4 4");
+          line.setAttribute("marker-end", "url(#arrowhead)");
+          linkWrapper.appendChild(line);
+          
+          const text = document.createElementNS(SVG_NS, "text");
+          text.setAttribute("x", (x1 + x2) / 2);
+          text.setAttribute("y", currentY - 8);
+          text.setAttribute("text-anchor", "middle");
+          text.setAttribute("fill", "var(--ink)");
+          text.setAttribute("font-family", "var(--sans)");
+          text.setAttribute("font-size", "12px");
+          text.textContent = msg.label;
+          linkWrapper.appendChild(text);
+          
+          currentY += config.rowHeight;
+        }
+        svg.appendChild(g);
+      });
+
+      container.appendChild(svg);
+      script.parentNode.insertBefore(container, script.nextSibling);
+    } catch (e) {
+      console.error("Failed to render sequence diagram", e);
+    }
+  });
+}
+
+// C14 Inspector
+function showInspector(nodeId, data, container) {
+  let inspector = container.querySelector('.inspector');
+  if (!inspector) {
+    inspector = document.createElement('div');
+    inspector.className = 'inspector';
+    container.appendChild(inspector);
+  }
+  
+  const template = document.querySelector(`template[data-for="${nodeId}"]`);
+  const content = template ? template.innerHTML : `<p>No details found for ${nodeId}</p>`;
+  
+  inspector.innerHTML = `
+    <div class="inspector-header">
+      <h3>${nodeId}</h3>
+      <button class="close-inspector">✕</button>
+    </div>
+    <div class="inspector-body">${content}</div>
+  `;
+  
+  inspector.querySelector('.close-inspector').addEventListener('click', () => {
+    inspector.style.display = 'none';
+  });
+  inspector.style.display = 'flex';
+}
+
+// C12 State Diagram
+function initStateDiagrams() {
+  document.querySelectorAll('script[type="application/json"][data-guide="states"]').forEach(script => {
+    try {
+      const data = JSON.parse(script.textContent);
+      const container = document.createElement('div');
+      container.className = 'state-diagram-container schematic';
+      
+      const statesDiv = document.createElement('div');
+      statesDiv.className = 'states-wrapper';
+      
+      data.states.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = `state-node status-${s.status || 'default'}`;
+        btn.textContent = s.label;
+        btn.setAttribute('data-id', s.id);
+        btn.addEventListener('click', () => {
+          showInspector(s.id, s, container);
+        });
+        statesDiv.appendChild(btn);
+      });
+      
+      container.appendChild(statesDiv);
+      script.parentNode.insertBefore(container, script.nextSibling);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+
+// C13 Graph Diagram
+function initGraphDiagrams() {
+  document.querySelectorAll('script[type="application/json"][data-guide="graph"]').forEach(script => {
+    try {
+      const data = JSON.parse(script.textContent);
+      const container = document.createElement('div');
+      container.className = 'graph-diagram-container schematic';
+      
+      const graphWrapper = document.createElement('div');
+      graphWrapper.className = 'graph-wrapper';
+      
+      const lanesMap = {};
+      (data.lanes || []).forEach(lane => {
+        const laneDiv = document.createElement('div');
+        laneDiv.className = 'graph-lane';
+        laneDiv.innerHTML = `<div class="lane-header">${lane.label || lane.id}</div>`;
+        const laneContent = document.createElement('div');
+        laneContent.className = 'lane-content';
+        laneDiv.appendChild(laneContent);
+        graphWrapper.appendChild(laneDiv);
+        lanesMap[lane.id] = laneContent;
+      });
+      
+      (data.nodes || []).forEach(node => {
+        const hasDetail = !!document.querySelector(`template[data-for="${node.id}"]`);
+        // Nodes without a detail template are non-interactive content (div),
+        // not focusable buttons with no action — avoids dead ends for
+        // keyboard readers. Only nodes with a detail template become buttons.
+        const el = document.createElement(hasDetail ? 'button' : 'div');
+        el.className = `graph-node status-${node.status || 'default'}`;
+        el.innerHTML = `<span class="node-id">${node.id}</span> <span class="node-label">${node.label}</span>`;
+        el.setAttribute('data-id', node.id);
+        if (!hasDetail) {
+          el.setAttribute('role', 'img');
+          el.setAttribute('aria-label', `${node.id} ${node.label}`);
+          el.style.cursor = 'default';
+        } else {
+          el.addEventListener('click', () => {
+            showInspector(node.id, node, container);
+          });
+        }
+
+        const targetLane = lanesMap[node.lane] || lanesMap[Object.keys(lanesMap)[0]];
+        if (targetLane) targetLane.appendChild(el);
+      });
+
+      // Draw edges as an SVG overlay after nodes are in the DOM
+      if (data.edges && data.edges.length > 0) {
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(SVG_NS, 'svg');
+        svg.setAttribute('class', 'graph-edges-overlay');
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.overflow = 'visible';
+
+        // Arrowhead marker
+        const defs = document.createElementNS(SVG_NS, 'defs');
+        const marker = document.createElementNS(SVG_NS, 'marker');
+        marker.setAttribute('id', 'arrowhead-graph');
+        marker.setAttribute('markerWidth', '10');
+        marker.setAttribute('markerHeight', '7');
+        marker.setAttribute('refX', '10');
+        marker.setAttribute('refY', '3.5');
+        marker.setAttribute('orient', 'auto');
+        const polygon = document.createElementNS(SVG_NS, 'polygon');
+        polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+        polygon.setAttribute('fill', 'var(--ink-soft, #888)');
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+
+        const wrapperRect = graphWrapper.getBoundingClientRect();
+
+        data.edges.forEach(edge => {
+          const fromEl = graphWrapper.querySelector(`[data-id="${edge.from}"]`);
+          const toEl = graphWrapper.querySelector(`[data-id="${edge.to}"]`);
+          if (!fromEl || !toEl) return;
+
+          const r1 = fromEl.getBoundingClientRect();
+          const r2 = toEl.getBoundingClientRect();
+
+          const x1 = r1.left - wrapperRect.left + r1.width / 2;
+          const y1 = r1.bottom - wrapperRect.top;
+          const x2 = r2.left - wrapperRect.left + r2.width / 2;
+          const y2 = r2.top - wrapperRect.top;
+
+          const path = document.createElementNS(SVG_NS, 'path');
+          const midY = (y1 + y2) / 2;
+          path.setAttribute('d', `M ${x1},${y1} C ${x1},${midY} ${x2},${midY} ${x2},${y2}`);
+          path.setAttribute('fill', 'none');
+          path.setAttribute('stroke', edge.kind && edge.kind.includes('dotted') ? 'var(--ink-soft, #aaa)' : 'var(--ink-soft, #888)');
+          path.setAttribute('stroke-width', '1.5');
+          path.setAttribute('stroke-dasharray', edge.kind && edge.kind.includes('dotted') ? '4 3' : '');
+          path.setAttribute('marker-end', 'url(#arrowhead-graph)');
+          if (edge.kind && edge.kind.includes('diff-edge-new')) {
+            path.setAttribute('stroke', 'var(--st-implemented, #2d8)');
+            path.setAttribute('stroke-width', '2');
+          }
+          svg.appendChild(path);
+
+          if (edge.label) {
+            const text = document.createElementNS(SVG_NS, 'text');
+            text.setAttribute('x', (x1 + x2) / 2);
+            text.setAttribute('y', midY - 5);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', 'var(--ink, #333)');
+            text.setAttribute('font-size', '11px');
+            text.textContent = edge.label;
+            svg.appendChild(text);
+          }
+        });
+
+        graphWrapper.style.position = 'relative';
+        graphWrapper.appendChild(svg);
+
+        // Redraw edges on resize
+        let resizeTimer;
+        const drawEdges = () => {
+          const wr = graphWrapper.getBoundingClientRect();
+          svg.querySelectorAll('path').forEach((p, i) => {
+            const edge = data.edges[i];
+            if (!edge) return;
+            const fEl = graphWrapper.querySelector(`[data-id="${edge.from}"]`);
+            const tEl = graphWrapper.querySelector(`[data-id="${edge.to}"]`);
+            if (!fEl || !tEl) return;
+            const r1 = fEl.getBoundingClientRect();
+            const r2 = tEl.getBoundingClientRect();
+            const x1 = r1.left - wr.left + r1.width / 2;
+            const y1 = r1.bottom - wr.top;
+            const x2 = r2.left - wr.left + r2.width / 2;
+            const y2 = r2.top - wr.top;
+            const my = (y1 + y2) / 2;
+            p.setAttribute('d', `M ${x1},${y1} C ${x1},${my} ${x2},${my} ${x2},${y2}`);
+          });
+        };
+        window.addEventListener('resize', () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(drawEdges, 100);
+        });
+      }
+
+      container.appendChild(graphWrapper);
+
+      // Text equivalent for screen readers: concise description of nodes and edges
+      const nodeIds = (data.nodes || []).map(n => n.id).join(', ');
+      const edgeDescs = (data.edges || []).map(e => `${e.from} to ${e.to}${e.label ? ' (' + e.label + ')' : ''}`).join('; ');
+      const fallback = document.createElement('div');
+      fallback.style.position = 'absolute';
+      fallback.style.width = '1px';
+      fallback.style.height = '1px';
+      fallback.style.padding = '0';
+      fallback.style.margin = '-1px';
+      fallback.style.overflow = 'hidden';
+      fallback.style.clip = 'rect(0, 0, 0, 0)';
+      fallback.style.whiteSpace = 'nowrap';
+      fallback.style.border = '0';
+      fallback.textContent = `Graph diagram. Nodes: ${nodeIds}. Edges: ${edgeDescs || 'none'}.`;
+      container.appendChild(fallback);
+
+      script.parentNode.insertBefore(container, script.nextSibling);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+
+// C15 Master-Detail
+function initMasterDetail() {
+  document.querySelectorAll('.master-detail-layout').forEach(container => {
+    const listItems = container.querySelectorAll('.master-list [data-target]');
+    const readerPanes = container.querySelectorAll('.detail-pane [data-id]');
+    
+    function showDetail(id) {
+      listItems.forEach(item => {
+        if (item.getAttribute('data-target') === id) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+      readerPanes.forEach(pane => {
+        if (pane.getAttribute('data-id') === id) {
+          pane.classList.add('active');
+        } else {
+          pane.classList.remove('active');
+        }
+      });
+    }
+    
+    listItems.forEach(item => {
+      item.addEventListener('click', () => {
+        showDetail(item.getAttribute('data-target'));
+      });
+    });
+    
+    if (listItems.length > 0) {
+      showDetail(listItems[0].getAttribute('data-target'));
+    }
+  });
+}
+
+// C8 Capability Matrix
+function initCapabilityMatrices() {
+  document.querySelectorAll('.guides-matrix').forEach(matrix => {
+    // The controls usually sit immediately before the table, but the table
+    // may be wrapped in a `.table-scroll` container (as in the gallery C8
+    // example). In that case the controls are the sibling before the wrapper,
+    // so look through the wrapper instead of bailing out and leaving the
+    // filter buttons and row inspector unattached.
+    let controls = matrix.previousElementSibling;
+    if (!controls || !controls.classList.contains('capability-matrix-controls')) {
+      const wrapper = matrix.parentElement;
+      if (wrapper && wrapper.classList.contains('table-scroll')) {
+        controls = wrapper.previousElementSibling;
+      }
+    }
+    if (!controls || !controls.classList.contains('capability-matrix-controls')) return;
+    
+    controls.addEventListener('click', e => {
+      if (e.target.classList.contains('matrix-filter')) {
+        const filterMark = e.target.getAttribute('data-filter');
+        const colIdx = parseInt(e.target.getAttribute('data-col'), 10);
+        
+        const isActive = e.target.classList.contains('active');
+        controls.querySelectorAll('.matrix-filter').forEach(btn => btn.classList.remove('active'));
+        
+        const rows = matrix.querySelectorAll('tbody tr');
+        if (isActive) {
+          // Clear filter
+          rows.forEach(r => r.style.display = '');
+        } else {
+          e.target.classList.add('active');
+          rows.forEach(r => {
+            const cells = r.querySelectorAll('td');
+            if (cells.length > colIdx) {
+              const cellText = cells[colIdx].textContent.trim();
+              if (cellText.includes(filterMark)) {
+                r.style.display = '';
+              } else {
+                r.style.display = 'none';
+              }
+            }
+          });
+        }
+      }
+    });
+
+    matrix.querySelectorAll('tbody tr').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.getAttribute('data-row-id');
+        if (id) showInspector(id, null, matrix.parentElement);
+      });
+    });
+  });
+}
+
+// C9 Entity Diagram
+function initEntityDiagrams() {
+  document.querySelectorAll('script[type="application/json"][data-guide="entities"]').forEach(script => {
+    try {
+      const data = JSON.parse(script.textContent);
+      const container = document.createElement('div');
+      container.className = 'entity-diagram-container schematic';
+      
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(SVG_NS, "svg");
+      svg.setAttribute("class", "entity-diagram-svg");
+      
+      const boxWidth = 220;
+      const boxHeight = 100;
+      const gapX = 100;
+      const gapY = 80;
+      const startX = 20;
+      const startY = 20;
+
+      let maxX = 0;
+      let maxY = 0;
+      
+      const defs = document.createElementNS(SVG_NS, "defs");
+      const marker = document.createElementNS(SVG_NS, "marker");
+      marker.setAttribute("id", "arrowhead-entity");
+      marker.setAttribute("markerWidth", "10");
+      marker.setAttribute("markerHeight", "7");
+      marker.setAttribute("refX", "9");
+      marker.setAttribute("refY", "3.5");
+      marker.setAttribute("orient", "auto");
+      const polygon = document.createElementNS(SVG_NS, "polygon");
+      polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+      polygon.setAttribute("fill", "var(--ink)");
+      marker.appendChild(polygon);
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+
+      const positions = {};
+
+      data.boxes.forEach((box, i) => {
+        const col = box.col || (i % 3);
+        const row = box.row || Math.floor(i / 3);
+        const x = startX + col * (boxWidth + gapX);
+        const y = startY + row * (boxHeight + gapY);
+        
+        positions[box.id] = { x: x + boxWidth/2, y: y + boxHeight/2, left: x, right: x + boxWidth, top: y, bottom: y + boxHeight };
+        
+        maxX = Math.max(maxX, x + boxWidth);
+        maxY = Math.max(maxY, y + boxHeight);
+        
+        const g = document.createElementNS(SVG_NS, "g");
+        g.setAttribute("class", `entity-box style-${box.style || 'solid'}`);
+        
+        const h = 30 + (box.fields ? box.fields.length * 20 : 0) + 10;
+        positions[box.id].bottom = y + h;
+        maxY = Math.max(maxY, y + h);
+
+        const rect = document.createElementNS(SVG_NS, "rect");
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", boxWidth);
+        rect.setAttribute("height", h);
+        rect.setAttribute("rx", "6");
+        g.appendChild(rect);
+        
+        const title = document.createElementNS(SVG_NS, "text");
+        title.setAttribute("class", "entity-header");
+        title.setAttribute("x", x + 10);
+        title.setAttribute("y", y + 20);
+        title.textContent = box.title;
+        g.appendChild(title);
+        
+        if (box.fields) {
+          box.fields.forEach((f, fi) => {
+            const field = document.createElementNS(SVG_NS, "text");
+            field.setAttribute("class", `entity-field mark-${f.mark || 'plain'}`);
+            field.setAttribute("x", x + 10);
+            field.setAttribute("y", y + 45 + fi * 20);
+            field.textContent = f.name;
+            g.appendChild(field);
+          });
+        }
+        
+        svg.appendChild(g);
+      });
+      
+      data.edges.forEach(edge => {
+        const p1 = positions[edge.from];
+        const p2 = positions[edge.to];
+        if (!p1 || !p2) return;
+        
+        const g = document.createElementNS(SVG_NS, "g");
+        g.setAttribute("class", `entity-edge style-${edge.style || 'solid'}`);
+        
+        const path = document.createElementNS(SVG_NS, "path");
+        
+        let startX = p1.x;
+        let startY = p1.bottom;
+        let endX = p2.x;
+        let endY = p2.top;
+        
+        if (p1.row === p2.row) {
+          startX = p1.right;
+          startY = (p1.top + p1.bottom) / 2;
+          endX = p2.left;
+          endY = (p2.top + p2.bottom) / 2;
+        } else if (p1.top > p2.bottom) {
+          startY = p1.top;
+          endY = p2.bottom;
+        }
+
+        path.setAttribute("d", `M ${startX},${startY} C ${startX},${(startY+endY)/2} ${endX},${(startY+endY)/2} ${endX},${endY}`);
+        path.setAttribute("marker-end", "url(#arrowhead-entity)");
+        g.appendChild(path);
+        
+        if (edge.label) {
+          const text = document.createElementNS(SVG_NS, "text");
+          text.setAttribute("x", (startX + endX) / 2);
+          text.setAttribute("y", (startY + endY) / 2 - 5);
+          text.setAttribute("text-anchor", "middle");
+          text.setAttribute("fill", "var(--ink)");
+          text.setAttribute("font-size", "12px");
+          text.textContent = edge.label;
+          g.appendChild(text);
+        }
+        
+        svg.appendChild(g);
+      });
+      
+      svg.setAttribute("viewBox", `0 0 ${maxX + 40} ${maxY + 40}`);
+      container.appendChild(svg);
+
+      // Text equivalent for screen readers: concise description of the
+      // diagram's boxes and their relationships. The serialized JSON was
+      // removed because it announced a lengthy, redundant payload; the
+      // Layer Picture section already has a readable walkthrough.
+      const fallback = document.createElement('div');
+      fallback.style.position = 'absolute';
+      fallback.style.width = '1px';
+      fallback.style.height = '1px';
+      fallback.style.padding = '0';
+      fallback.style.margin = '-1px';
+      fallback.style.overflow = 'hidden';
+      fallback.style.clip = 'rect(0, 0, 0, 0)';
+      fallback.style.whiteSpace = 'nowrap';
+      fallback.style.border = '0';
+      const boxList = data.boxes.map(b => b.title || b.id).join(', ');
+      const edgeList = data.edges.map(e => `${e.from} to ${e.to}${e.label ? ' (' + e.label + ')' : ''}`).join('; ');
+      fallback.textContent = `Entity diagram. Boxes: ${boxList}. Relationships: ${edgeList}.`;
+      container.appendChild(fallback);
+      
+      script.parentNode.insertBefore(container, script.nextSibling);
+    } catch (e) {
+      console.error("Failed to parse entity diagram", e);
+    }
+  });
+}
+
+// C16: Side-by-side tab switching (narrow screens)
+function initSideBySide() {
+  document.querySelectorAll('[data-sbs].sbs-tabs').forEach(tabs => {
+    // The tabs and the .side-by-side share a parent in the gallery fixture.
+    const root = tabs.parentElement;
+    const panes = root ? root.querySelectorAll('.side-by-side .sbs-pane') : [];
+    tabs.querySelectorAll('.sbs-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-sbs-pane');
+        tabs.querySelectorAll('.sbs-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        panes.forEach(pane => {
+          if (pane.getAttribute('data-sbs-pane') === target) {
+            pane.classList.add('active');
+          } else {
+            pane.classList.remove('active');
+          }
+        });
+      });
+    });
   });
 }
 

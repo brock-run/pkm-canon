@@ -6,6 +6,7 @@
 <title>Current vs Target - pkm-rosetta</title>
   <meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-canon;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
 <!-- guides:runtime begin v2.x -->
+<meta name="guides:repo-dirs" content="canon-flow=canon-flow;pkm-canon=pkm-rosetta;living-knowledge=living-knowledge;brocks-helpers=brocks-helpers">
 <style>
 /* brocks-helpers/assets/html-guides/tokens.css */
 :root {
@@ -723,7 +724,7 @@ ul.files-changed li {
 }
 .graph-lane {
   border: 1px dashed var(--rule);
-  padding: 1rem 3rem 1rem 1rem;
+  padding: 1rem;
   min-width: 200px;
 }
 .lane-header {
@@ -750,10 +751,6 @@ ul.files-changed li {
 }
 .state-node:hover, .graph-node:hover {
   border-color: var(--ink);
-}
-.graph-node {
-  position: relative;
-  z-index: 1;
 }
 .status-implemented { border-color: var(--st-implemented); }
 .status-partial { border-color: var(--st-partial); }
@@ -1032,6 +1029,9 @@ table.guides-matrix tbody.matrix-group::before {
     flex-direction: column;
     gap: 1rem;
   }
+  .sbs-pane { display: none; }
+  .sbs-pane.active { display: block; }
+  .sbs-tabs { display: flex; }
 }
 
 </style>
@@ -1042,6 +1042,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initSourcesObserver();
   initCopyButtons();
   initCitations();
+  if (typeof initPhaseCopyButtons === 'function') initPhaseCopyButtons();
+  if (typeof initSequenceDiagrams === 'function') initSequenceDiagrams();
+  if (typeof initStateDiagrams === 'function') initStateDiagrams();
+  if (typeof initGraphDiagrams === 'function') initGraphDiagrams();
+  if (typeof initCapabilityMatrices === 'function') initCapabilityMatrices();
+  if (typeof initEntityDiagrams === 'function') initEntityDiagrams();
+  if (typeof initMasterDetail === 'function') initMasterDetail();
+  if (typeof initSideBySide === 'function') initSideBySide();
 });
 
 // C3: Sources Observer (right rail)
@@ -1117,6 +1125,7 @@ function initCitations() {
     <div class="popover-actions">
       <a class="action-primary" href="#"></a>
       <hr style="margin:0.25rem 0; border:none; border-top:1px solid var(--rule);">
+      <button class="action-start-viewer">Start viewer (copy command)</button>
       <a class="action-cursor" href="#">Open in Cursor</a>
       <a class="action-github" href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
       <button class="action-copy-path">Copy Path</button>
@@ -1151,6 +1160,7 @@ function initCitations() {
       const viewCursor = popover.querySelector('.action-cursor');
       const viewGithub = popover.querySelector('.action-github');
       const copyPath = popover.querySelector('.action-copy-path');
+      const startViewer = popover.querySelector('.action-start-viewer');
 
       let cursorAbsPath = path;
       const match = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
@@ -1176,6 +1186,29 @@ function initCitations() {
       copyPath.onclick = (ce) => {
         ce.stopPropagation();
         navigator.clipboard.writeText(path);
+      };
+      
+      startViewer.onclick = (ce) => {
+        ce.stopPropagation();
+        // The viewer server lives in brocks-helpers (scripts.html_guides).
+        // Build a runnable command that cds into that checkout first, so the
+        // copied command works from any repo a guide is opened from.
+        let serveCmd = "python -m scripts.html_guides.cli serve";
+        const pathMatch = window.location.pathname.match(/^(.*)\/([^/]+)\/docs\/html-guides\//);
+        if (pathMatch) {
+          let wsRoot = pathMatch[1];
+          const bhDir = repoDirs["brocks-helpers"] || "brocks-helpers";
+          // file:// pathnames are percent-encoded and may contain spaces.
+          // Decode so the copied cd target is a real filesystem path, then
+          // single-quote it so the shell treats the whole path (including any
+          // spaces) as one literal argument.
+          try { wsRoot = decodeURIComponent(wsRoot); } catch (e) { /* leave as-is */ }
+          serveCmd = `cd '${wsRoot}/${bhDir}' && python -m scripts.html_guides.cli serve`;
+        }
+        navigator.clipboard.writeText(serveCmd);
+        const original = startViewer.textContent;
+        startViewer.textContent = "Copied command!";
+        setTimeout(() => startViewer.textContent = original, 2000);
       };
 
       const rect = citation.getBoundingClientRect();
@@ -1451,85 +1484,144 @@ function initGraphDiagrams() {
       });
       
       (data.nodes || []).forEach(node => {
-        const btn = document.createElement('div');
-        btn.className = `graph-node status-${node.status || 'default'}`;
-        btn.innerHTML = `<span class="node-id">${node.id}</span> <span class="node-label">${node.label}</span>`;
-        btn.setAttribute('data-id', node.id);
-        btn.style.cursor = 'default';
-        
-        const targetLane = lanesMap[node.lane] || lanesMap[Object.keys(lanesMap)[0]];
-        if (targetLane) targetLane.appendChild(btn);
-      });
-      
-      container.appendChild(graphWrapper);
+        const hasDetail = !!document.querySelector(`template[data-for="${node.id}"]`);
+        // Nodes without a detail template are non-interactive content (div),
+        // not focusable buttons with no action — avoids dead ends for
+        // keyboard readers. Only nodes with a detail template become buttons.
+        const el = document.createElement(hasDetail ? 'button' : 'div');
+        el.className = `graph-node status-${node.status || 'default'}`;
+        el.innerHTML = `<span class="node-id">${node.id}</span> <span class="node-label">${node.label}</span>`;
+        el.setAttribute('data-id', node.id);
+        if (!hasDetail) {
+          el.setAttribute('role', 'img');
+          el.setAttribute('aria-label', `${node.id} ${node.label}`);
+          el.style.cursor = 'default';
+        } else {
+          el.addEventListener('click', () => {
+            showInspector(node.id, node, container);
+          });
+        }
 
-      // Draw edges
+        const targetLane = lanesMap[node.lane] || lanesMap[Object.keys(lanesMap)[0]];
+        if (targetLane) targetLane.appendChild(el);
+      });
+
+      // Draw edges as an SVG overlay after nodes are in the DOM
       if (data.edges && data.edges.length > 0) {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(SVG_NS, 'svg');
+        svg.setAttribute('class', 'graph-edges-overlay');
         svg.style.position = 'absolute';
         svg.style.top = '0';
         svg.style.left = '0';
         svg.style.width = '100%';
         svg.style.height = '100%';
         svg.style.pointerEvents = 'none';
-        svg.style.zIndex = '0';
-        
-        const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-        const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-        marker.setAttribute("id", "arrowhead-graph");
-        marker.setAttribute("markerWidth", "10");
-        marker.setAttribute("markerHeight", "7");
-        marker.setAttribute("refX", "9");
-        marker.setAttribute("refY", "3.5");
-        marker.setAttribute("orient", "auto");
-        const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-        polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
-        polygon.setAttribute("fill", "var(--ink-soft)");
+        svg.style.overflow = 'visible';
+
+        // Arrowhead marker
+        const defs = document.createElementNS(SVG_NS, 'defs');
+        const marker = document.createElementNS(SVG_NS, 'marker');
+        marker.setAttribute('id', 'arrowhead-graph');
+        marker.setAttribute('markerWidth', '10');
+        marker.setAttribute('markerHeight', '7');
+        marker.setAttribute('refX', '10');
+        marker.setAttribute('refY', '3.5');
+        marker.setAttribute('orient', 'auto');
+        const polygon = document.createElementNS(SVG_NS, 'polygon');
+        polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+        polygon.setAttribute('fill', 'var(--ink-soft, #888)');
         marker.appendChild(polygon);
         defs.appendChild(marker);
         svg.appendChild(defs);
-        
-        container.style.position = 'relative';
-        container.appendChild(svg);
-        
+
+        const wrapperRect = graphWrapper.getBoundingClientRect();
+
+        data.edges.forEach(edge => {
+          const fromEl = graphWrapper.querySelector(`[data-id="${edge.from}"]`);
+          const toEl = graphWrapper.querySelector(`[data-id="${edge.to}"]`);
+          if (!fromEl || !toEl) return;
+
+          const r1 = fromEl.getBoundingClientRect();
+          const r2 = toEl.getBoundingClientRect();
+
+          const x1 = r1.left - wrapperRect.left + r1.width / 2;
+          const y1 = r1.bottom - wrapperRect.top;
+          const x2 = r2.left - wrapperRect.left + r2.width / 2;
+          const y2 = r2.top - wrapperRect.top;
+
+          const path = document.createElementNS(SVG_NS, 'path');
+          const midY = (y1 + y2) / 2;
+          path.setAttribute('d', `M ${x1},${y1} C ${x1},${midY} ${x2},${midY} ${x2},${y2}`);
+          path.setAttribute('fill', 'none');
+          path.setAttribute('stroke', edge.kind && edge.kind.includes('dotted') ? 'var(--ink-soft, #aaa)' : 'var(--ink-soft, #888)');
+          path.setAttribute('stroke-width', '1.5');
+          path.setAttribute('stroke-dasharray', edge.kind && edge.kind.includes('dotted') ? '4 3' : '');
+          path.setAttribute('marker-end', 'url(#arrowhead-graph)');
+          if (edge.kind && edge.kind.includes('diff-edge-new')) {
+            path.setAttribute('stroke', 'var(--st-implemented, #2d8)');
+            path.setAttribute('stroke-width', '2');
+          }
+          svg.appendChild(path);
+
+          if (edge.label) {
+            const text = document.createElementNS(SVG_NS, 'text');
+            text.setAttribute('x', (x1 + x2) / 2);
+            text.setAttribute('y', midY - 5);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', 'var(--ink, #333)');
+            text.setAttribute('font-size', '11px');
+            text.textContent = edge.label;
+            svg.appendChild(text);
+          }
+        });
+
+        graphWrapper.style.position = 'relative';
+        graphWrapper.appendChild(svg);
+
+        // Redraw edges on resize
+        let resizeTimer;
         const drawEdges = () => {
-          Array.from(svg.querySelectorAll('path')).forEach(p => p.remove());
-          const svgRect = svg.getBoundingClientRect();
-          data.edges.forEach(edge => {
-            const fromNode = container.querySelector(`[data-id="${edge.from}"]`);
-            const toNode = container.querySelector(`[data-id="${edge.to}"]`);
-            if (!fromNode || !toNode) return;
-            
-            const fromRect = fromNode.getBoundingClientRect();
-            const toRect = toNode.getBoundingClientRect();
-            
-            const adjacent = fromNode.nextElementSibling === toNode;
-            const x1 = (adjacent ? fromRect.left + fromRect.width / 2 : fromRect.right) - svgRect.left;
-            const y1 = (adjacent ? fromRect.bottom : fromRect.top + fromRect.height / 2) - svgRect.top;
-            const x2 = (adjacent ? toRect.left + toRect.width / 2 : toRect.right) - svgRect.left;
-            const y2 = (adjacent ? toRect.top : toRect.top + toRect.height / 2) - svgRect.top;
-            const gutterX = Math.max(fromRect.right, toRect.right) - svgRect.left + 24;
-            
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            const isDiff = edge.kind && edge.kind.includes('diff-edge-new');
-            path.setAttribute("d", adjacent
-              ? `M ${x1} ${y1} L ${x2} ${y2}`
-              : `M ${x1} ${y1} L ${gutterX} ${y1} L ${gutterX} ${y2} L ${x2} ${y2}`);
-            path.setAttribute("stroke", isDiff ? "var(--st-implemented)" : "var(--ink-soft)");
-            path.setAttribute("stroke-width", "2");
-            path.setAttribute("fill", "none");
-            if (isDiff) {
-              path.setAttribute("stroke-dasharray", "4,4");
-            }
-            path.setAttribute("marker-end", "url(#arrowhead-graph)");
-            svg.appendChild(path);
+          const wr = graphWrapper.getBoundingClientRect();
+          svg.querySelectorAll('path').forEach((p, i) => {
+            const edge = data.edges[i];
+            if (!edge) return;
+            const fEl = graphWrapper.querySelector(`[data-id="${edge.from}"]`);
+            const tEl = graphWrapper.querySelector(`[data-id="${edge.to}"]`);
+            if (!fEl || !tEl) return;
+            const r1 = fEl.getBoundingClientRect();
+            const r2 = tEl.getBoundingClientRect();
+            const x1 = r1.left - wr.left + r1.width / 2;
+            const y1 = r1.bottom - wr.top;
+            const x2 = r2.left - wr.left + r2.width / 2;
+            const y2 = r2.top - wr.top;
+            const my = (y1 + y2) / 2;
+            p.setAttribute('d', `M ${x1},${y1} C ${x1},${my} ${x2},${my} ${x2},${y2}`);
           });
         };
-
-        // Draw after layout
-        setTimeout(drawEdges, 100);
-        window.addEventListener('resize', drawEdges);
+        window.addEventListener('resize', () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(drawEdges, 100);
+        });
       }
+
+      container.appendChild(graphWrapper);
+
+      // Text equivalent for screen readers: concise description of nodes and edges
+      const nodeIds = (data.nodes || []).map(n => n.id).join(', ');
+      const edgeDescs = (data.edges || []).map(e => `${e.from} to ${e.to}${e.label ? ' (' + e.label + ')' : ''}`).join('; ');
+      const fallback = document.createElement('div');
+      fallback.style.position = 'absolute';
+      fallback.style.width = '1px';
+      fallback.style.height = '1px';
+      fallback.style.padding = '0';
+      fallback.style.margin = '-1px';
+      fallback.style.overflow = 'hidden';
+      fallback.style.clip = 'rect(0, 0, 0, 0)';
+      fallback.style.whiteSpace = 'nowrap';
+      fallback.style.border = '0';
+      fallback.textContent = `Graph diagram. Nodes: ${nodeIds}. Edges: ${edgeDescs || 'none'}.`;
+      container.appendChild(fallback);
 
       script.parentNode.insertBefore(container, script.nextSibling);
     } catch (e) {
@@ -1573,21 +1665,21 @@ function initMasterDetail() {
   });
 }
 
-// Update initialization to run these functions
-document.addEventListener('DOMContentLoaded', () => {
-  if (typeof initPhaseCopyButtons === 'function') initPhaseCopyButtons();
-  if (typeof initSequenceDiagrams === 'function') initSequenceDiagrams();
-  if (typeof initStateDiagrams === 'function') initStateDiagrams();
-  if (typeof initGraphDiagrams === 'function') initGraphDiagrams();
-  if (typeof initCapabilityMatrices === 'function') initCapabilityMatrices();
-  if (typeof initEntityDiagrams === 'function') initEntityDiagrams();
-
-  if (typeof initMasterDetail === 'function') initMasterDetail();
-});
 // C8 Capability Matrix
 function initCapabilityMatrices() {
   document.querySelectorAll('.guides-matrix').forEach(matrix => {
-    const controls = matrix.previousElementSibling;
+    // The controls usually sit immediately before the table, but the table
+    // may be wrapped in a `.table-scroll` container (as in the gallery C8
+    // example). In that case the controls are the sibling before the wrapper,
+    // so look through the wrapper instead of bailing out and leaving the
+    // filter buttons and row inspector unattached.
+    let controls = matrix.previousElementSibling;
+    if (!controls || !controls.classList.contains('capability-matrix-controls')) {
+      const wrapper = matrix.parentElement;
+      if (wrapper && wrapper.classList.contains('table-scroll')) {
+        controls = wrapper.previousElementSibling;
+      }
+    }
     if (!controls || !controls.classList.contains('capability-matrix-controls')) return;
     
     controls.addEventListener('click', e => {
@@ -1759,17 +1851,53 @@ function initEntityDiagrams() {
       
       svg.setAttribute("viewBox", `0 0 ${maxX + 40} ${maxY + 40}`);
       container.appendChild(svg);
-      
-      // Text equivalent below
+
+      // Text equivalent for screen readers: concise description of the
+      // diagram's boxes and their relationships. The serialized JSON was
+      // removed because it announced a lengthy, redundant payload; the
+      // Layer Picture section already has a readable walkthrough.
       const fallback = document.createElement('div');
-      fallback.style.display = 'none'; // Accessible via screen reader or alternative rendering
-      fallback.textContent = JSON.stringify(data);
+      fallback.style.position = 'absolute';
+      fallback.style.width = '1px';
+      fallback.style.height = '1px';
+      fallback.style.padding = '0';
+      fallback.style.margin = '-1px';
+      fallback.style.overflow = 'hidden';
+      fallback.style.clip = 'rect(0, 0, 0, 0)';
+      fallback.style.whiteSpace = 'nowrap';
+      fallback.style.border = '0';
+      const boxList = data.boxes.map(b => b.title || b.id).join(', ');
+      const edgeList = data.edges.map(e => `${e.from} to ${e.to}${e.label ? ' (' + e.label + ')' : ''}`).join('; ');
+      fallback.textContent = `Entity diagram. Boxes: ${boxList}. Relationships: ${edgeList}.`;
       container.appendChild(fallback);
       
       script.parentNode.insertBefore(container, script.nextSibling);
     } catch (e) {
       console.error("Failed to parse entity diagram", e);
     }
+  });
+}
+
+// C16: Side-by-side tab switching (narrow screens)
+function initSideBySide() {
+  document.querySelectorAll('[data-sbs].sbs-tabs').forEach(tabs => {
+    // The tabs and the .side-by-side share a parent in the gallery fixture.
+    const root = tabs.parentElement;
+    const panes = root ? root.querySelectorAll('.side-by-side .sbs-pane') : [];
+    tabs.querySelectorAll('.sbs-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-sbs-pane');
+        tabs.querySelectorAll('.sbs-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        panes.forEach(pane => {
+          if (pane.getAttribute('data-sbs-pane') === target) {
+            pane.classList.add('active');
+          } else {
+            pane.classList.remove('active');
+          }
+        });
+      });
+    });
   });
 }
 
