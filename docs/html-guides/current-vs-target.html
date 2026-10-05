@@ -1200,7 +1200,7 @@ function initCitations() {
         navigator.clipboard.writeText(path);
       };
       
-      startViewer.onclick = (ce) => {
+      startViewer.onclick = async (ce) => {
         ce.stopPropagation();
         // The viewer server lives in brocks-helpers (scripts.html_guides).
         // Build a runnable command that cds into that checkout first, so the
@@ -1219,9 +1219,14 @@ function initCitations() {
           const viewerDir = `${wsRoot}/${bhDir}`.replace(/'/g, "'\\''");
           serveCmd = `cd '${viewerDir}' && python -m scripts.html_guides.cli serve`;
         }
-        navigator.clipboard.writeText(serveCmd);
         const original = startViewer.textContent;
-        startViewer.textContent = "Copied command!";
+        try {
+          await navigator.clipboard.writeText(serveCmd);
+          startViewer.textContent = "Copied command!";
+        } catch (err) {
+          console.error("Failed to copy command", err);
+          startViewer.textContent = "Copy failed";
+        }
         setTimeout(() => startViewer.textContent = original, 2000);
       };
 
@@ -1782,12 +1787,12 @@ function initEntityDiagrams() {
       const positions = {};
 
       data.boxes.forEach((box, i) => {
-        const col = box.col || (i % 3);
-        const row = box.row || Math.floor(i / 3);
+        const col = box.col ?? (i % 3);
+        const row = box.row ?? Math.floor(i / 3);
         const x = startX + col * (boxWidth + gapX);
         const y = startY + row * (boxHeight + gapY);
         
-        positions[box.id] = { x: x + boxWidth/2, y: y + boxHeight/2, left: x, right: x + boxWidth, top: y, bottom: y + boxHeight };
+        positions[box.id] = { x: x + boxWidth/2, y: y + boxHeight/2, left: x, right: x + boxWidth, top: y, bottom: y + boxHeight, col, row };
         
         maxX = Math.max(maxX, x + boxWidth);
         maxY = Math.max(maxY, y + boxHeight);
